@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: lotto_postgres
+    environment:
+      POSTGRES_DB: lotto_db
+      POSTGRES_USER: lotto_user
+      POSTGRES_PASSWORD: lotto_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lotto_user -d lotto_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: lotto_backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://lotto_user:lotto_password@postgres:5432/lotto_db
+      API_HOST: 0.0.0.0
+      API_PORT: 8000
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: lotto_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
