@@ -12,67 +12,44 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 # 프로젝트 루트 디렉토리를 Python 경로에 추가
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.config import settings
+# Docker Compose 환경에 맞는 설정
+DB_HOST = "localhost"
+DB_PORT = 5432
+DB_NAME = "lotto_db"
+DB_USER = "lotto_user"
+DB_PASSWORD = "lotto_password"
 
-def create_database():
-    """데이터베이스 및 사용자 생성"""
+def check_database_connection():
+    """데이터베이스 연결 확인"""
     try:
-        # 관리자 권한으로 연결 (기본 postgres 데이터베이스)
         conn = psycopg2.connect(
-            host=settings.db_host,
-            port=settings.db_port,
-            user='postgres',
-            password=os.getenv('POSTGRES_PASSWORD', 'postgres'),
-            database='postgres'
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
         )
-        conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
         cursor = conn.cursor()
-        
-        # 데이터베이스 존재 여부 확인
-        cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (settings.db_name,))
-        if cursor.fetchone():
-            print(f"✅ 데이터베이스 '{settings.db_name}'이 이미 존재합니다")
-        else:
-            # 데이터베이스 생성
-            cursor.execute(f"CREATE DATABASE {settings.db_name}")
-            print(f"✅ 데이터베이스 '{settings.db_name}'을 생성했습니다")
-        
-        # 사용자 존재 여부 확인
-        cursor.execute("SELECT 1 FROM pg_user WHERE usename = %s", (settings.db_user,))
-        if cursor.fetchone():
-            print(f"✅ 사용자 '{settings.db_user}'가 이미 존재합니다")
-        else:
-            # 사용자 생성 및 권한 부여
-            cursor.execute(f"CREATE USER {settings.db_user} WITH PASSWORD '{settings.db_password}'")
-            print(f"✅ 사용자 '{settings.db_user}'를 생성했습니다")
-        
-        # 데이터베이스 권한 부여
-        cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {settings.db_name} TO {settings.db_user}")
-        print(f"✅ 사용자 '{settings.db_user}'에게 데이터베이스 권한을 부여했습니다")
-        
+        cursor.execute("SELECT version();")
+        version = cursor.fetchone()
         cursor.close()
         conn.close()
-        
-    except psycopg2.OperationalError as e:
-        print(f"❌ 데이터베이스 연결 실패: {e}")
-        print("PostgreSQL이 실행 중인지 확인하세요")
-        return False
+        print(f"✅ 데이터베이스 연결 성공: {version[0]}")
+        return True
     except Exception as e:
-        print(f"❌ 데이터베이스 생성 실패: {e}")
+        print(f"❌ 데이터베이스 연결 실패: {e}")
         return False
-    
-    return True
 
 def create_tables():
     """테이블 생성"""
     try:
-        # 새로 생성된 데이터베이스에 연결
+        # 데이터베이스에 연결
         conn = psycopg2.connect(
-            host=settings.db_host,
-            port=settings.db_port,
-            database=settings.db_name,
-            user=settings.db_user,
-            password=settings.db_password
+            host=DB_HOST,
+            port=DB_PORT,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD
         )
         cursor = conn.cursor()
         
@@ -202,13 +179,13 @@ def create_tables():
 def main():
     """메인 함수"""
     print("🚀 LottoGenius 데이터베이스 초기화 시작...")
-    print(f"📍 대상 데이터베이스: {settings.db_name}")
-    print(f"📍 대상 호스트: {settings.db_host}:{settings.db_port}")
+    print(f"📍 대상 데이터베이스: {DB_NAME}")
+    print(f"📍 대상 호스트: {DB_HOST}:{DB_PORT}")
     print()
     
-    # 1단계: 데이터베이스 및 사용자 생성
-    print("1️⃣ 데이터베이스 및 사용자 생성 중...")
-    if not create_database():
+    # 1단계: 데이터베이스 연결 확인
+    print("1️⃣ 데이터베이스 연결 확인 중...")
+    if not check_database_connection():
         print("❌ 데이터베이스 초기화 실패")
         sys.exit(1)
     
@@ -219,9 +196,9 @@ def main():
         sys.exit(1)
     
     print("\n🎉 데이터베이스 초기화 완료!")
-    print(f"📍 데이터베이스: {settings.db_name}")
-    print(f"📍 사용자: {settings.db_user}")
-    print(f"📍 연결 문자열: postgresql://{settings.db_user}:{settings.db_password}@{settings.db_host}:{settings.db_port}/{settings.db_name}")
+    print(f"📍 데이터베이스: {DB_NAME}")
+    print(f"📍 사용자: {DB_USER}")
+    print(f"📍 연결 문자열: postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}")
 
 if __name__ == "__main__":
     main()
