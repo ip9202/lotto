@@ -53,13 +53,29 @@ app = FastAPI(
 )
 
 # CORS 미들웨어 설정
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=settings.get_cors_origins(),
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+try:
+    cors_origins = settings.get_cors_origins()
+    print(f"CORS Origins: {cors_origins}")
+    
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    print("✅ CORS 미들웨어 설정 완료")
+except Exception as e:
+    print(f"❌ CORS 미들웨어 설정 실패: {e}")
+    # 기본 CORS 설정으로 폴백
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    print("✅ 기본 CORS 설정으로 폴백")
 
 # API 라우터 등록
 app.include_router(lotto.router, prefix="")

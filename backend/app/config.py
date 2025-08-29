@@ -19,14 +19,17 @@ class Settings(BaseSettings):
     
     def get_cors_origins(self) -> List[str]:
         """환경 변수에서 CORS origins를 파싱하거나 기본값 사용"""
-        # 환경 변수에서 CORS_ORIGINS 확인
-        cors_env = os.getenv('CORS_ORIGINS')
-        if cors_env:
-            # 쉼표로 구분된 문자열을 리스트로 변환
-            if ',' in cors_env:
-                return [origin.strip() for origin in cors_env.split(',')]
-            else:
-                return [cors_env.strip()]
+        try:
+            # 환경 변수에서 CORS_ORIGINS 확인
+            cors_env = os.getenv('CORS_ORIGINS')
+            if cors_env:
+                # 쉼표로 구분된 문자열을 리스트로 변환
+                if ',' in cors_env:
+                    return [origin.strip() for origin in cors_env.split(',')]
+                else:
+                    return [cors_env.strip()]
+        except Exception as e:
+            print(f"CORS 환경 변수 파싱 오류: {e}")
         
         return self.cors_origins
     
