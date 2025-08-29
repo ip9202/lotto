@@ -9,12 +9,15 @@ export default defineConfig({
     port: 5173,
     watch: {
       usePolling: true
-    }
+    },
+    allowedHosts: [
+      'localhost',
+      'lotto-frontend-production.up.railway.app',
+      '.up.railway.app'  // 모든 Railway 도메인 허용
+    ]
   },
   build: {
     outDir: 'dist',
     sourcemap: true
   }
 })
-
-
