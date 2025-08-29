@@ -16,9 +16,9 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchLatestDraw = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/api/v1/lotto/latest');
+      const fetchLatestDraw = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/lotto/latest`);
         const data = await response.json();
         if (data.success) {
           setLatestDraw(data.data);

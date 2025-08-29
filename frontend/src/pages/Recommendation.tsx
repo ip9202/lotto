@@ -83,7 +83,7 @@ const Recommendation: React.FC = () => {
 
       console.log('요청 데이터:', requestData);
       
-      const response = await fetch('http://localhost:8000/api/v1/recommendations/generate', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/recommendations/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

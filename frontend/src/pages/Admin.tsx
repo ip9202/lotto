@@ -68,7 +68,7 @@ const Admin: React.FC = () => {
   // 시스템 상태 조회
   const fetchSystemStatus = async () => {
     try {
-      const response = await fetch('http://localhost:8000/admin/check-latest-data');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/check-latest-data`);
       const data = await response.json();
       if (data.success) {
         setSystemStatus(data.data);
@@ -81,7 +81,7 @@ const Admin: React.FC = () => {
   // 업데이트 진행 상황 조회
   const fetchUpdateProgress = async () => {
     try {
-      const response = await fetch('http://localhost:8000/admin/update-progress');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/update-progress`);
       const data = await response.json();
       if (data.success) {
         setUpdateProgress(data.data);
@@ -94,7 +94,7 @@ const Admin: React.FC = () => {
   // 스케줄러 상태 조회
   const fetchSchedulerStatus = async () => {
     try {
-      const response = await fetch('http://localhost:8000/admin/scheduler-status');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/scheduler-status`);
       const data = await response.json();
       if (data.success) {
         setSchedulerStatus(data.data);
@@ -110,7 +110,7 @@ const Admin: React.FC = () => {
     setMessage(null);
     
     try {
-      const response = await fetch('http://localhost:8000/admin/update-latest-data', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/update-latest-data`, {
         method: 'POST',
       });
       const data = await response.json();
@@ -135,7 +135,7 @@ const Admin: React.FC = () => {
               attempts++;
               
               try {
-                const progressResponse = await fetch('http://localhost:8000/admin/update-progress');
+                const progressResponse = await fetch(`${import.meta.env.VITE_API_URL}/admin/update-progress`);
                 const progressData = await progressResponse.json();
                 
                 if (progressData.success) {
@@ -203,7 +203,7 @@ const Admin: React.FC = () => {
     setMessage(null);
     
     try {
-      const response = await fetch('http://localhost:8000/admin/start-scheduler', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/start-scheduler`, {
         method: 'POST',
       });
       const data = await response.json();
@@ -242,7 +242,7 @@ const Admin: React.FC = () => {
     setMessage(null);
     
     try {
-      const response = await fetch('http://localhost:8000/admin/stop-scheduler', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/stop-scheduler`, {
         method: 'POST',
       });
       const data = await response.json();

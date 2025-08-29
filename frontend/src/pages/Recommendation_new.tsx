@@ -95,7 +95,7 @@ const Recommendation: React.FC = () => {
 
       console.log('요청 데이터:', requestData);
       
-      const response = await fetch('http://localhost:8000/api/v1/recommendations/generate', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/recommendations/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -217,7 +217,7 @@ const Recommendation: React.FC = () => {
       
       // 개별 조합 재생성 API 호출
       const response = await fetch(
-        `http://localhost:8000/api/v1/recommendations/regenerate/${recommendations[0].history_id}/${index}`,
+        `${import.meta.env.VITE_API_URL}/api/v1/recommendations/regenerate/${recommendations[0].history_id}/${index}`,
         {
           method: 'POST',
           headers: {
