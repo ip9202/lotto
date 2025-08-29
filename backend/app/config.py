@@ -1,5 +1,6 @@
 import os
 from typing import List
+from pydantic import Field
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -14,7 +15,7 @@ class Settings(BaseSettings):
     # API 설정
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    cors_origins: List[str] = ["http://localhost:5173", "http://localhost:5174"]
+    cors_origins: List[str] = Field(default=["http://localhost:5173", "http://localhost:5174"], exclude=True)
     
     def get_cors_origins(self) -> List[str]:
         """환경 변수에서 CORS origins를 파싱하거나 기본값 사용"""
