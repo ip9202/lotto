@@ -16,13 +16,10 @@ class RecommendationEngine:
         self.db = db_session
         self.analyzer = LottoAnalyzer(db_session)
         
-        # AI 종합 분석 가중치 설정
+        # 단순화된 가중치 설정
         self.weights = {
-            'frequency': 0.25,      # 출현 빈도 (25%)
-            'trend': 0.30,          # 최근 트렌드 (30%)  
-            'gap': 0.20,            # 번호 간격 (20%)
-            'pattern': 0.15,        # 조합 패턴 (15%)
-            'balance': 0.10         # 통계적 균형 (10%)
+            'frequency': 0.6,       # 출현 빈도 (60%)
+            'trend': 0.4            # 최근 트렌드 (40%)
         }
     
     def generate_combinations(self, count: int, preferences: PreferenceSettings = None, exclude_combinations: List[List[int]] = None) -> List[Combination]:
@@ -49,22 +46,18 @@ class RecommendationEngine:
         return top_combinations
     
     def _calculate_base_scores(self) -> Dict[int, float]:
-        """번호별 기본 점수 계산"""
+        """번호별 기본 점수 계산 - 단순화된 버전"""
         scores = {}
-        total_draws = self.analyzer.get_total_draws()
-        current_draw = self.analyzer.get_latest_draw_number()
         
         for number in range(1, 46):
-            # 각 요소별 점수 계산
-            freq_score = self._calculate_frequency_score(number, total_draws)
+            # 출현 빈도와 최근 트렌드만 고려
+            freq_score = self._calculate_frequency_score(number, 1000)  # 고정값 사용
             trend_score = self._calculate_trend_score(number)
-            gap_score = self._calculate_gap_score(number, current_draw)
             
-            # 가중 평균으로 최종 점수
+            # 단순 가중 평균
             base_score = (
                 freq_score * self.weights['frequency'] +
-                trend_score * self.weights['trend'] +
-                gap_score * self.weights['gap']
+                trend_score * self.weights['trend']
             )
             
             scores[number] = base_score
@@ -106,25 +99,7 @@ class RecommendationEngine:
         
         return trend_score
     
-    def _calculate_gap_score(self, number: int, current_draw: int) -> float:
-        """번호별 간격 점수 계산"""
-        stats = self.analyzer.calculate_frequency_statistics()
-        if number not in stats:
-            return 1.0
-        
-        gap = stats[number]['gap_since_last']
-        
-        # 오래 안 나온 번호일수록 높은 점수 (반등 가능성)
-        if gap <= 5:
-            gap_score = 0.8  # 최근에 나온 번호
-        elif gap <= 20:
-            gap_score = 1.0  # 보통
-        elif gap <= 50:
-            gap_score = 1.2  # 오래 안 나온 번호
-        else:
-            gap_score = 1.4  # 매우 오래 안 나온 번호
-        
-        return gap_score
+    # 간격 점수 계산 제거 - 단순화
     
     def _apply_preferences(self, scores: Dict[int, float], preferences: PreferenceSettings) -> Dict[int, float]:
         """사용자 선호도 적용"""
