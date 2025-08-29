@@ -8,13 +8,16 @@ class UserHistory(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     draw_number = Column(Integer, nullable=True, index=True)  # 대상 회차 (null이면 다음 회차)
-    session_id = Column(String(255), nullable=False, index=True)  # 사용자 세션 구분용
+    session_id = Column(String(255), ForeignKey("user_sessions.session_id"), nullable=False, index=True)  # 사용자 세션 구분용
     total_count = Column(Integer, nullable=False)  # 총 추천 조합 수
     manual_count = Column(Integer, default=0)  # 수동 선택 개수
     auto_count = Column(Integer, default=0)  # AI 추천 개수
     preferences = Column(JSON, nullable=True)  # 선호 설정 (JSON)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    # UserSession과의 관계 추가
+    session = relationship("UserSession", back_populates="histories")
     
     # 추천 조합들과의 관계
     recommendations = relationship("Recommendation", back_populates="history", cascade="all, delete-orphan")

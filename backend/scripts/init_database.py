@@ -96,6 +96,26 @@ def create_tables():
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
 
+        -- 사용자 세션 관리 테이블
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            id SERIAL PRIMARY KEY,
+            session_id VARCHAR(255) UNIQUE NOT NULL,
+            session_name VARCHAR(100),
+            is_active BOOLEAN DEFAULT TRUE,
+            is_admin_created BOOLEAN DEFAULT FALSE,
+            created_by VARCHAR(100) DEFAULT 'admin',
+            max_recommendations INTEGER DEFAULT 10,
+            manual_ratio INTEGER DEFAULT 30,
+            auto_ratio INTEGER DEFAULT 70,
+            include_numbers JSONB,
+            exclude_numbers JSONB,
+            description TEXT,
+            tags JSONB,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP
+        );
+
         -- 사용자 추천 기록 테이블
         CREATE TABLE IF NOT EXISTS user_histories (
             id SERIAL PRIMARY KEY,
@@ -125,6 +145,13 @@ def create_tables():
         -- 인덱스 생성
         CREATE INDEX IF NOT EXISTS idx_lotto_draws_number ON lotto_draws(draw_number);
         CREATE INDEX IF NOT EXISTS idx_lotto_draws_date ON lotto_draws(draw_date);
+        
+        -- 세션 테이블 인덱스
+        CREATE INDEX IF NOT EXISTS idx_user_sessions_id ON user_sessions(session_id);
+        CREATE INDEX IF NOT EXISTS idx_user_sessions_active ON user_sessions(is_active);
+        CREATE INDEX IF NOT EXISTS idx_user_sessions_admin ON user_sessions(is_admin_created);
+        CREATE INDEX IF NOT EXISTS idx_user_sessions_expires ON user_sessions(expires_at);
+        
         CREATE INDEX IF NOT EXISTS idx_user_histories_session ON user_histories(session_id);
         CREATE INDEX IF NOT EXISTS idx_user_histories_draw ON user_histories(draw_number);
         CREATE INDEX IF NOT EXISTS idx_user_histories_created ON user_histories(created_at);

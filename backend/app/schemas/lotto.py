@@ -4,7 +4,7 @@ from datetime import date
 
 class LottoNumber(BaseModel):
     draw_number: int = Field(..., description="회차")
-    draw_date: date = Field(..., description="추첨일")
+    draw_date: str = Field(..., description="추첨일 (YYYY-MM-DD)")
     numbers: List[int] = Field(..., min_items=6, max_items=6, description="당첨번호 1~6")
     bonus_number: int = Field(..., ge=1, le=45, description="보너스번호")
     first_winners: int = Field(0, description="1등 당첨자 수")

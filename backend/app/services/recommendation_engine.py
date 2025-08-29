@@ -16,14 +16,13 @@ class RecommendationEngine:
         self.db = db_session
         self.analyzer = LottoAnalyzer(db_session)
         
-        # 가중치 설정
+        # AI 종합 분석 가중치 설정
         self.weights = {
-            'frequency': 0.25,      # 출현 빈도
-            'trend': 0.30,          # 최근 트렌드  
-            'gap': 0.20,            # 번호 간격
-            'odd_even': 0.10,       # 홀짝 균형
-            'range': 0.10,          # 구간 분포
-            'consecutive': 0.05     # 연속 번호
+            'frequency': 0.25,      # 출현 빈도 (25%)
+            'trend': 0.30,          # 최근 트렌드 (30%)  
+            'gap': 0.20,            # 번호 간격 (20%)
+            'pattern': 0.15,        # 조합 패턴 (15%)
+            'balance': 0.10         # 통계적 균형 (10%)
         }
     
     def generate_combinations(self, count: int, preferences: PreferenceSettings = None, exclude_combinations: List[List[int]] = None) -> List[Combination]:
@@ -212,24 +211,30 @@ class RecommendationEngine:
         return combinations
     
     def _score_combinations(self, combinations: List[List[int]]) -> List[Combination]:
-        """조합별 점수 계산"""
+        """AI 종합 분석을 통한 조합별 신뢰도 점수 계산"""
         scored_combinations = []
         
         for combo in combinations:
             combination = Combination(combo)
             
-            # 각 요소별 점수 계산
-            odd_even_score = self._calculate_odd_even_score(combo)
-            range_score = self._calculate_range_score(combo)
-            consecutive_score = self._calculate_consecutive_score(combo)
+            # 1. 번호별 개별 점수 계산 (이미 계산된 base_scores 활용)
+            number_scores = self._calculate_base_scores()
+            individual_score = sum(number_scores[num] for num in combo) / 6
             
-            # 가중 평균으로 최종 점수
+            # 2. 조합 패턴 점수 계산
+            pattern_score = self._calculate_pattern_score(combo)
+            
+            # 3. 통계적 균형 점수 계산
+            balance_score = self._calculate_balance_score(combo)
+            
+            # 4. AI 가중치를 적용한 종합 점수 계산
             total_score = (
-                odd_even_score * self.weights['odd_even'] +
-                range_score * self.weights['range'] +
-                consecutive_score * self.weights['consecutive']
+                individual_score * 0.40 +      # 개별 번호 점수 (40%)
+                pattern_score * 0.35 +         # 조합 패턴 점수 (35%)
+                balance_score * 0.25           # 통계적 균형 점수 (25%)
             )
             
+            # 5. 신뢰도 점수 정규화 (0.0 ~ 1.0)
             combination.total_score = total_score
             combination.confidence_score = min(1.0, max(0.0, total_score))
             scored_combinations.append(combination)
@@ -281,6 +286,171 @@ class RecommendationEngine:
             return 0.6
         else:
             return 0.3
+    
+    def _calculate_pattern_score(self, numbers: List[int]) -> float:
+        """AI 조합 패턴 분석 점수 (종합적 패턴 평가)"""
+        sorted_numbers = sorted(numbers)
+        
+        # 1. 홀짝 균형 점수
+        odd_count = sum(1 for num in numbers if num % 2 == 1)
+        even_count = 6 - odd_count
+        odd_even_score = self._calculate_odd_even_score(numbers)
+        
+        # 2. 구간 분포 점수
+        range_score = self._calculate_range_score(numbers)
+        
+        # 3. 연속 번호 점수
+        consecutive_score = self._calculate_consecutive_score(numbers)
+        
+        # 4. 번호 간격 균형 점수
+        gap_balance_score = self._calculate_gap_balance_score(sorted_numbers)
+        
+        # 5. 끝자리 분포 점수
+        ending_score = self._calculate_ending_distribution_score(numbers)
+        
+        # 종합 패턴 점수 (가중 평균)
+        pattern_score = (
+            odd_even_score * 0.25 +
+            range_score * 0.25 +
+            consecutive_score * 0.20 +
+            gap_balance_score * 0.20 +
+            ending_score * 0.10
+        )
+        
+        return pattern_score
+    
+    def _calculate_balance_score(self, numbers: List[int]) -> float:
+        """통계적 균형 및 안정성 점수"""
+        sorted_numbers = sorted(numbers)
+        
+        # 1. 평균값과의 편차 점수
+        mean_score = self._calculate_mean_deviation_score(sorted_numbers)
+        
+        # 2. 분산 점수 (너무 집중되지 않도록)
+        variance_score = self._calculate_variance_score(sorted_numbers)
+        
+        # 3. 극값 분포 점수 (너무 극단적이지 않도록)
+        extreme_score = self._calculate_extreme_distribution_score(sorted_numbers)
+        
+        # 4. 과거 당첨 패턴과의 유사도 점수
+        similarity_score = self._calculate_historical_similarity_score(sorted_numbers)
+        
+        # 종합 균형 점수
+        balance_score = (
+            mean_score * 0.30 +
+            variance_score * 0.25 +
+            extreme_score * 0.25 +
+            similarity_score * 0.20
+        )
+        
+        return balance_score
+    
+    def _calculate_gap_balance_score(self, sorted_numbers: List[int]) -> float:
+        """번호 간격 균형 점수"""
+        if len(sorted_numbers) < 2:
+            return 1.0
+        
+        gaps = []
+        for i in range(len(sorted_numbers) - 1):
+            gap = sorted_numbers[i + 1] - sorted_numbers[i]
+            gaps.append(gap)
+        
+        # 간격의 표준편차가 작을수록 균형적
+        if len(gaps) == 1:
+            return 1.0
+        
+        mean_gap = sum(gaps) / len(gaps)
+        variance = sum((gap - mean_gap) ** 2 for gap in gaps) / len(gaps)
+        std_dev = variance ** 0.5
+        
+        # 표준편차가 작을수록 높은 점수
+        if std_dev <= 2:
+            return 1.0
+        elif std_dev <= 4:
+            return 0.8
+        elif std_dev <= 6:
+            return 0.6
+        else:
+            return 0.4
+    
+    def _calculate_ending_distribution_score(self, numbers: List[int]) -> float:
+        """끝자리 분포 점수 (0-9)"""
+        endings = [num % 10 for num in numbers]
+        unique_endings = len(set(endings))
+        
+        # 끝자리가 다양할수록 높은 점수
+        if unique_endings == 6:
+            return 1.0
+        elif unique_endings == 5:
+            return 0.8
+        elif unique_endings == 4:
+            return 0.6
+        else:
+            return 0.4
+    
+    def _calculate_mean_deviation_score(self, sorted_numbers: List[int]) -> float:
+        """평균값과의 편차 점수"""
+        if not sorted_numbers:
+            return 1.0
+        
+        mean = sum(sorted_numbers) / len(sorted_numbers)
+        # 이론적 평균 (1+45)/2 = 23
+        theoretical_mean = 23
+        
+        deviation = abs(mean - theoretical_mean)
+        
+        # 평균이 23에 가까울수록 높은 점수
+        if deviation <= 2:
+            return 1.0
+        elif deviation <= 4:
+            return 0.8
+        elif deviation <= 6:
+            return 0.6
+        else:
+            return 0.4
+    
+    def _calculate_variance_score(self, sorted_numbers: List[int]) -> float:
+        """분산 점수 (너무 집중되지 않도록)"""
+        if not sorted_numbers:
+            return 1.0
+        
+        mean = sum(sorted_numbers) / len(sorted_numbers)
+        variance = sum((num - mean) ** 2 for num in sorted_numbers) / len(sorted_numbers)
+        
+        # 적당한 분산이 이상적 (너무 집중되지도, 너무 분산되지도 않게)
+        if 50 <= variance <= 200:
+            return 1.0
+        elif 30 <= variance <= 250:
+            return 0.8
+        elif 20 <= variance <= 300:
+            return 0.6
+        else:
+            return 0.4
+    
+    def _calculate_extreme_distribution_score(self, sorted_numbers: List[int]) -> float:
+        """극값 분포 점수"""
+        if not sorted_numbers:
+            return 1.0
+        
+        min_num = sorted_numbers[0]
+        max_num = sorted_numbers[-1]
+        range_size = max_num - min_num
+        
+        # 적당한 범위가 이상적 (너무 좁지도, 너무 넓지도 않게)
+        if 20 <= range_size <= 35:
+            return 1.0
+        elif 15 <= range_size <= 40:
+            return 0.8
+        elif 10 <= range_size <= 44:
+            return 0.6
+        else:
+            return 0.4
+    
+    def _calculate_historical_similarity_score(self, sorted_numbers: List[int]) -> float:
+        """과거 당첨 패턴과의 유사도 점수"""
+        # 간단한 구현: 과거 데이터가 있다면 더 정교하게 계산 가능
+        # 현재는 기본 점수 반환
+        return 0.8  # 기본값
     
     def _select_top_combinations(self, combinations: List[Combination], count: int, exclude_combinations: List[List[int]]) -> List[Combination]:
         """상위 조합 선택 (중복 제거)"""

@@ -69,7 +69,7 @@ const Recommendation: React.FC = () => {
 
       // 백엔드 스키마에 맞는 형식으로 변환
       const requestData = {
-        session_id: `session_${Date.now()}`, // 임시 세션 ID 생성
+        session_id: `default_session`, // 기본 세션 ID 사용 (백엔드에서 자동 생성)
         total_count: combinationSettings.total_count,
         manual_combinations: selectedNumbers.map(numbers => ({
           numbers: numbers.sort((a, b) => a - b)
@@ -141,203 +141,264 @@ const Recommendation: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* 페이지 헤더 */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900">
-          🎯 AI 로또 번호 추천
-        </h1>
-        <p className="text-xl text-gray-600">
-          원하는 번호를 선택하고 AI가 최적의 조합을 추천해드립니다.
-        </p>
-      </div>
-
-      {/* 조합 설정 - 컴팩트 */}
-      <div className="bg-white rounded-xl shadow-lg p-4">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          🎲 조합 설정
-        </h2>
+      {/* 페이지 헤더 - 세련되고 모던한 디자인 */}
+      <div className="relative overflow-hidden">
+        {/* 배경 그라데이션 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50/30"></div>
         
-        <div className="grid grid-cols-3 gap-3">
-          {/* 총 조합 수 */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              총 조합 수
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="20"
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.total_count}
-              onChange={(e) => {
-                const total = parseInt(e.target.value) || 1;
-                const manual = Math.min(combinationSettings.manual_count, total);
-                const auto = total - manual;
-                setCombinationSettings({
-                  total_count: total,
-                  manual_count: manual,
-                  auto_count: auto
-                });
-              }}
-            />
-          </div>
-
-          {/* 수동 생성 */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              수동
-            </label>
-            <input
-              type="number"
-              min="0"
-              max={combinationSettings.total_count}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.manual_count}
-              onChange={(e) => {
-                const manual = parseInt(e.target.value) || 0;
-                const total = combinationSettings.total_count;
-                const auto = Math.max(0, total - manual);
-                setCombinationSettings({
-                  total_count: total,
-                  manual_count: manual,
-                  auto_count: auto
-                });
-              }}
-            />
-          </div>
-
-          {/* 자동 생성 */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              자동
-            </label>
-            <input
-              type="number"
-              min="0"
-              max={combinationSettings.total_count}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.auto_count}
-              onChange={(e) => {
-                const auto = parseInt(e.target.value) || 0;
-                const total = combinationSettings.total_count;
-                const manual = Math.max(0, total - auto);
-                setCombinationSettings({
-                  total_count: total,
-                  manual_count: manual,
-                  auto_count: auto
-                });
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 간단한 비율 표시 */}
-        <div className="mt-3 bg-gray-50 p-2 rounded text-center">
-          <div className="text-xs text-gray-600 mb-1">현재: {combinationSettings.manual_count} 수동 + {combinationSettings.auto_count} 자동</div>
-          <div className="flex items-center space-x-1">
-            <div className="flex-1 bg-blue-200 rounded-full h-1.5">
-              <div 
-                className="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                style={{ width: `${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%` }}
-              ></div>
-            </div>
-            <span className="text-xs text-gray-500 w-8 text-center">
-              {combinationSettings.manual_count}:{combinationSettings.auto_count}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 통합 번호 관리 */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          🎯 통합 번호 관리
-        </h2>
-        <UnifiedNumberManager
-          includeNumbers={preferences.include_numbers}
-          excludeNumbers={preferences.exclude_numbers}
-          manualCombinations={selectedNumbers}
-          onIncludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, include_numbers: numbers }))}
-          onExcludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, exclude_numbers: numbers }))}
-          onManualCombinationsChange={setSelectedNumbers}
-          maxCombinations={combinationSettings.manual_count}
-          maxNumbersPerCombination={6}
-          combinationSettings={combinationSettings}
-        />
-      </div>
-
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* 왼쪽: 번호 입력 및 설정 */}
-        <div className="space-y-6">
-
-          {/* 추천 생성 버튼 */}
-          <button
-            onClick={handleGenerateRecommendations}
-            disabled={loading || (combinationSettings.manual_count > 0 && selectedNumbers.length === 0)}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center space-x-2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>AI 분석 중...</span>
+        {/* 헤더 콘텐츠 */}
+        <div className="relative z-10 text-center py-6 sm:py-8 lg:py-10 px-4">
+          {/* 아이콘과 제목 */}
+          <div className="flex items-center justify-center space-x-3 sm:space-x-4 mb-4">
+            <div className="relative">
+              {/* 과녁 아이콘 배경 */}
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg">
+                {/* 과녁 중앙 */}
+                <div className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 bg-white rounded-full flex items-center justify-center">
+                  {/* 다트 */}
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 lg:w-3 lg:h-3 bg-blue-500 rounded-full"></div>
+                </div>
               </div>
-            ) : (
-              `🤖 ${combinationSettings.total_count}개 조합 생성하기 (수동 ${combinationSettings.manual_count}개 + 자동 ${combinationSettings.auto_count}개)`
-            )}
-          </button>
-        </div>
-
-        {/* 오른쪽: 추천 결과 */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-gray-900">
-              🎯 추천 결과
-            </h2>
-            {recommendations.length > 0 && (
-              <button
-                onClick={() => {
-                  setRecommendations([]);
-                  setSelectedNumbers([]);
-                  setPreferences(prev => ({
-                    ...prev
-                  }));
-                }}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center space-x-2"
-              >
-                <span>🔄</span>
-                <span>초기화</span>
-              </button>
-            )}
+              {/* 과녁 테두리 */}
+              <div className="absolute inset-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 border-3 border-red-400 rounded-full opacity-30"></div>
+            </div>
+            
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-gray-800 via-gray-900 to-black bg-clip-text text-transparent leading-tight">
+              AI 로또 번호 추천
+            </h1>
           </div>
           
-          {recommendations.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-              <div className="text-6xl mb-4">🎲</div>
-              <p className="text-gray-600 text-lg">
+          {/* 설명 문구 */}
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            원하는 번호를 선택하고 AI가 최적의 조합을 추천해드립니다.
+          </p>
+        </div>
+        
+        {/* 하단 장식 라인 */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+      </div>
+
+      {/* 조합 설정과 통합 번호 관리를 2컬럼으로 배치 */}
+      <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+        {/* 왼쪽: 조합 설정 */}
+        <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6">
+          <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
+            🎲 조합 설정
+          </h2>
+          
+          <div className="grid grid-cols-3 gap-3 lg:gap-4">
+            {/* 총 조합 수 */}
+            <div>
+              <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                총 조합 수
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="20"
+                className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={combinationSettings.total_count}
+                onChange={(e) => {
+                  const total = parseInt(e.target.value) || 1;
+                  const manual = Math.min(combinationSettings.manual_count, total);
+                  const auto = total - manual;
+                  setCombinationSettings({
+                    total_count: total,
+                    manual_count: manual,
+                    auto_count: auto
+                  });
+                }}
+              />
+            </div>
+
+            {/* 수동 생성 */}
+            <div>
+              <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                수동
+              </label>
+              <input
+                type="number"
+                min="0"
+                max={combinationSettings.total_count}
+                className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={combinationSettings.manual_count}
+                onChange={(e) => {
+                  const manual = parseInt(e.target.value) || 0;
+                  const total = combinationSettings.total_count;
+                  const auto = Math.max(0, total - manual);
+                  setCombinationSettings({
+                    total_count: total,
+                    manual_count: manual,
+                    auto_count: auto
+                  });
+                }}
+              />
+            </div>
+
+            {/* 자동 생성 */}
+            <div>
+              <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                자동
+              </label>
+              <input
+                type="number"
+                min="0"
+                max={combinationSettings.total_count}
+                className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={combinationSettings.auto_count}
+                onChange={(e) => {
+                  const auto = parseInt(e.target.value) || 0;
+                  const total = combinationSettings.total_count;
+                  const manual = Math.max(0, total - auto);
+                  setCombinationSettings({
+                    total_count: total,
+                    manual_count: manual,
+                    auto_count: auto
+                  });
+                }}
+              />
+            </div>
+          </div>
+
+          {/* 간단한 비율 표시 */}
+          <div className="mt-3 lg:mt-4 bg-gray-50 p-2 lg:p-3 rounded text-center">
+            <div className="text-xs lg:text-sm text-gray-600 mb-1 lg:mb-2">현재: {combinationSettings.manual_count} 수동 + {combinationSettings.auto_count} 자동</div>
+            <div className="flex items-center space-x-1 lg:space-x-2">
+              <div className="flex-1 bg-blue-200 rounded-full h-1.5 lg:h-2">
+                <div 
+                  className="bg-blue-600 h-1.5 lg:h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%` }}
+                ></div>
+              </div>
+              <span className="text-xs lg:text-sm text-gray-500 w-8 lg:w-12 text-center">
+                {combinationSettings.manual_count}:{combinationSettings.auto_count}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* 오른쪽: 통합 번호 관리 */}
+        <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6">
+          <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
+            🎯 통합 번호 관리
+          </h2>
+          <UnifiedNumberManager
+            includeNumbers={preferences.include_numbers}
+            excludeNumbers={preferences.exclude_numbers}
+            manualCombinations={selectedNumbers}
+            onIncludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, include_numbers: numbers }))}
+            onExcludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, exclude_numbers: numbers }))}
+            onManualCombinationsChange={setSelectedNumbers}
+            maxCombinations={combinationSettings.manual_count}
+            maxNumbersPerCombination={6}
+            combinationSettings={combinationSettings}
+          />
+        </div>
+      </div>
+
+      {/* 추천 생성 버튼 - 모던하고 세련된 디자인 */}
+      <div className="w-full relative">
+        {/* 배경 장식 */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-indigo-50/30 to-purple-50/50 rounded-2xl"></div>
+        
+        <button
+          onClick={handleGenerateRecommendations}
+          disabled={loading || (combinationSettings.manual_count > 0 && selectedNumbers.length === 0)}
+          className="relative w-full py-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-2xl text-lg font-semibold hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] border border-blue-500/20"
+        >
+          {loading ? (
+            <div className="flex items-center justify-center space-x-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              <span className="text-lg">AI 분석 중...</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center space-x-3">
+              <span className="text-xl">🤖</span>
+              <span>{combinationSettings.total_count}개 조합 생성하기</span>
+              <span className="text-sm opacity-90">(수동 {combinationSettings.manual_count}개 + 자동 {combinationSettings.auto_count}개)</span>
+            </div>
+          )}
+        </button>
+      </div>
+
+      {/* 추천 결과 - 전체 너비 */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            🎯 추천 결과
+          </h2>
+          {recommendations.length > 0 && (
+            <button
+              onClick={() => {
+                setRecommendations([]);
+                setSelectedNumbers([]);
+                setPreferences(prev => ({
+                  ...prev
+                }));
+              }}
+              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center space-x-2"
+            >
+              <span>🔄</span>
+              <span>초기화</span>
+            </button>
+          )}
+        </div>
+        
+        {recommendations.length === 0 ? (
+          <div className="text-center py-16 sm:py-20">
+            {/* 3D 주사위 아이콘 */}
+            <div className="relative mb-6">
+              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-lg flex items-center justify-center transform rotate-12">
+                <div className="grid grid-cols-3 gap-1 w-16 h-16 sm:w-20 sm:h-20">
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                </div>
+              </div>
+              {/* 그림자 효과 */}
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-2 sm:w-24 sm:h-3 bg-black/10 rounded-full blur-sm"></div>
+            </div>
+            
+            {/* 메시지 */}
+            <div className="space-y-3">
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-700">
+                AI 추천을 기다리고 있습니다
+              </h3>
+              <p className="text-gray-500 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
                 번호를 선택하고 AI 추천을 받아보세요!
               </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {recommendations.map((rec, index) => (
-                <SimpleCombination
-                  key={index}
-                  numbers={rec.numbers}
-                  index={index}
-                  isManual={rec.is_manual}
-                  confidenceScore={rec.confidence_score ? Math.round(rec.confidence_score * 100) : 0}
-                  onRegenerate={() => handleRegenerateCombination(index)}
-                  onShowAnalysis={() => handleShowAnalysis(
-                    rec.numbers,
-                    rec.is_manual ? '수동' : 'AI',
-                    rec.confidence_score ? Math.round(rec.confidence_score * 100) : 0,
-                    rec.analysis
-                  )}
-                />
-              ))}
+            
+            {/* 장식 요소 */}
+            <div className="mt-8 flex justify-center space-x-1">
+              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+              <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div>
+              <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {recommendations.map((rec, index) => (
+              <SimpleCombination
+                key={index}
+                numbers={rec.numbers}
+                index={index}
+                isManual={rec.is_manual}
+                confidenceScore={rec.confidence_score ? Math.round(rec.confidence_score * 100) : 0}
+                onRegenerate={() => handleRegenerateCombination(index)}
+                onShowAnalysis={() => handleShowAnalysis(
+                  rec.numbers,
+                  rec.is_manual ? '수동' : 'AI',
+                  rec.confidence_score ? Math.round(rec.confidence_score * 100) : 0,
+                  rec.analysis
+                )}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 상세분석 모달 */}

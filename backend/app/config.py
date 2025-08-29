@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # API 설정
     api_host: str = "0.0.0.0"
     api_port: int = 8000
-    cors_origins: List[str] = ["http://localhost:5173"]
+    cors_origins: List[str] = ["http://localhost:5173", "http://localhost:5174"]
     
     # 데이터 소스
     lotto_data_url: str = "https://dhlottery.co.kr/gameResult.do?method=byWin"

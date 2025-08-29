@@ -5,7 +5,8 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from .database import engine, Base
 from .config import settings
-from .api import lotto, recommendations
+from .api import lotto, recommendations, admin, sessions
+from .services.auto_updater import auto_updater
 
 # 로깅 설정
 logging.basicConfig(
@@ -28,6 +29,13 @@ async def lifespan(app: FastAPI):
         print("✅ 데이터베이스 테이블 생성 완료")
     except Exception as e:
         print(f"❌ 데이터베이스 테이블 생성 실패: {e}")
+    
+    # 자동 업데이트 스케줄러 시작
+    try:
+        auto_updater.start_scheduler()
+        print("✅ 자동 업데이트 스케줄러 시작 완료")
+    except Exception as e:
+        print(f"❌ 자동 업데이트 스케줄러 시작 실패: {e}")
     
     yield
     
@@ -56,6 +64,8 @@ app.add_middleware(
 # API 라우터 등록
 app.include_router(lotto.router, prefix="")
 app.include_router(recommendations.router, prefix="")
+app.include_router(admin.router, prefix="")
+app.include_router(sessions.router, prefix="")
 
 # 전역 예외 처리
 @app.exception_handler(Exception)

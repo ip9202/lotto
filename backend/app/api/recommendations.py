@@ -4,6 +4,7 @@ from typing import List
 from ..database import get_db
 from ..models.user_history import UserHistory
 from ..models.recommendation import Recommendation
+from ..models.session import UserSession
 from ..schemas.recommendation import (
     RecommendationRequest, 
     RecommendationResponse, 
@@ -15,6 +16,32 @@ from ..services.recommendation_engine import RecommendationEngine
 from ..services.lotto_analyzer import LottoAnalyzer
 
 router = APIRouter(prefix="/api/v1/recommendations", tags=["recommendations"])
+
+def ensure_session_exists(db: Session, session_id: str) -> str:
+    """세션이 존재하지 않으면 자동으로 생성"""
+    existing_session = db.query(UserSession).filter(UserSession.session_id == session_id).first()
+    
+    if not existing_session:
+        # 새 세션 자동 생성
+        new_session = UserSession(
+            session_id=session_id,
+            session_name=f"자동 생성 세션 ({session_id})",
+            description="추천 생성 시 자동으로 생성된 세션",
+            is_active=True,
+            is_admin_created=False,
+            created_by="system",
+            manual_ratio=0,
+            auto_ratio=100,
+            tags=["auto-generated"],
+            include_numbers={},
+            exclude_numbers={},
+            expires_at=None
+        )
+        db.add(new_session)
+        db.flush()
+        print(f"새 세션 자동 생성: {session_id}")
+    
+    return session_id
 
 @router.post("/generate", response_model=APIResponse)
 async def generate_recommendations(
@@ -28,9 +55,14 @@ async def generate_recommendations(
         print(f"수동 조합 개수: {len(request.manual_combinations)}")
         print(f"총 개수: {request.total_count}")
         print(f"선호 설정: {request.preferences}")
+        
+        # 0. 세션 존재 확인 및 자동 생성
+        session_id = ensure_session_exists(db, request.session_id)
+        print(f"사용할 세션 ID: {session_id}")
+        
         # 1. 추천 기록 생성
         history = UserHistory(
-            session_id=request.session_id,
+            session_id=session_id,
             draw_number=request.target_draw,
             total_count=request.total_count,
             manual_count=len(request.manual_combinations),
@@ -81,15 +113,14 @@ async def generate_recommendations(
         response_combinations = []
         
         for rec in combinations:
-            analysis = None
-            if not rec.is_manual:
-                analysis = analyzer.analyze_combination(rec.numbers)
+            # 모든 조합에 대해 분석 수행 (수동/자동 구분 없이)
+            analysis = analyzer.analyze_combination(rec.numbers)
             
             response_combinations.append(CombinationDetail(
                 numbers=rec.numbers,
                 is_manual=rec.is_manual,
                 confidence_score=float(rec.confidence_score) if rec.confidence_score else None,
-                analysis=CombinationAnalysis(**analysis) if analysis else None
+                analysis=CombinationAnalysis(**analysis)
             ))
         
         response_data = RecommendationResponse(

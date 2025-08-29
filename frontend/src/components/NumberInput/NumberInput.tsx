@@ -189,22 +189,30 @@ const NumberInput: React.FC<NumberInputProps> = ({
       {/* 번호 선택 그리드 */}
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900">번호 선택</h3>
-        <div className="grid grid-cols-9 gap-2">
-          {Array.from({ length: 45 }, (_, i) => i + 1).map((number) => (
-            <LottoBall
-              key={number}
-              number={number}
-              size="sm"
-              variant="default"
-              onClick={() => {
-                // 현재 활성화된 조합이 있으면 해당 조합에 추가
-                if (selectedNumbers.length > 0) {
-                  const lastCombinationIndex = selectedNumbers.length - 1;
-                  handleNumberClick(number, lastCombinationIndex);
-                }
-              }}
-            />
-          ))}
+        <div className="flex justify-center">
+          <div className="grid grid-cols-9 gap-4 sm:gap-5 lg:gap-6 max-w-fit">
+            {Array.from({ length: 45 }, (_, i) => i + 1).map((number) => {
+              // 현재 활성화된 조합에서 이 번호가 선택되었는지 확인
+              const isSelected = selectedNumbers.length > 0 && 
+                selectedNumbers[selectedNumbers.length - 1]?.includes(number);
+              
+              return (
+                <LottoBall
+                  key={number}
+                  number={number}
+                  size="sm"
+                  variant={isSelected ? 'selected' : 'default'}
+                  onClick={() => {
+                    // 현재 활성화된 조합이 있으면 해당 조합에 추가
+                    if (selectedNumbers.length > 0) {
+                      const lastCombinationIndex = selectedNumbers.length - 1;
+                      handleNumberClick(number, lastCombinationIndex);
+                    }
+                  }}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -216,3 +224,6 @@ const NumberInput: React.FC<NumberInputProps> = ({
 };
 
 export default NumberInput;
+
+
+

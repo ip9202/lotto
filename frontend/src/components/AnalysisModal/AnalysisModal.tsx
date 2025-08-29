@@ -88,8 +88,8 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 <LottoBall
                   key={index}
                   number={number}
-                  size="lg"
-                  variant="recommended"
+                  size="xs"
+                  variant="default"
                 />
               ))}
             </div>

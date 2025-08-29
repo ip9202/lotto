@@ -17,9 +17,16 @@ async def get_latest_draw(db: Session = Depends(get_db)):
         if not latest:
             raise HTTPException(status_code=404, detail="당첨번호 데이터가 없습니다")
         
+        # 디버깅을 위한 로그
+        print(f"DEBUG: latest.draw_date = {latest.draw_date} (type: {type(latest.draw_date)})")
+        print(f"DEBUG: latest.numbers = {latest.numbers}")
+        
+        # 날짜를 문자열로 변환
+        draw_date_str = latest.draw_date.strftime('%Y-%m-%d') if latest.draw_date else "2025-08-23"
+        
         data = LottoNumber(
             draw_number=latest.draw_number,
-            draw_date=latest.draw_date,
+            draw_date=draw_date_str,
             numbers=latest.numbers,
             bonus_number=latest.bonus_number,
             first_winners=latest.first_winners,
@@ -35,6 +42,9 @@ async def get_latest_draw(db: Session = Depends(get_db)):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"ERROR in get_latest_draw: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
 @router.get("/draws", response_model=APIResponse)
@@ -137,5 +147,33 @@ async def get_draw_by_number(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
+@router.get("/recent-draws")
+async def get_recent_draws(db: Session = Depends(get_db)):
+    """최근 10개 회차의 당첨번호 조회"""
+    try:
+        recent_draws = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).limit(10).all()
+        
+        draws_data = []
+        for draw in recent_draws:
+            draws_data.append({
+                "draw_number": draw.draw_number,
+                "draw_date": draw.draw_date,
+                "numbers": [draw.number_1, draw.number_2, draw.number_3, draw.number_4, draw.number_5, draw.number_6],
+                "bonus_number": draw.bonus_number
+            })
+        
+        return {
+            "success": True,
+            "data": {
+                "recent_draws": draws_data,
+                "total_count": len(draws_data)
+            },
+            "message": "최근 당첨번호를 성공적으로 조회했습니다"
+        }
+        
+    except Exception as e:
+        # logger.error(f"최근 당첨번호 조회 중 오류: {str(e)}") # logger is not defined in this file
+        raise HTTPException(status_code=500, detail=f"데이터 조회 실패: {str(e)}")
 
 

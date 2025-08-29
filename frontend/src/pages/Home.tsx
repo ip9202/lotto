@@ -35,29 +35,53 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* 히어로 섹션 */}
-      <div className="text-center space-y-6">
-        <h1 className="text-4xl md:text-6xl font-bold text-gray-900">
-          🎰 LottoGenius
-        </h1>
-        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-          AI 기술로 분석한 로또 번호 추천 서비스로 당신의 행운을 높여보세요!
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link
-            to="/recommendation"
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            🎯 번호 추천 받기
-          </Link>
-          {/* 추천기록 버튼 완전 제거 - 기능 일시 비활성화 */}
+      {/* 히어로 섹션 - 세련되고 모던한 디자인 */}
+      <div className="relative overflow-hidden">
+        {/* 배경 그라데이션 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50/30 to-purple-50/30"></div>
+        
+        {/* 헤더 콘텐츠 */}
+        <div className="relative z-10 text-center py-6 sm:py-8 lg:py-10 px-4">
+          {/* 로고와 제목 */}
+          <div className="flex items-center justify-center space-x-3 sm:space-x-4 mb-4">
+            <div className="relative">
+              {/* 로고 아이콘 */}
+              <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform rotate-12">
+                <span className="text-white text-base sm:text-lg lg:text-xl font-bold">🎯</span>
+              </div>
+              {/* 로고 글로우 효과 */}
+              <div className="absolute inset-0 w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-400 to-purple-400 rounded-xl opacity-20 blur-xl"></div>
+            </div>
+            
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
+              LottoGenius
+            </h1>
+          </div>
+          
+          {/* 설명 문구 */}
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
+            AI 기술로 분석한 로또 번호 추천 서비스로 당신의 행운을 높여보세요!
+          </p>
+          
+          {/* CTA 버튼 */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              to="/recommendation"
+              className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl text-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              번호 추천 받기
+            </Link>
+          </div>
         </div>
+        
+        {/* 하단 장식 라인 */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
       {/* 최신 당첨 번호 */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          🏆 최신 당첨 번호
+          최신 당첨 번호
         </h2>
         
         {loading ? (
@@ -67,6 +91,8 @@ const Home: React.FC = () => {
           </div>
         ) : latestDraw ? (
           <div className="space-y-6">
+
+            
             <div className="text-center space-y-2">
               <p className="text-lg text-gray-600">
                 <span className="font-semibold">{latestDraw.draw_number}회차</span>
@@ -78,23 +104,25 @@ const Home: React.FC = () => {
               </p>
             </div>
             
-            {/* 당첨 번호들 */}
-            <div className="flex flex-wrap gap-4 justify-center">
-              {latestDraw.numbers.map((number, index) => (
-                <LottoBall
-                  key={index}
-                  number={number}
-                  size="lg"
-                  variant="default"
-                />
-              ))}
-              <div className="flex items-center">
-                <span className="text-2xl text-gray-400 mx-2">+</span>
-                <LottoBall
-                  number={latestDraw.bonus_number}
-                  size="lg"
-                  variant="bonus"
-                />
+            {/* 당첨 번호들 - 가운데 정렬, 간격 개선 */}
+            <div className="flex justify-center">
+              <div className="flex flex-wrap gap-5 sm:gap-6 lg:gap-8 justify-center max-w-fit">
+                {latestDraw.numbers.map((number, index) => (
+                  <LottoBall
+                    key={number}
+                    number={number}
+                    size="lg"
+                    variant="default"
+                  />
+                ))}
+                <div className="flex items-center">
+                  <span className="text-2xl text-gray-400 mx-3 sm:mx-4">+</span>
+                  <LottoBall
+                    number={latestDraw.bonus_number}
+                    size="lg"
+                    variant="default"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -108,7 +136,9 @@ const Home: React.FC = () => {
       {/* 서비스 특징 */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl p-6 text-center shadow-lg">
-          <div className="text-4xl mb-4">🤖</div>
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl font-bold">AI</span>
+          </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">AI 분석</h3>
           <p className="text-gray-600">
             머신러닝 알고리즘으로 과거 당첨 패턴을 분석하여 최적의 번호를 추천합니다.
@@ -116,7 +146,9 @@ const Home: React.FC = () => {
         </div>
         
         <div className="bg-white rounded-xl p-6 text-center shadow-lg">
-          <div className="text-4xl mb-4">📊</div>
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl font-bold">📊</span>
+          </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">통계 기반</h3>
           <p className="text-gray-600">
             빈도 분석, 트렌드 분석, 패턴 분석을 통해 과학적인 번호 선택을 도와줍니다.
@@ -124,7 +156,9 @@ const Home: React.FC = () => {
         </div>
         
         <div className="bg-white rounded-xl p-6 text-center shadow-lg">
-          <div className="text-4xl mb-4">🎯</div>
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-white text-2xl font-bold">🎯</span>
+          </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">맞춤 추천</h3>
           <p className="text-gray-600">
             사용자의 선호도와 과거 선택 패턴을 고려한 개인화된 번호를 제안합니다.
@@ -144,7 +178,7 @@ const Home: React.FC = () => {
           to="/recommendation"
           className="inline-block px-8 py-4 bg-white text-blue-600 rounded-lg text-lg font-semibold hover:bg-gray-100 transition-colors duration-200"
         >
-          무료로 번호 추천 받기
+                      번호 추천 받기
         </Link>
       </div>
     </div>
