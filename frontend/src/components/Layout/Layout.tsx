@@ -156,11 +156,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             {/* 추가 정보 */}
             <div className="pt-4 border-t border-gray-200/60">
-              <div className="flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-6 text-xs text-gray-400">
+              <div className="flex items-center justify-center space-x-3 sm:space-x-6 text-xs text-gray-400">
                 <span>AI 기반 분석</span>
-                <span className="hidden sm:inline">•</span>
+                <span className="text-gray-300">•</span>
                 <span>실시간 데이터</span>
-                <span className="hidden sm:inline">•</span>
+                <span className="text-gray-300">•</span>
                 <span>개인화 추천</span>
               </div>
             </div>
