@@ -507,38 +507,72 @@ const Recommendation: React.FC = () => {
           
           {recommendations.length === 0 ? (
           <div className="text-center py-16 sm:py-20">
-            {/* 3D 주사위 아이콘 */}
-            <div className="relative mb-6">
-              <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-lg flex items-center justify-center transform rotate-12">
-                <div className="grid grid-cols-3 gap-1 w-16 h-16 sm:w-20 sm:h-20">
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
-                  <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+            {loading ? (
+              // 로딩 상태일 때
+              <>
+                {/* 로딩 애니메이션 */}
+                <div className="relative mb-6">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl shadow-lg flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-blue-200 border-t-blue-600"></div>
+                  </div>
+                  {/* 그림자 효과 */}
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-2 sm:w-24 sm:h-3 bg-black/10 rounded-full blur-sm"></div>
                 </div>
-              </div>
-              {/* 그림자 효과 */}
-              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-2 sm:w-24 sm:h-3 bg-black/10 rounded-full blur-sm"></div>
-            </div>
-            
-            {/* 메시지 */}
-            <div className="space-y-3">
-              <h3 className="text-xl sm:text-2xl font-semibold text-gray-700">
-                AI 추천을 기다리고 있습니다
-              </h3>
-              <p className="text-gray-500 text-base sm:text-lg max-w-md mx-auto leading-relaxed">
-                번호를 선택하고 AI 추천을 받아보세요!
-              </p>
-            </div>
-            
-            {/* 장식 요소 */}
-            <div className="mt-8 flex justify-center space-x-1">
-              <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
-              <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div>
-              <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
-            </div>
+                
+                {/* 로딩 메시지 */}
+                <div className="space-y-3">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-blue-700">
+                    AI가 분석 중입니다...
+                  </h3>
+                  <p className="text-blue-500 text-sm sm:text-base max-w-md mx-auto leading-relaxed">
+                        잠시만 기다려주세요. 최적의 조합을 찾고 있습니다!
+                  </p>
+                </div>
+                
+                {/* 로딩 장식 요소 */}
+                <div className="mt-8 flex justify-center space-x-1">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <div className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+              </>
+            ) : (
+              // 로딩이 끝났을 때 (기존 상태)
+              <>
+                {/* 3D 주사위 아이콘 */}
+                <div className="relative mb-6">
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-lg flex items-center justify-center transform rotate-12">
+                    <div className="grid grid-cols-3 gap-1 w-16 h-16 sm:w-20 sm:h-20">
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                      <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
+                    </div>
+                  </div>
+                  {/* 그림자 효과 */}
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-2 sm:w-24 sm:h-3 bg-black/10 rounded-full blur-sm"></div>
+                </div>
+                
+                {/* 메시지 */}
+                <div className="space-y-3">
+                  <h3 className="text-xl sm:text-2xl font-semibold text-gray-700">
+                    AI 추천을 기다리고 있습니다
+                  </h3>
+                  <p className="text-gray-500 text-sm sm:text-base lg:text-lg max-w-md mx-auto leading-relaxed">
+                    번호를 선택하고 AI 추천을 받아보세요!
+                  </p>
+                </div>
+                
+                {/* 장식 요소 */}
+                <div className="mt-8 flex justify-center space-x-1">
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full"></div>
+                  <div className="w-1.5 h-1.5 bg-purple-400 rounded-full"></div>
+                </div>
+              </>
+            )}
             </div>
           ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
