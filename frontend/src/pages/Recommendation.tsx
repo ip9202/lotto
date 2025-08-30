@@ -506,17 +506,17 @@ const Recommendation: React.FC = () => {
           </div>
           
           {recommendations.length === 0 ? (
-          <div className="text-center py-16 sm:py-20">
+          <div className="text-center py-8 sm:py-12 lg:py-16">
             {loading ? (
               // 로딩 상태일 때
               <>
                 {/* 로딩 애니메이션 */}
-                <div className="relative mb-6">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl shadow-lg flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-16 w-16 sm:h-20 sm:w-20 border-4 border-blue-200 border-t-blue-600"></div>
+                <div className="relative mb-4 sm:mb-6">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 lg:w-32 lg:h-32 mx-auto bg-gradient-to-br from-blue-100 to-indigo-200 rounded-2xl shadow-lg flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-10 w-10 sm:h-16 sm:w-16 lg:h-20 lg:w-20 border-4 border-blue-200 border-t-blue-600"></div>
                   </div>
                   {/* 그림자 효과 */}
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-2 sm:w-24 sm:h-3 bg-black/10 rounded-full blur-sm"></div>
+                  <div className="absolute -bottom-1 sm:-bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 sm:w-20 sm:h-2 lg:w-24 lg:h-3 bg-black/10 rounded-full blur-sm"></div>
                 </div>
                 
                 {/* 로딩 메시지 */}
@@ -540,9 +540,9 @@ const Recommendation: React.FC = () => {
               // 로딩이 끝났을 때 (기존 상태)
               <>
                 {/* 3D 주사위 아이콘 */}
-                <div className="relative mb-6">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-lg flex items-center justify-center transform rotate-12">
-                    <div className="grid grid-cols-3 gap-1 w-16 h-16 sm:w-20 sm:h-20">
+                <div className="relative mb-4 sm:mb-6">
+                  <div className="w-16 h-16 sm:w-24 sm:h-24 lg:w-32 lg:h-32 mx-auto bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl shadow-lg flex items-center justify-center transform rotate-12">
+                    <div className="grid grid-cols-3 gap-1 w-10 h-10 sm:w-16 sm:h-16 lg:w-20 lg:h-20">
                       <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
                       <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
                       <div className="w-3 h-3 sm:w-4 sm:h-4 bg-gray-600 rounded-full"></div>
@@ -552,7 +552,7 @@ const Recommendation: React.FC = () => {
                     </div>
                   </div>
                   {/* 그림자 효과 */}
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-20 h-2 sm:w-24 sm:h-3 bg-black/10 rounded-full blur-sm"></div>
+                  <div className="absolute -bottom-1 sm:-bottom-2 left-1/2 transform -translate-x-1/2 w-16 h-1 sm:w-20 sm:h-2 lg:w-24 lg:h-3 bg-black/10 rounded-full blur-sm"></div>
                 </div>
                 
                 {/* 메시지 */}
