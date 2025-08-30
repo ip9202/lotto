@@ -33,16 +33,17 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
   if (!isOpen) return null;
 
   const getConfidenceColor = (score: number) => {
-    if (score >= 80) return 'text-green-600 bg-green-100';
-    if (score >= 60) return 'text-yellow-600 bg-yellow-100';
+    if (score >= 75) return 'text-green-600 bg-green-100';
+    if (score >= 60) return 'text-blue-600 bg-blue-100';
+    if (score >= 45) return 'text-yellow-600 bg-yellow-100';
     return 'text-red-600 bg-red-100';
   };
 
   const getConfidenceText = (score: number) => {
-    if (score >= 80) return '매우 높음';
-    if (score >= 60) return '높음';
-    if (score >= 40) return '보통';
-    return '낮음';
+    if (score >= 75) return '높음';
+    if (score >= 60) return '보통';
+    if (score >= 45) return '낮음';
+    return '아주 낮음';
   };
 
   return (
@@ -80,7 +81,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
             
             {combinationType === 'AI' && (
               <div className={`inline-block px-3 py-1 text-sm font-medium rounded-full ${getConfidenceColor(confidenceScore)}`}>
-                신뢰도: {confidenceScore}% ({getConfidenceText(confidenceScore)})
+                신뢰도: {getConfidenceText(confidenceScore)}
               </div>
             )}
           </div>

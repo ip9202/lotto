@@ -102,6 +102,20 @@ const History: React.FC = () => {
     return 'text-red-600';
   };
 
+  const getConfidenceColor = (score: number) => {
+    if (score >= 75) return 'text-green-600';
+    if (score >= 60) return 'text-blue-600';
+    if (score >= 45) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getConfidenceText = (score: number) => {
+    if (score >= 75) return '높음';
+    if (score >= 60) return '보통';
+    if (score >= 45) return '낮음';
+    return '아주 낮음';
+  };
+
   const filteredHistories = selectedSession 
     ? histories.filter(h => h.session_id === selectedSession)
     : histories;
@@ -218,8 +232,8 @@ const History: React.FC = () => {
                   {/* 신뢰도 */}
                   <div className="text-right">
                     <div className="text-sm text-gray-600">신뢰도</div>
-                    <div className="text-lg font-semibold text-blue-600">
-                      {history.confidence_score}%
+                    <div className={`text-lg font-semibold ${getConfidenceColor(history.confidence_score)}`}>
+                      {getConfidenceText(history.confidence_score)}
                     </div>
                   </div>
                   
