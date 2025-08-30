@@ -272,7 +272,7 @@ const Recommendation: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-4">
                 🎯 간단하고 빠른 AI 추천
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-6">
                 원하는 조합 수만 입력하면 AI가 즉시 최적의 번호를 추천해드립니다.
               </p>
             </div>
