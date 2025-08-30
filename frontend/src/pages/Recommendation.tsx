@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import SimpleCombination from '../components/SimpleCombination';
 import AnalysisModal from '../components/AnalysisModal';
 import UnifiedNumberManager from '../components/UnifiedNumberManager';
@@ -12,6 +13,7 @@ interface Recommendation {
 }
 
 const Recommendation: React.FC = () => {
+  const location = useLocation();
   const [selectedNumbers, setSelectedNumbers] = useState<number[][]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -44,6 +46,13 @@ const Recommendation: React.FC = () => {
     manual_count: 0,
     auto_count: 5
   });
+
+  // 페이지 로드 시 상단으로 스크롤
+  useEffect(() => {
+    if (location.state?.scrollToTop) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [location.state]);
 
   // 기본 추천 처리 함수
   const handleBasicRecommendations = async () => {
