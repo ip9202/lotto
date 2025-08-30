@@ -10,9 +10,14 @@ interface AnalysisModalProps {
   analysis?: {
     hot_numbers: number;
     cold_numbers: number;
+    hot_number_list?: number[];
+    cold_number_list?: number[];
     odd_even_ratio: string;
+    odd_numbers?: number[];
+    even_numbers?: number[];
     sum: number;
     consecutive_count: number;
+    consecutive_numbers?: number[];
     range_distribution: string;
   };
 }
@@ -102,28 +107,92 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <h5 className="font-medium text-blue-900 mb-2">핫/콜드 분석</h5>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-blue-700">핫 넘버:</span>
-                      <span className="font-medium">{analysis.hot_numbers}개</span>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-blue-700">핫 넘버:</span>
+                        <span className="font-medium text-blue-900">{analysis.hot_numbers}개</span>
+                      </div>
+                      {analysis.hot_number_list && analysis.hot_number_list.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {analysis.hot_number_list.map((num) => (
+                            <span key={num} className="inline-flex items-center justify-center w-6 h-6 bg-red-100 text-red-700 text-xs font-semibold rounded-full border border-red-200">
+                              {num}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-blue-600 text-xs italic">
+                          {analysis.hot_numbers > 0 ? '핫 넘버 정보를 확인하려면 백엔드를 업데이트하세요' : '핫 넘버가 없습니다'}
+                        </div>
+                      )}
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-700">콜드 넘버:</span>
-                      <span className="font-medium">{analysis.cold_numbers}개</span>
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-blue-700">콜드 넘버:</span>
+                        <span className="font-medium text-blue-900">{analysis.cold_numbers}개</span>
+                      </div>
+                      {analysis.cold_number_list && analysis.cold_number_list.length > 0 ? (
+                        <div className="flex flex-wrap gap-1">
+                          {analysis.cold_number_list.map((num) => (
+                            <span key={num} className="inline-flex items-center justify-center w-6 h-6 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-200">
+                              {num}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-blue-600 text-xs italic">
+                          {analysis.cold_numbers > 0 ? '콜드 넘버 정보를 확인하려면 백엔드를 업데이트하세요' : '콜드 넘버가 없습니다'}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h5 className="font-medium text-green-900 mb-2">패턴 분석</h5>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-green-700">홀짝 비율:</span>
-                      <span className="font-medium">{analysis.odd_even_ratio}</span>
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-green-700">홀짝 비율:</span>
+                        <span className="font-medium text-green-900">{analysis.odd_even_ratio}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {analysis.odd_numbers && analysis.odd_numbers.map((num, index) => (
+                          <span 
+                            key={`odd-${index}`} 
+                            className="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold rounded-full border-2 bg-blue-100 text-blue-700 border-blue-300"
+                          >
+                            {num}
+                          </span>
+                        ))}
+                        {analysis.even_numbers && analysis.even_numbers.map((num, index) => (
+                          <span 
+                            key={`even-${index}`} 
+                            className="inline-flex items-center justify-center w-5 h-5 text-xs font-semibold rounded-full border-2 bg-pink-100 text-pink-700 border-pink-300"
+                          >
+                            {num}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-green-700">연속 번호:</span>
-                      <span className="font-medium">{analysis.consecutive_count}개</span>
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-green-700">연속 번호:</span>
+                        <span className="font-medium text-green-900">{analysis.consecutive_count}개</span>
+                      </div>
+                      {analysis.consecutive_numbers && analysis.consecutive_numbers.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {analysis.consecutive_numbers.map((num, index) => (
+                            <span 
+                              key={`consecutive-${index}`} 
+                              className="inline-flex items-center justify-center w-5 h-5 bg-yellow-100 text-yellow-700 text-xs font-semibold rounded-full border-2 border-yellow-300"
+                            >
+                              {num}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -144,8 +213,76 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <h5 className="font-medium text-orange-900 mb-2">구간 분포</h5>
-                  <div className="text-sm text-orange-700">
-                    {analysis.range_distribution}
+                  <div className="space-y-3 text-sm">
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-orange-700">1-15:</span>
+                        <span className="font-medium text-orange-900">
+                          {analysis.range_distribution.includes('1-15:') 
+                            ? analysis.range_distribution.split('1-15:')[1]?.split(',')[0] || '0'
+                            : '0'
+                          }개
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.from({ length: parseInt(analysis.range_distribution.includes('1-15:') 
+                          ? analysis.range_distribution.split('1-15:')[1]?.split(',')[0] || '0'
+                          : '0') }, (_, i) => (
+                          <span 
+                            key={`range1-${i}`} 
+                            className="inline-flex items-center justify-center w-5 h-5 bg-red-100 text-red-700 text-xs font-semibold rounded-full border-2 border-red-300"
+                          >
+                            {i + 1}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-orange-700">16-30:</span>
+                        <span className="font-medium text-orange-900">
+                          {analysis.range_distribution.includes('16-30:') 
+                            ? analysis.range_distribution.split('16-30:')[1]?.split(',')[0] || '0'
+                            : '0'
+                          }개
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.from({ length: parseInt(analysis.range_distribution.includes('16-30:') 
+                          ? analysis.range_distribution.split('16-30:')[1]?.split(',')[0] || '0'
+                          : '0') }, (_, i) => (
+                          <span 
+                            key={`range2-${i}`} 
+                            className="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border-2 border-blue-300"
+                          >
+                            {i + 16}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-orange-700">31-45:</span>
+                        <span className="font-medium text-orange-900">
+                          {analysis.range_distribution.includes('31-45:') 
+                            ? analysis.range_distribution.split('31-45:')[1] || '0'
+                            : '0'
+                          }개
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.from({ length: parseInt(analysis.range_distribution.includes('31-45:') 
+                          ? analysis.range_distribution.split('31-45:')[1] || '0'
+                          : '0') }, (_, i) => (
+                          <span 
+                            key={`range3-${i}`} 
+                            className="inline-flex items-center justify-center w-5 h-5 bg-green-100 text-green-700 text-xs font-semibold rounded-full border-2 border-green-300"
+                          >
+                            {i + 31}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

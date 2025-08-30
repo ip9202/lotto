@@ -10,6 +10,7 @@ class Combination:
         self.numbers = sorted(numbers)
         self.confidence_score = confidence_score
         self.total_score = 0.0
+        self.analysis = None  # 분석 데이터 필드 추가
 
 class RecommendationEngine:
     def __init__(self, db_session: Session):
@@ -42,6 +43,10 @@ class RecommendationEngine:
         
         # 5. 상위 N개 선택 (중복 제거)
         top_combinations = self._select_top_combinations(scored_combinations, count, exclude_combinations)
+        
+        # 6. 각 조합에 대해 분석 수행
+        for combination in top_combinations:
+            combination.analysis = self.analyzer.analyze_combination(combination.numbers)
         
         return top_combinations
     

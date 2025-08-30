@@ -395,22 +395,19 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
         <div className="space-y-4">
           {/* 포함할 번호 */}
           {includeNumbers.length > 0 && (
-            <div className={`p-3 sm:p-4 rounded-lg transition-all ${
+            <div className={`p-3 rounded-lg transition-all ${
               mode === 'include' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
             }`}>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-2 space-y-2 sm:space-y-0">
-                <span className={`text-base sm:text-lg font-semibold ${
+              <div className="mb-3">
+                <span className={`text-base font-semibold ${
                   mode === 'include' ? 'text-green-700' : 'text-gray-600'
                 }`}>
                   포함할 번호
                 </span>
-                <span className="text-sm sm:text-base text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">
-                  ({includeNumbers.length}/5)
-                </span>
               </div>
-              <div className="flex flex-wrap gap-4 sm:gap-5">
+              <div className="flex flex-wrap gap-4">
                 {includeNumbers.map((num) => (
-                  <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-base font-semibold bg-green-100 text-green-800 border border-green-300 hover:bg-green-200 transition-colors">
+                  <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 border border-green-300 hover:bg-green-200 transition-colors">
                     {num}
                     <button
                       onClick={() => handleNumberRemove(num, 'include')}

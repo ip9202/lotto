@@ -94,10 +94,15 @@ class RecommendationRequest(BaseModel):
 
 class CombinationAnalysis(BaseModel):
     hot_numbers: int = Field(..., description="핫 넘버 개수")
+    hot_number_list: List[int] = Field(..., description="핫 넘버 리스트")
     cold_numbers: int = Field(..., description="콜드 넘버 개수")
+    cold_number_list: List[int] = Field(..., description="콜드 넘버 리스트")
     odd_even_ratio: str = Field(..., description="홀짝 비율 (예: 3:3)")
+    odd_numbers: List[int] = Field(..., description="홀수 번호 리스트")
+    even_numbers: List[int] = Field(..., description="짝수 번호 리스트")
     sum: int = Field(..., description="번호 합계")
     consecutive_count: int = Field(..., description="연속 번호 개수")
+    consecutive_numbers: List[int] = Field(..., description="연속된 번호 리스트")
     range_distribution: str = Field(..., description="구간 분포 (예: 1-15:2, 16-30:2, 31-45:2)")
 
 class CombinationDetail(BaseModel):
