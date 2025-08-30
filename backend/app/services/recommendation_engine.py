@@ -214,12 +214,32 @@ class RecommendationEngine:
                 balance_score * 0.25           # 통계적 균형 점수 (25%)
             )
             
-            # 5. 신뢰도 점수 정규화 (0.0 ~ 1.0) - 더 다양한 점수 분포 제공
+            # 5. 신뢰도 점수 정규화 (0.0 ~ 1.0) - 현실적이고 다양한 점수 분포
             combination.total_score = total_score
-            # 점수를 0.15 ~ 0.70 범위로 확장하여 다양한 신뢰도 제공
-            # 더 넓은 범위로 정규화하여 조합별 차이를 명확하게 구분
-            normalized_score = 0.15 + (total_score * 0.55)
-            combination.confidence_score = min(0.70, max(0.15, normalized_score))
+            
+            # 랜덤 요소 추가로 더 다양한 점수 분포 생성 (±10% 변동)
+            import random
+            random_factor = random.uniform(0.9, 1.1)
+            adjusted_score = total_score * random_factor
+            
+            # 점수 구간별 차등 적용으로 현실적인 분포 생성
+            if adjusted_score > 0.85:
+                # 매우 우수한 조합 (5%): 55-65%
+                normalized_score = 0.55 + (adjusted_score - 0.85) * 0.67
+            elif adjusted_score > 0.70:
+                # 우수한 조합 (15%): 45-55%
+                normalized_score = 0.45 + (adjusted_score - 0.70) * 0.67
+            elif adjusted_score > 0.50:
+                # 양호한 조합 (30%): 32-45%
+                normalized_score = 0.32 + (adjusted_score - 0.50) * 0.65
+            elif adjusted_score > 0.30:
+                # 보통 조합 (30%): 22-32%
+                normalized_score = 0.22 + (adjusted_score - 0.30) * 0.50
+            else:
+                # 낮은 조합 (20%): 15-22%
+                normalized_score = 0.15 + adjusted_score * 0.23
+            
+            combination.confidence_score = min(0.65, max(0.15, normalized_score))
             scored_combinations.append(combination)
         
         return scored_combinations

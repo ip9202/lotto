@@ -34,17 +34,17 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
   const getConfidenceColor = (score: number) => {
     const percentScore = Math.round(score * 100);
-    if (percentScore >= 55) return 'text-green-600 bg-green-100';
+    if (percentScore >= 65) return 'text-green-600 bg-green-100';
     if (percentScore >= 40) return 'text-blue-600 bg-blue-100';
-    if (percentScore >= 30) return 'text-yellow-600 bg-yellow-100';
+    if (percentScore >= 25) return 'text-yellow-600 bg-yellow-100';
     return 'text-red-600 bg-red-100';
   };
 
   const getConfidenceText = (score: number) => {
     const percentScore = Math.round(score * 100);
-    if (percentScore >= 55) return '높음';
+    if (percentScore >= 65) return '높음';
     if (percentScore >= 40) return '보통';
-    if (percentScore >= 30) return '낮음';
+    if (percentScore >= 25) return '낮음';
     return '아주 낮음';
   };
 
