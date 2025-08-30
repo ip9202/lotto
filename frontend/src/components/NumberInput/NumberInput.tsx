@@ -190,7 +190,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900">번호 선택</h3>
         <div className="flex justify-center">
-          <div className="grid grid-cols-9 gap-2 sm:gap-3 md:gap-4 lg:gap-5 max-w-fit">
+          <div className="grid grid-cols-8 gap-2 sm:gap-3 md:gap-4 lg:gap-5 max-w-fit">
             {Array.from({ length: 45 }, (_, i) => i + 1).map((number) => {
               // 현재 활성화된 조합에서 이 번호가 선택되었는지 확인
               const isSelected = selectedNumbers.length > 0 && 
