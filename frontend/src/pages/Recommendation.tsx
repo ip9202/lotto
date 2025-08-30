@@ -230,7 +230,7 @@ const Recommendation: React.FC = () => {
           </div>
           
           {/* 설명 문구 */}
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
           원하는 번호를 선택하고 AI가 최적의 조합을 추천해드립니다.
         </p>
       </div>
@@ -331,7 +331,7 @@ const Recommendation: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-2">
                 ⚙️ 상세 설정을 통한 맞춤형 추천
               </h2>
-              <p className="text-gray-600">
+              <p className="text-sm sm:text-base lg:text-lg text-gray-600">
                 포함/제외 번호, 수동 조합 등을 설정하여 더 정확한 추천을 받아보세요.
               </p>
             </div>
