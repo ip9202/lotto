@@ -214,11 +214,12 @@ class RecommendationEngine:
                 balance_score * 0.25           # 통계적 균형 점수 (25%)
             )
             
-            # 5. 신뢰도 점수 정규화 (0.0 ~ 1.0) - 더 현실적인 범위로 조정
+            # 5. 신뢰도 점수 정규화 (0.0 ~ 1.0) - 더 다양한 점수 분포 제공
             combination.total_score = total_score
-            # 점수를 0.3 ~ 0.85 범위로 제한하여 100%에 가까운 점수 방지
-            normalized_score = 0.3 + (total_score * 0.55)
-            combination.confidence_score = min(0.85, max(0.3, normalized_score))
+            # 점수를 0.15 ~ 0.70 범위로 확장하여 다양한 신뢰도 제공
+            # 더 넓은 범위로 정규화하여 조합별 차이를 명확하게 구분
+            normalized_score = 0.15 + (total_score * 0.55)
+            combination.confidence_score = min(0.70, max(0.15, normalized_score))
             scored_combinations.append(combination)
         
         return scored_combinations

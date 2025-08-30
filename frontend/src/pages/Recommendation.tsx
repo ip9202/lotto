@@ -540,12 +540,12 @@ const Recommendation: React.FC = () => {
                   numbers={rec.numbers}
                   index={index}
                   isManual={rec.is_manual}
-                  confidenceScore={rec.confidence_score ? Math.round(rec.confidence_score * 100) : 0}
+                  confidenceScore={rec.confidence_score || 0}
                 onRegenerate={() => handleRegenerateCombination(index)}
                   onShowAnalysis={() => handleShowAnalysis(
                     rec.numbers,
                     rec.is_manual ? '수동' : 'AI',
-                    rec.confidence_score ? Math.round(rec.confidence_score * 100) : 0,
+                    rec.confidence_score || 0,
                     rec.analysis
                   )}
                 />
