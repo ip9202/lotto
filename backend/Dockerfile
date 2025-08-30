@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 # Python 의존성 파일 복사 및 설치
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --retries 3 --timeout 300 -r requirements.txt
 
 # 앱 코드 복사
 COPY . .
