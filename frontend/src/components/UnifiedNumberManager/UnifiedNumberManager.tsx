@@ -313,13 +313,13 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 모드 선택 탭 - 항상 가로 배치 */}
-      <div className="flex flex-row space-x-2 bg-gray-100 p-2 rounded-lg overflow-x-auto">
+      {/* 모드 선택 탭 - 반응형 배치 (iPhone에서는 세로, 데스크톱에서는 가로) */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-2 bg-gray-100 p-3 sm:p-2 rounded-lg sm:justify-center">
         <button 
-          className={`flex-1 min-w-0 px-3 py-2 rounded-md transition-all font-medium text-sm whitespace-nowrap ${
+          className={`w-full sm:w-auto px-4 py-3 sm:px-3 sm:py-2 rounded-md transition-all font-medium text-sm sm:text-base ${
             mode === 'include' 
               ? 'bg-green-500 text-white shadow-md' 
-              : 'bg-white text-gray-600 hover:bg-gray-50'
+              : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
           }`}
           onClick={() => setMode('include')}
         >
@@ -327,10 +327,10 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
         </button>
         
         <button 
-          className={`flex-1 min-w-0 px-3 py-2 rounded-md transition-all font-medium text-sm whitespace-nowrap ${
+          className={`w-full sm:w-auto px-4 py-3 sm:px-3 sm:py-2 rounded-md transition-all font-medium text-sm sm:text-base ${
             mode === 'exclude' 
               ? 'bg-red-500 text-white shadow-md' 
-              : 'bg-white text-gray-600 hover:bg-gray-50'
+              : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
           }`}
           onClick={() => setMode('exclude')}
         >
@@ -338,10 +338,10 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
         </button>
         
         <button 
-          className={`flex-1 min-w-0 px-3 py-2 rounded-md transition-all font-medium text-sm whitespace-nowrap ${
+          className={`w-full sm:w-auto px-4 py-3 sm:px-3 sm:py-2 rounded-md transition-all font-medium text-sm sm:text-base ${
             mode === 'combination' 
               ? 'bg-blue-500 text-white shadow-md' 
-              : 'bg-white text-gray-600 hover:bg-gray-50'
+              : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
           } ${
             combinationSettings?.manual_count === 0 
               ? 'opacity-50 cursor-not-allowed' 
@@ -386,7 +386,7 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
 
       {/* 번호 볼 그리드 - 가운데 정렬, 사이즈 및 간격 개선 */}
       <div className="flex justify-center">
-        <div className="grid grid-cols-8 !grid-cols-8 gap-4 sm:gap-5 lg:gap-6 max-w-fit overflow-hidden">
+        <div className="grid grid-cols-6 sm:grid-cols-7 md:grid-cols-8 lg:grid-cols-8 gap-3 sm:gap-4 md:gap-5 lg:gap-6 max-w-fit overflow-hidden">
           {Array.from({ length: 45 }, (_, i) => i + 1).map(renderNumberBall)}
         </div>
       </div>
