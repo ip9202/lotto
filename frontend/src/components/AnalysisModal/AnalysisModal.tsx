@@ -112,7 +112,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                   <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center cursor-help hover:bg-gray-200 transition-colors">
                     <span className="text-gray-500 text-xs font-bold">?</span>
                   </div>
-                  <div className="absolute top-6 right-0 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                  <div className="absolute top-6 right-0 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg transform -translate-x-full">
                     <div className="space-y-2">
                       <div><strong>핫/콜드:</strong> 최근 출현 빈도 분석</div>
                       <div><strong>패턴:</strong> 홀짝 비율과 연속 번호</div>
@@ -130,7 +130,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                       <div className="w-4 h-4 bg-blue-200 rounded-full flex items-center justify-center cursor-help hover:bg-blue-300 transition-colors">
                         <span className="text-blue-700 text-xs">?</span>
                       </div>
-                      <div className="absolute top-5 right-0 w-56 bg-blue-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <div className="absolute top-5 right-0 w-56 bg-blue-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 transform -translate-x-full">
                         <strong>핫 넘버:</strong> 최근 자주 나온 번호<br/>
                         <strong>콜드 넘버:</strong> 오래 안 나온 번호
                       </div>
@@ -185,7 +185,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                       <div className="w-4 h-4 bg-green-200 rounded-full flex items-center justify-center cursor-help hover:bg-green-300 transition-colors">
                         <span className="text-green-700 text-xs">?</span>
                       </div>
-                      <div className="absolute top-5 right-0 w-56 bg-green-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <div className="absolute top-5 right-0 w-56 bg-green-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 transform -translate-x-full">
                         <strong>홀짝 비율:</strong> 홀수/짝수 균형<br/>
                         <strong>연속 번호:</strong> 이어지는 번호 개수
                       </div>
@@ -244,7 +244,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                       <div className="w-4 h-4 bg-purple-200 rounded-full flex items-center justify-center cursor-help hover:bg-purple-300 transition-colors">
                         <span className="text-purple-700 text-xs">?</span>
                       </div>
-                      <div className="absolute top-5 right-0 w-56 bg-purple-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <div className="absolute top-5 right-0 w-56 bg-purple-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 transform -translate-x-full">
                         <strong>합계:</strong> 6개 번호의 총합<br/>
                         <strong>평균:</strong> 균형잡힌 분포 확인
                       </div>
@@ -269,7 +269,7 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                       <div className="w-4 h-4 bg-orange-200 rounded-full flex items-center justify-center cursor-help hover:bg-orange-300 transition-colors">
                         <span className="text-orange-700 text-xs">?</span>
                       </div>
-                      <div className="absolute top-5 right-0 w-56 bg-orange-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      <div className="absolute top-5 right-0 w-56 bg-orange-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 transform -translate-x-full">
                         <strong>1-15:</strong> 낮은 번호대<br/>
                         <strong>16-30:</strong> 중간 번호대<br/>
                         <strong>31-45:</strong> 높은 번호대
