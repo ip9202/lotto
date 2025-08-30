@@ -49,10 +49,9 @@ const Recommendation: React.FC = () => {
 
   // 페이지 로드 시 상단으로 스크롤
   useEffect(() => {
-    if (location.state?.scrollToTop) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [location.state]);
+    // 페이지 로드 시 항상 상단으로 스크롤
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
   // 기본 추천 처리 함수
   const handleBasicRecommendations = async () => {
