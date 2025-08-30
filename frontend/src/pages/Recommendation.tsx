@@ -178,121 +178,123 @@ const Recommendation: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
-      {/* 조합 설정과 통합 번호 관리를 2컬럼으로 배치 */}
-      <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* 왼쪽: 조합 설정 */}
-        <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6">
-          <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
-            🎲 조합 설정
-          </h2>
-          
-          <div className="grid grid-cols-3 gap-3 lg:gap-4">
-            {/* 총 조합 수 */}
-            <div>
-              <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
-                총 조합 수
-              </label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={combinationSettings.total_count}
-                onChange={(e) => {
-                  const total = parseInt(e.target.value) || 1;
-                  const manual = Math.min(combinationSettings.manual_count, total);
-                  const auto = total - manual;
-                  setCombinationSettings({
-                    total_count: total,
-                    manual_count: manual,
-                    auto_count: auto
-                  });
-                }}
-              />
-            </div>
-
-            {/* 수동 생성 */}
-            <div>
-              <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
-                수동
-              </label>
-              <input
-                type="number"
-                min="0"
-                max={combinationSettings.total_count}
-                className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={combinationSettings.manual_count}
-                onChange={(e) => {
-                  const manual = parseInt(e.target.value) || 0;
-                  const total = combinationSettings.total_count;
-                  const auto = Math.max(0, total - manual);
-                  setCombinationSettings({
-                    total_count: total,
-                    manual_count: manual,
-                    auto_count: auto
-                  });
-                }}
-              />
-            </div>
-
-            {/* 자동 생성 */}
-            <div>
-              <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
-                자동
-              </label>
-              <input
-                type="number"
-                min="0"
-                max={combinationSettings.total_count}
-                className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                value={combinationSettings.auto_count}
-                onChange={(e) => {
-                  const auto = parseInt(e.target.value) || 0;
-                  const total = combinationSettings.total_count;
-                  const manual = Math.max(0, total - auto);
-                  setCombinationSettings({
-                    total_count: total,
-                    manual_count: manual,
-                    auto_count: auto
-                  });
-                }}
-              />
-            </div>
-          </div>
-
-          {/* 간단한 비율 표시 */}
-          <div className="mt-3 lg:mt-4 bg-gray-50 p-2 lg:p-3 rounded text-center">
-            <div className="text-xs lg:text-sm text-gray-600 mb-1 lg:mb-2">현재: {combinationSettings.manual_count} 수동 + {combinationSettings.auto_count} 자동</div>
-            <div className="flex items-center space-x-1 lg:space-x-2">
-              <div className="flex-1 bg-blue-200 rounded-full h-1.5 lg:h-2">
-                <div 
-                  className="bg-blue-600 h-1.5 lg:h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%` }}
-                ></div>
+      {/* 조합 설정과 통합 번호 관리를 하나의 통합된 컨테이너 안에 배치 */}
+      <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+          {/* 왼쪽: 조합 설정 */}
+          <div>
+            <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
+              🎲 조합 설정
+            </h2>
+            
+            <div className="grid grid-cols-3 gap-3 lg:gap-4">
+              {/* 총 조합 수 */}
+              <div>
+                <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                  총 조합 수
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={combinationSettings.total_count}
+                  onChange={(e) => {
+                    const total = parseInt(e.target.value) || 1;
+                    const manual = Math.min(combinationSettings.manual_count, total);
+                    const auto = total - manual;
+                    setCombinationSettings({
+                      total_count: total,
+                      manual_count: manual,
+                      auto_count: auto
+                    });
+                  }}
+                />
               </div>
-              <span className="text-xs lg:text-sm text-gray-500 w-8 lg:w-12 text-center">
-                {combinationSettings.manual_count}:{combinationSettings.auto_count}
-              </span>
+
+              {/* 수동 생성 */}
+              <div>
+                <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                  수동
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max={combinationSettings.total_count}
+                  className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={combinationSettings.manual_count}
+                  onChange={(e) => {
+                    const manual = parseInt(e.target.value) || 0;
+                    const total = combinationSettings.total_count;
+                    const auto = Math.max(0, total - manual);
+                    setCombinationSettings({
+                      total_count: total,
+                      manual_count: manual,
+                      auto_count: auto
+                    });
+                  }}
+                />
+              </div>
+
+              {/* 자동 생성 */}
+              <div>
+                <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
+                  자동
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max={combinationSettings.total_count}
+                  className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  value={combinationSettings.auto_count}
+                  onChange={(e) => {
+                    const auto = parseInt(e.target.value) || 0;
+                    const total = combinationSettings.total_count;
+                    const manual = Math.max(0, total - auto);
+                    setCombinationSettings({
+                      total_count: total,
+                      manual_count: manual,
+                      auto_count: auto
+                    });
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* 간단한 비율 표시 */}
+            <div className="mt-3 lg:mt-4 bg-gray-50 p-2 lg:p-3 rounded text-center">
+              <div className="text-xs lg:text-sm text-gray-600 mb-1 lg:mb-2">현재: {combinationSettings.manual_count} 수동 + {combinationSettings.auto_count} 자동</div>
+              <div className="flex items-center space-x-1 lg:space-x-2">
+                <div className="flex-1 bg-blue-200 rounded-full h-1.5 lg:h-2">
+                  <div 
+                    className="bg-blue-600 h-1.5 lg:h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%` }}
+                  ></div>
+                </div>
+                <span className="text-xs lg:text-sm text-gray-500 w-8 lg:w-12 text-center">
+                  {combinationSettings.manual_count}:{combinationSettings.auto_count}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* 오른쪽: 통합 번호 관리 */}
-        <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6">
-          <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
-            🎯 통합 번호 관리
-          </h2>
-          <UnifiedNumberManager
-            includeNumbers={preferences.include_numbers}
-            excludeNumbers={preferences.exclude_numbers}
-            manualCombinations={selectedNumbers}
-            onIncludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, include_numbers: numbers }))}
-            onExcludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, exclude_numbers: numbers }))}
-            onManualCombinationsChange={setSelectedNumbers}
-            maxCombinations={combinationSettings.manual_count}
-            maxNumbersPerCombination={6}
-            combinationSettings={combinationSettings}
-          />
+          {/* 오른쪽: 통합 번호 관리 */}
+          <div>
+            <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
+              🎯 통합 번호 관리
+            </h2>
+            <UnifiedNumberManager
+              includeNumbers={preferences.include_numbers}
+              excludeNumbers={preferences.exclude_numbers}
+              manualCombinations={selectedNumbers}
+              onIncludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, include_numbers: numbers }))}
+              onExcludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, exclude_numbers: numbers }))}
+              onManualCombinationsChange={setSelectedNumbers}
+              maxCombinations={combinationSettings.manual_count}
+              maxNumbersPerCombination={6}
+              combinationSettings={combinationSettings}
+            />
+          </div>
         </div>
       </div>
 
