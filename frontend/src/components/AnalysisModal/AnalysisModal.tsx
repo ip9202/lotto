@@ -106,10 +106,36 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
           {/* 상세 분석 */}
           {analysis && (
             <div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">번호 분석</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-lg font-semibold text-gray-900">번호 분석</h4>
+                <div className="group relative">
+                  <div className="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center cursor-help hover:bg-gray-200 transition-colors">
+                    <span className="text-gray-500 text-xs font-bold">?</span>
+                  </div>
+                  <div className="absolute top-6 right-0 w-80 bg-gray-900 text-white text-xs rounded-lg p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg">
+                    <div className="space-y-2">
+                      <div><strong>핫/콜드:</strong> 최근 출현 빈도 분석</div>
+                      <div><strong>패턴:</strong> 홀짝 비율과 연속 번호</div>
+                      <div><strong>수치:</strong> 번호 합계와 평균값</div>
+                      <div><strong>구간:</strong> 1-15, 16-30, 31-45 분포</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-blue-900 mb-2">핫/콜드 분석</h5>
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="font-medium text-blue-900">핫/콜드 분석</h5>
+                    <div className="group relative">
+                      <div className="w-4 h-4 bg-blue-200 rounded-full flex items-center justify-center cursor-help hover:bg-blue-300 transition-colors">
+                        <span className="text-blue-700 text-xs">?</span>
+                      </div>
+                      <div className="absolute top-5 right-0 w-56 bg-blue-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <strong>핫 넘버:</strong> 최근 자주 나온 번호<br/>
+                        <strong>콜드 넘버:</strong> 오래 안 나온 번호
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-3 text-sm">
                     <div>
                       <div className="flex justify-between items-center mb-2">
@@ -153,7 +179,18 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-green-900 mb-2">패턴 분석</h5>
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="font-medium text-green-900">패턴 분석</h5>
+                    <div className="group relative">
+                      <div className="w-4 h-4 bg-green-200 rounded-full flex items-center justify-center cursor-help hover:bg-green-300 transition-colors">
+                        <span className="text-green-700 text-xs">?</span>
+                      </div>
+                      <div className="absolute top-5 right-0 w-56 bg-green-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <strong>홀짝 비율:</strong> 홀수/짝수 균형<br/>
+                        <strong>연속 번호:</strong> 이어지는 번호 개수
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-3 text-sm">
                     <div>
                       <div className="flex justify-between items-center mb-2">
@@ -201,7 +238,18 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 </div>
 
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-purple-900 mb-2">수치 분석</h5>
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="font-medium text-purple-900">수치 분석</h5>
+                    <div className="group relative">
+                      <div className="w-4 h-4 bg-purple-200 rounded-full flex items-center justify-center cursor-help hover:bg-purple-300 transition-colors">
+                        <span className="text-purple-700 text-xs">?</span>
+                      </div>
+                      <div className="absolute top-5 right-0 w-56 bg-purple-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <strong>합계:</strong> 6개 번호의 총합<br/>
+                        <strong>평균:</strong> 균형잡힌 분포 확인
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-purple-700">번호 합계:</span>
@@ -215,7 +263,19 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 </div>
 
                 <div className="bg-orange-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-orange-900 mb-2">구간 분포</h5>
+                  <div className="flex items-center justify-between mb-2">
+                    <h5 className="font-medium text-orange-900">구간 분포</h5>
+                    <div className="group relative">
+                      <div className="w-4 h-4 bg-orange-200 rounded-full flex items-center justify-center cursor-help hover:bg-orange-300 transition-colors">
+                        <span className="text-orange-700 text-xs">?</span>
+                      </div>
+                      <div className="absolute top-5 right-0 w-56 bg-orange-900 text-white text-xs rounded-lg p-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                        <strong>1-15:</strong> 낮은 번호대<br/>
+                        <strong>16-30:</strong> 중간 번호대<br/>
+                        <strong>31-45:</strong> 높은 번호대
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-3 text-sm">
                     <div>
                       <div className="flex justify-between items-center mb-2">
