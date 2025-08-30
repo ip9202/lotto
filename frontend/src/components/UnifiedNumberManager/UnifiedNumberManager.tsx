@@ -386,7 +386,7 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
 
       {/* 번호 볼 그리드 - 가운데 정렬, 사이즈 및 간격 개선 */}
       <div className="flex justify-center">
-        <div className="grid grid-cols-8 gap-4 sm:gap-5 lg:gap-6 max-w-fit">
+        <div className="grid grid-cols-8 !grid-cols-8 gap-4 sm:gap-5 lg:gap-6 max-w-fit overflow-hidden">
           {Array.from({ length: 45 }, (_, i) => i + 1).map(renderNumberBall)}
         </div>
       </div>

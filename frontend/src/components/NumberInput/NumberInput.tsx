@@ -174,7 +174,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
                     <LottoBall
                       key={number}
                       number={number}
-                      size="mobile" // iPhone에 최적화된 크기
+                      size="xs" // iPhone에 최적화된 더 작은 크기
                       variant="selected"
                       onClick={() => handleNumberClick(number, combinationIndex)}
                     />
@@ -190,7 +190,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
       <div className="space-y-3">
         <h3 className="text-lg font-semibold text-gray-900">번호 선택</h3>
         <div className="flex justify-center">
-          <div className="grid grid-cols-8 gap-2 sm:gap-3 md:gap-4 lg:gap-5 max-w-fit">
+          <div className="grid grid-cols-8 !grid-cols-8 gap-2 sm:gap-3 md:gap-4 lg:gap-5 max-w-fit overflow-hidden">
             {Array.from({ length: 45 }, (_, i) => i + 1).map((number) => {
               // 현재 활성화된 조합에서 이 번호가 선택되었는지 확인
               const isSelected = selectedNumbers.length > 0 && 
@@ -200,7 +200,7 @@ const NumberInput: React.FC<NumberInputProps> = ({
                 <LottoBall
                   key={number}
                   number={number}
-                  size="mobile" // iPhone에 최적화된 크기
+                                        size="xs" // iPhone에 최적화된 더 작은 크기
                   variant={isSelected ? 'selected' : 'default'}
                   onClick={() => {
                     // 현재 활성화된 조합이 있으면 해당 조합에 추가

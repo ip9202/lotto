@@ -179,7 +179,7 @@ const Recommendation: React.FC = () => {
       </div>
 
       {/* 조합 설정과 통합 번호 관리를 하나의 통합된 컨테이너 안에 배치 */}
-      <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
+      <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8 overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
           {/* 왼쪽: 조합 설정 */}
           <div>
