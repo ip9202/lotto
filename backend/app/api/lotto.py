@@ -66,9 +66,12 @@ async def get_draws(
         
         data = []
         for draw in draws:
+            # 날짜를 문자열로 변환
+            draw_date_str = draw.draw_date.strftime('%Y-%m-%d') if draw.draw_date else "2025-08-23"
+            
             data.append(LottoNumber(
                 draw_number=draw.draw_number,
-                draw_date=draw.draw_date,
+                draw_date=draw_date_str,
                 numbers=draw.numbers,
                 bonus_number=draw.bonus_number,
                 first_winners=draw.first_winners,
@@ -128,9 +131,12 @@ async def get_draw_by_number(
         if not draw:
             raise HTTPException(status_code=404, detail=f"{draw_number}회차 당첨번호를 찾을 수 없습니다")
         
+        # 날짜를 문자열로 변환
+        draw_date_str = draw.draw_date.strftime('%Y-%m-%d') if draw.draw_date else "2025-08-23"
+        
         data = LottoNumber(
             draw_number=draw.draw_number,
-            draw_date=draw.draw_date,
+            draw_date=draw_date_str,
             numbers=draw.numbers,
             bonus_number=draw.bonus_number,
             first_winners=draw.first_winners,

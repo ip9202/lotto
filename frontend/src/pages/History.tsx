@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import RecommendationCard from '../components/RecommendationCard';
 import LottoBall from '../components/LottoBall';
+import PastDraws from '../components/PastDraws';
 
 interface RecommendationHistory {
   id: string;
@@ -24,6 +25,7 @@ interface RecommendationHistory {
 }
 
 const History: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<'recommendations' | 'past-draws'>('past-draws');
   const [histories, setHistories] = useState<RecommendationHistory[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSession, setSelectedSession] = useState<string>('');
@@ -34,7 +36,50 @@ const History: React.FC = () => {
 
   const fetchHistories = async () => {
     try {
-      // 임시로 더미 데이터를 사용 (실제 API 연동 시 수정)
+      setLoading(true);
+      
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      const response = await fetch(`${apiUrl}/api/v1/recommendations/history?limit=50&offset=0`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const histories: RecommendationHistory[] = result.data.map((item: any) => ({
+          id: item.id,
+          draw_number: item.draw_number || 0,
+          session_id: item.session_id || 'unknown',
+          combination_type: item.combination_type || 'AI',
+          numbers: item.numbers || [],
+          confidence_score: item.confidence_score || 0.5,
+          is_manual: item.is_manual || false,
+          win_rank: item.win_rank,
+          win_amount: item.win_amount,
+          created_at: item.created_at,
+          analysis: item.analysis || {
+            hot_numbers: 0,
+            cold_numbers: 0,
+            odd_even_ratio: '0:0',
+            sum: 0,
+            consecutive_count: 0,
+            range_distribution: '1-15:0, 16-30:0, 31-45:0'
+          }
+        }));
+        
+        setHistories(histories);
+        if (histories.length > 0) {
+          setSelectedSession(histories[0].session_id);
+        }
+      } else {
+        throw new Error(result.message || '데이터를 불러올 수 없습니다');
+      }
+    } catch (error) {
+      console.error('추천 기록 조회 실패:', error);
+      
+      // 에러 발생 시 더미 데이터로 대체
       const dummyHistories: RecommendationHistory[] = [
         {
           id: '1',
@@ -78,8 +123,6 @@ const History: React.FC = () => {
       if (dummyHistories.length > 0) {
         setSelectedSession(dummyHistories[0].session_id);
       }
-    } catch (error) {
-      console.error('추천 기록 조회 실패:', error);
     } finally {
       setLoading(false);
     }
@@ -103,7 +146,8 @@ const History: React.FC = () => {
   };
 
   const getConfidenceColor = (score: number) => {
-    const percentScore = Math.round(score * 100);
+    // score가 이미 백분율로 되어있는지 확인 (100 이상이면 백분율, 1 이하면 소수)
+    const percentScore = score > 1 ? Math.round(score) : Math.round(score * 100);
     if (percentScore >= 55) return 'text-green-600';
     if (percentScore >= 40) return 'text-blue-600';
     if (percentScore >= 30) return 'text-yellow-600';
@@ -111,7 +155,8 @@ const History: React.FC = () => {
   };
 
   const getConfidenceText = (score: number) => {
-    const percentScore = Math.round(score * 100);
+    // score가 이미 백분율로 되어있는지 확인 (100 이상이면 백분율, 1 이하면 소수)
+    const percentScore = score > 1 ? Math.round(score) : Math.round(score * 100);
     if (percentScore >= 55) return '높음';
     if (percentScore >= 40) return '보통';
     if (percentScore >= 30) return '낮음';
@@ -138,15 +183,55 @@ const History: React.FC = () => {
       {/* 페이지 헤더 */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold text-gray-900">
-          📚 추천 기록
+          📚 기록 보기
         </h1>
         <p className="text-xl text-gray-600">
-          이전에 받은 AI 추천 번호들과 당첨 결과를 확인해보세요.
+          지난회차 당첨번호와 AI 추천 기록을 확인해보세요.
         </p>
       </div>
 
-      {/* 세션 선택 */}
-      {sessions.length > 1 && (
+      {/* 탭 메뉴 */}
+      <div className="bg-white rounded-xl shadow-lg">
+        <div className="flex border-b border-gray-200">
+          <button
+            onClick={() => setActiveTab('past-draws')}
+            className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+              activeTab === 'past-draws'
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <span className="text-lg mr-2">🎱</span>
+            지난회차 당첨번호
+          </button>
+          <button
+            onClick={() => setActiveTab('recommendations')}
+            className={`flex-1 px-6 py-4 text-center font-medium transition-colors ${
+              activeTab === 'recommendations'
+                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <span className="text-lg mr-2">🤖</span>
+            AI 추천 기록
+          </button>
+        </div>
+      </div>
+
+      {/* 탭 컨텐츠 */}
+      {activeTab === 'past-draws' ? (
+        <PastDraws 
+          limit={20} 
+          showPagination={true}
+          onDrawSelect={(draw) => {
+            console.log('선택된 회차:', draw);
+            // 필요시 상세 보기 모달 등을 추가할 수 있음
+          }}
+        />
+      ) : (
+        <>
+          {/* 세션 선택 */}
+          {sessions.length > 1 && (
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
             📅 세션 선택
@@ -314,6 +399,8 @@ const History: React.FC = () => {
             </div>
           ))}
         </div>
+          )}
+        </>
       )}
     </div>
   );

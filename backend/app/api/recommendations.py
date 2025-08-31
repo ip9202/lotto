@@ -146,61 +146,124 @@ async def generate_recommendations(
 
 # 중복된 regenerate 함수 제거됨 - 이 함수는 사용하지 않음
 
-# 추천기록 기능 일시 비활성화
-# @router.get("/history/{session_id}", response_model=APIResponse)
-# async def get_recommendation_history(
-#     session_id: str,
-#     db: Session = Depends(get_db)
-# ):
-#     """사용자 추천 기록 조회"""
-#     try:
-#         histories = db.query(UserHistory)\
-#             .filter(UserHistory.session_id == session_id)\
-#             .order_by(UserHistory.created_at.desc())\
-#             .all()
-#         
-#         if not histories:
-#             return APIResponse(
-#                 success=True,
-#                 data=[],
-#                 message="추천 기록이 없습니다"
-#             )
-#         
-#         data = []
-#         for history in histories:
-#             recommendations = db.query(Recommendation)\
-#                 .filter(Recommendation.history_id == history.id)\
-#                 .all()
-#             
-#             history_data = {
-#                 "id": history.id,
-#                 "draw_number": history.draw_number,
-#                 "total_count": history.total_count,
-#                 "manual_count": history.manual_count,
-#                 "auto_count": history.auto_count,
-#                 "preferences": history.preferences,
-#                 "created_at": history.created_at.isoformat(),
-#                 "recommendations": [
-#                     {
-#                         "id": rec.id,
-#                         "numbers": rec.numbers,
-#                         "is_manual": rec.is_manual,
-#                         "confidence_score": float(rec.confidence_score) if rec.confidence_score else None,
-#                         "win_rank": rec.win_rank,
-#                         "win_amount": rec.win_amount
-#                     } for rec in recommendations
-#                 ]
-#             }
-#             data.append(history_data)
-#         
-#         return APIResponse(
-#             success=True,
-#             data=data,
-#             message=f"{len(data)}개의 추천 기록을 성공적으로 조회했습니다"
-#         )
-#         
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=f"기록 조회 실패: {str(e)}")
+@router.get("/history/{session_id}", response_model=APIResponse)
+async def get_recommendation_history(
+    session_id: str,
+    db: Session = Depends(get_db)
+):
+    """사용자 추천 기록 조회"""
+    try:
+        histories = db.query(UserHistory)\
+            .filter(UserHistory.session_id == session_id)\
+            .order_by(UserHistory.created_at.desc())\
+            .all()
+        
+        if not histories:
+            return APIResponse(
+                success=True,
+                data=[],
+                message="추천 기록이 없습니다"
+            )
+        
+        data = []
+        for history in histories:
+            recommendations = db.query(Recommendation)\
+                .filter(Recommendation.history_id == history.id)\
+                .all()
+            
+            history_data = {
+                "id": history.id,
+                "draw_number": history.draw_number,
+                "total_count": history.total_count,
+                "manual_count": history.manual_count,
+                "auto_count": history.auto_count,
+                "preferences": history.preferences,
+                "created_at": history.created_at.isoformat(),
+                "recommendations": [
+                    {
+                        "id": rec.id,
+                        "numbers": rec.numbers,
+                        "is_manual": rec.is_manual,
+                        "confidence_score": float(rec.confidence_score) if rec.confidence_score else None,
+                        "win_rank": rec.win_rank,
+                        "win_amount": rec.win_amount
+                    } for rec in recommendations
+                ]
+            }
+            data.append(history_data)
+        
+        return APIResponse(
+            success=True,
+            data=data,
+            message=f"{len(data)}개의 추천 기록을 성공적으로 조회했습니다"
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"기록 조회 실패: {str(e)}")
+
+@router.get("/history", response_model=APIResponse)
+async def get_all_recommendation_history(
+    limit: int = 50,
+    offset: int = 0,
+    db: Session = Depends(get_db)
+):
+    """모든 추천 기록 조회 (세션 구분 없이)"""
+    try:
+        histories = db.query(UserHistory)\
+            .order_by(UserHistory.created_at.desc())\
+            .offset(offset)\
+            .limit(limit)\
+            .all()
+        
+        if not histories:
+            return APIResponse(
+                success=True,
+                data=[],
+                message="추천 기록이 없습니다"
+            )
+        
+        data = []
+        for history in histories:
+            recommendations = db.query(Recommendation)\
+                .filter(Recommendation.history_id == history.id)\
+                .all()
+            
+            # 각 추천을 개별 항목으로 생성
+            for rec in recommendations:
+                # 분석 결과 생성
+                analyzer = LottoAnalyzer(db)
+                analysis = analyzer.analyze_combination(rec.numbers)
+                
+                history_data = {
+                    "id": f"{history.id}_{rec.id}",
+                    "draw_number": history.draw_number,
+                    "session_id": history.session_id,
+                    "combination_type": "수동" if rec.is_manual else "AI",
+                    "numbers": rec.numbers,
+                    "confidence_score": float(rec.confidence_score) if rec.confidence_score else 0.5,
+                    "is_manual": rec.is_manual,
+                    "win_rank": rec.win_rank,
+                    "win_amount": rec.win_amount,
+                    "created_at": history.created_at.isoformat(),
+                    "analysis": {
+                        "hot_numbers": analysis.get("hot_numbers", 0),
+                        "cold_numbers": analysis.get("cold_numbers", 0),
+                        "odd_even_ratio": f"{analysis.get('odd_count', 0)}:{analysis.get('even_count', 0)}",
+                        "sum": analysis.get("sum", 0),
+                        "consecutive_count": analysis.get("consecutive_count", 0),
+                        "range_distribution": f"1-15:{analysis.get('range_1_15', 0)}, 16-30:{analysis.get('range_16_30', 0)}, 31-45:{analysis.get('range_31_45', 0)}"
+                    }
+                }
+                data.append(history_data)
+        
+        return APIResponse(
+            success=True,
+            data=data,
+            message=f"{len(data)}개의 추천 기록을 성공적으로 조회했습니다"
+        )
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"기록 조회 실패: {str(e)}")
 
 @router.put("/{recommendation_id}/result", response_model=APIResponse)
 async def update_winning_result(
