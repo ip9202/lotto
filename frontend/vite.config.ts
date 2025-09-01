@@ -20,6 +20,31 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: false, // 프로덕션에서 소스맵 비활성화
+    rollupOptions: {
+      output: {
+        // 청크 분할로 로딩 성능 최적화
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['@heroicons/react'],
+          utils: ['axios', 'clsx', 'date-fns']
+        }
+      }
+    },
+    // 압축 최적화
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true
+      }
+    },
+    // 청크 크기 경고 임계값 증가
+    chunkSizeWarningLimit: 1000
+  },
+  // 성능 최적화
+  optimizeDeps: {
+    include: ['react', 'react-dom', 'react-router-dom']
   }
 })

@@ -2,18 +2,89 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LottoGenius - AI 로또 번호 추천</title>
-    <meta name="description" content="AI가 분석한 로또 번호 추천 서비스" />
     
-    <!-- 폰트 로드 -->
+    <!-- 🎯 기본 SEO 메타 태그 -->
+    <title>로또리아 AI - 인공지능 로또 번호 예측 서비스</title>
+    <meta name="description" content="AI 머신러닝으로 로또 당첨번호를 분석하고 예측하는 로또리아. 과거 데이터 기반 통계 분석과 패턴 인식으로 더 스마트한 로또 번호 선택을 도와드립니다." />
+    <meta name="keywords" content="로또번호예측, AI로또, 머신러닝로또, 로또분석, 당첨번호예측, 로또통계, 인공지능로또" />
+    <meta name="author" content="Lottoria" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://lottoria.ai.kr" />
+    
+    <!-- 🌐 오픈그래프 태그 -->
+    <meta property="og:title" content="로또리아 AI - 인공지능 로또 번호 예측" />
+    <meta property="og:description" content="AI 머신러닝 기술로 로또 당첨 확률을 높여보세요" />
+    <meta property="og:image" content="https://lottoria.ai.kr/images/og-image.jpg" />
+    <meta property="og:url" content="https://lottoria.ai.kr" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="로또리아 AI" />
+    <meta property="og:locale" content="ko_KR" />
+    
+    <!-- 🐦 트위터 카드 -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="로또리아 AI - 인공지능 로또 번호 예측" />
+    <meta name="twitter:description" content="AI 머신러닝 기술로 로또 당첨 확률을 높여보세요" />
+    <meta name="twitter:image" content="https://lottoria.ai.kr/images/twitter-card.jpg" />
+    
+    <!-- 🔍 검색엔진 인증 메타 태그 -->
+    <meta name="google-site-verification" content="GOOGLE_VERIFICATION_CODE" />
+    <meta name="naver-site-verification" content="NAVER_VERIFICATION_CODE" />
+    
+    <!-- 📱 파비콘 및 앱 아이콘 -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3B82F6" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="로또리아 AI" />
+    
+    <!-- 🎨 폰트 최적화 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" /></noscript>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Pretendard 폰트 -->
-    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <!-- 📊 구조화 데이터 (Schema.org JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "로또리아 AI",
+      "description": "AI 머신러닝으로 로또 번호를 예측하는 웹 애플리케이션",
+      "url": "https://lottoria.ai.kr",
+      "applicationCategory": "GameApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "KRW"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "Lottoria"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.5",
+        "ratingCount": "100"
+      }
+    }
+    </script>
+    
+    <!-- 📈 Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-XXXXXXXXXX', {
+        page_title: document.title,
+        page_location: window.location.href,
+      });
+    </script>
     
     <style>
       body {

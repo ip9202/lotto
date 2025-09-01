@@ -1,0 +1,32 @@
+User-agent: *
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: NaverBot  
+Allow: /
+
+User-agent: Yeti
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+# AI 크롤러 차단 (Cloudflare에서 이미 설정했지만 추가 보안)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+Sitemap: https://lottoria.ai.kr/sitemap.xml

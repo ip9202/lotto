@@ -54,13 +54,13 @@ const Home: React.FC = () => {
             </div>
             
             <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
-              LottoGenius
+              로또리아 AI - 인공지능으로 예측하는 로또 번호
             </h1>
           </div>
           
           {/* 설명 문구 */}
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
-            AI 기술로 분석한 로또 번호 추천 서비스로 당신의 행운을 높여보세요!
+            AI 머신러닝 기술의 로또 분석으로 과거 데이터 기반 통계 분석과 패턴 인식을 통해 더 스마트한 로또 번호 선택을 경험해보세요!
           </p>
           
           {/* CTA 버튼 */}
@@ -81,7 +81,7 @@ const Home: React.FC = () => {
       {/* 최신 당첨 번호 */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          최신 당첨 번호
+          🎯 실시간 번호 예측 서비스 - 최신 당첨 번호
         </h2>
         
         {loading ? (
@@ -107,7 +107,7 @@ const Home: React.FC = () => {
             {/* 당첨 번호들 - 가운데 정렬, 간격 개선 */}
             <div className="flex justify-center">
               <div className="flex flex-wrap gap-5 sm:gap-6 lg:gap-8 justify-center max-w-fit">
-                {latestDraw.numbers.map((number, index) => (
+                {latestDraw.numbers.map((number) => (
                   <LottoBall
                     key={number}
                     number={number}
@@ -139,7 +139,7 @@ const Home: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-2xl font-bold">AI</span>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">AI 분석</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">AI 머신러닝 기술의 로또 분석</h3>
           <p className="text-gray-600">
             머신러닝 알고리즘으로 과거 당첨 패턴을 분석하여 최적의 번호를 추천합니다.
           </p>
@@ -149,7 +149,7 @@ const Home: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-2xl font-bold">📊</span>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">통계 기반</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">과거 데이터 기반 통계 분석</h3>
           <p className="text-gray-600">
             빈도 분석, 트렌드 분석, 패턴 분석을 통해 과학적인 번호 선택을 도와줍니다.
           </p>
