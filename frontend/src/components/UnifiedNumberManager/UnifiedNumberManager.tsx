@@ -384,10 +384,12 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
         </div>
       )}
 
-      {/* 번호 볼 그리드 - 가운데 정렬, 사이즈 및 간격 개선 */}
-      <div className="flex justify-center">
-        <div className="grid grid-cols-6 sm:grid-cols-7 md:grid-cols-8 lg:grid-cols-8 gap-3 sm:gap-4 md:gap-5 lg:gap-6 max-w-fit overflow-hidden">
-          {Array.from({ length: 45 }, (_, i) => i + 1).map(renderNumberBall)}
+      {/* 번호 볼 그리드 - 모바일 최적화 */}
+      <div className="w-full overflow-x-auto">
+        <div className="flex justify-center min-w-full">
+          <div className="grid grid-cols-7 gap-2 sm:gap-3 md:gap-4 max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl mx-auto px-2">
+            {Array.from({ length: 45 }, (_, i) => i + 1).map(renderNumberBall)}
+          </div>
         </div>
       </div>
 
@@ -405,7 +407,7 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
                   포함할 번호
                 </span>
               </div>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-2">
                 {includeNumbers.map((num) => (
                   <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 border border-green-300 hover:bg-green-200 transition-colors">
                     {num}
@@ -436,7 +438,7 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
                   ({excludeNumbers.length}개)
                 </span>
               </div>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-2">
                 {excludeNumbers.map((num) => (
                   <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-red-100 text-red-800 border border-red-300 hover:bg-red-200 transition-colors">
                     {num}
@@ -492,12 +494,12 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
 
             {/* 조합 선택 탭 */}
             {manualCombinations.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4 sm:mb-3">
+              <div className="flex flex-wrap gap-2 mb-4 sm:mb-3 justify-center sm:justify-start">
                 {manualCombinations.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentCombinationIndex(index)}
-                    className={`px-4 py-2 sm:px-3 sm:py-1 rounded-md text-sm sm:text-base font-semibold transition-colors ${
+                    className={`px-3 py-2 rounded-md text-xs sm:text-sm font-semibold transition-colors flex-shrink-0 ${
                       currentCombinationIndex === index
                         ? 'bg-blue-500 text-white shadow-md'
                         : 'bg-white text-blue-600 hover:bg-blue-50 border border-blue-200'
@@ -516,28 +518,28 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
                   <div key={index} className={`p-4 sm:p-3 rounded-lg ${
                     currentCombinationIndex === index ? 'bg-blue-100 border border-blue-300' : 'bg-white border border-gray-200'
                   }`}>
-                    <div className="flex items-center justify-between mb-3 sm:mb-2">
-                      <span className="text-lg font-semibold text-gray-700">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 sm:mb-2 space-y-2 sm:space-y-0">
+                      <span className="text-base sm:text-lg font-semibold text-gray-700">
                         조합 {index + 1} ({combination.length}/6)
                       </span>
-                      <div className="flex space-x-2">
+                      <div className="flex flex-col sm:flex-row gap-2">
                         <button
                           onClick={() => generateRandomCombination(index)}
-                          className="px-3 py-2 bg-blue-500 text-white rounded text-sm font-medium hover:bg-blue-600 transition-colors"
+                          className="px-3 py-2 bg-blue-500 text-white rounded text-xs sm:text-sm font-medium hover:bg-blue-600 transition-colors flex items-center justify-center"
                         >
                           🎲 스마트 랜덤
                         </button>
                         <button
                           onClick={() => removeCombination(index)}
-                          className="px-3 py-2 bg-red-500 text-white rounded text-sm font-medium hover:bg-red-600 transition-colors"
+                          className="px-3 py-2 bg-red-500 text-white rounded text-xs sm:text-sm font-medium hover:bg-red-600 transition-colors"
                         >
                           삭제
                         </button>
                       </div>
                     </div>
-                    <div className="flex gap-2 overflow-x-auto">
+                    <div className="flex flex-wrap gap-2">
                       {combination.map((num) => (
-                        <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-300 hover:bg-blue-200 transition-colors whitespace-nowrap">
+                        <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 border border-blue-300 hover:bg-blue-200 transition-colors">
                           {num}
                           <button
                             onClick={() => handleNumberRemove(num, 'combination', index)}
