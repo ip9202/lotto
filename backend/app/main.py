@@ -21,7 +21,7 @@ logging.basicConfig(
 async def lifespan(app: FastAPI):
     """애플리케이션 생명주기 관리"""
     # 시작 시
-    print("🚀 LottoGenius 백엔드 서버 시작 중...")
+    print("🚀 로또리아 AI 백엔드 서버 시작 중...")
     
     # 데이터베이스 테이블 생성
     try:
@@ -40,11 +40,11 @@ async def lifespan(app: FastAPI):
     yield
     
     # 종료 시
-    print("🛑 LottoGenius 백엔드 서버 종료 중...")
+    print("🛑 로또리아 AI 백엔드 서버 종료 중...")
 
 # FastAPI 앱 생성
 app = FastAPI(
-    title="LottoGenius API",
+    title="로또리아 AI API",
     description="AI 로또 번호 추천 서비스 API",
     version="1.0.0",
     docs_url="/docs",
@@ -111,9 +111,9 @@ async def root():
     """루트 엔드포인트"""
     return {
         "success": True,
-        "message": "🎯 LottoGenius API에 오신 것을 환영합니다!",
+        "message": "🎯 로또리아 AI API에 오신 것을 환영합니다!",
         "data": {
-            "service": "LottoGenius Backend",
+            "service": "로또리아 AI Backend",
             "version": "1.0.0",
             "docs": "/docs",
             "health": "/api/v1/recommendations/health"
@@ -128,7 +128,7 @@ async def health_check():
         "success": True,
         "data": {
             "status": "healthy",
-            "service": "LottoGenius Backend",
+            "service": "로또리아 AI Backend",
             "version": "1.0.0",
             "timestamp": "2024-01-10T10:30:00Z"
         },

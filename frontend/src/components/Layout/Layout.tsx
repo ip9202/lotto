@@ -57,7 +57,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center">
               <Link to="/" className="flex items-center" onClick={() => handleNavClick('/')}>
                 <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  LottoGenius
+                  로또리아 AI
                 </span>
               </Link>
             </div>
@@ -140,14 +140,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span className="text-white text-sm font-bold">🎯</span>
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                LottoGenius
+                로또리아 AI
               </span>
             </div>
             
             {/* 메인 텍스트 */}
             <div className="space-y-2">
               <p className="text-gray-700 font-medium">
-                &copy; 2024 LottoGenius. AI 로또 번호 추천 서비스
+                &copy; 2024 로또리아 AI. 인공지능 로또 번호 예측 서비스
               </p>
               <p className="text-sm text-gray-500">
                 행운을 빕니다! 🍀

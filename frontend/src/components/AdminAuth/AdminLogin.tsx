@@ -47,7 +47,7 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onLogin, loading = false, error
             
             {/* 설명 문구 */}
             <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              LottoGenius 관리자 시스템에 접속합니다
+              로또리아 AI 관리자 시스템에 접속합니다
             </p>
           </div>
 

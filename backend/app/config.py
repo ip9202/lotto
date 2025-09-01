@@ -4,10 +4,10 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # 데이터베이스 설정
-    database_url: str = "postgresql://lotto_user:lotto_password@localhost:5432/lotto_genius"
+    database_url: str = "postgresql://lotto_user:lotto_password@localhost:5432/lotto_db"
     db_host: str = "localhost"
     db_port: int = 5432
-    db_name: str = "lotto_genius"
+    db_name: str = "lotto_db"
     db_user: str = "lotto_user"
     db_password: str = "lotto_password"
     

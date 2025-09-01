@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# 🚨 LottoGenius 개발 환경 시작 스크립트
+# 🚨 로또리아 AI 개발 환경 시작 스크립트
 # 이 스크립트를 실행하기 전에 conda가 설치되어 있어야 합니다!
 
-echo "🎯 LottoGenius 개발 환경을 시작합니다..."
+echo "🎯 로또리아 AI 개발 환경을 시작합니다..."
 
 # 1. conda 가상환경 활성화
 echo "📦 conda 가상환경을 활성화합니다..."
