@@ -6,10 +6,13 @@ interface AdSenseBannerProps {
 }
 
 const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ className = '' }) => {
+  // 실제 광고 단위 ID가 생성되면 여기에 입력
+  const adSlot = "1234567890"; // 임시 광고 단위 ID
+  
   return (
     <div className={`ad-banner ${className}`}>
       <AdSense 
-        adSlot="1234567890" 
+        adSlot={adSlot} 
         adFormat="auto"
         className="w-full"
       />

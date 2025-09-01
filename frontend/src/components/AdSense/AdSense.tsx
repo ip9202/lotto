@@ -1,5 +1,12 @@
 import React from 'react';
 
+// AdSense 타입 정의
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
+
 interface AdSenseProps {
   adSlot: string;
   adFormat?: 'auto' | 'fluid';
@@ -15,8 +22,8 @@ const AdSense: React.FC<AdSenseProps> = ({
 }) => {
   React.useEffect(() => {
     try {
-      // AdSense가 로드되었는지 확인
-      if (window.adsbygoogle) {
+      // AdSense가 로드되었는지 확인하고 광고를 푸시
+      if (typeof window !== 'undefined' && window.adsbygoogle) {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       }
     } catch (error) {
