@@ -4,8 +4,8 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Recommendation from './pages/Recommendation';
 import Admin from './pages/Admin';
-import History from './pages/History';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
+// import History from './pages/History'; // 이전기록 기능 개발 중 - 일시 비활성화
 
 const App: React.FC = () => {
   return (
@@ -18,7 +18,7 @@ const App: React.FC = () => {
             <Admin />
           </AdminAuthProvider>
         } />
-        <Route path="/history" element={<History />} />
+        {/* <Route path="/history" element={<History />} /> 이전기록 기능 개발 중 - 일시 비활성화 */}
       </Routes>
     </Layout>
   );
