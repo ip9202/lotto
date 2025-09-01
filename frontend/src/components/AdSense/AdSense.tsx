@@ -28,6 +28,8 @@ const AdSense: React.FC<AdSenseProps> = ({
       }
     } catch (error) {
       console.warn('AdSense 로드 중 오류:', error);
+      // AdSense가 로드되지 않은 경우 테스트 메시지 표시
+      console.log('AdSense 스크립트 로드 실패 - 계정 승인 대기 중일 수 있습니다.');
     }
   }, []);
 
