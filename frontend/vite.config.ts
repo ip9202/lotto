@@ -12,6 +12,8 @@ export default defineConfig({
     },
     allowedHosts: [
       'localhost',
+      'lottoria.ai.kr',
+      'www.lottoria.ai.kr',
       'lotto-frontend-production.up.railway.app',
       '.up.railway.app'  // 모든 Railway 도메인 허용
     ]
