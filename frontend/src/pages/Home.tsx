@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LottoBall from '../components/LottoBall';
+import AdSenseBanner from '../components/AdSense/AdSenseBanner';
+import AdSense from '../components/AdSense/AdSense';
 
 interface LottoDraw {
   draw_number: number;
@@ -78,6 +80,9 @@ const Home: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
+      {/* 상단 광고 배너 */}
+      <AdSenseBanner className="my-8" />
+
       {/* 최신 당첨 번호 */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
@@ -133,6 +138,9 @@ const Home: React.FC = () => {
         )}
       </div>
 
+      {/* 중간 광고 */}
+      <AdSense adSlot="2468013579" className="my-8" />
+
       {/* 서비스 특징 */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="bg-white rounded-xl p-6 text-center shadow-lg">
@@ -165,6 +173,9 @@ const Home: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* 하단 광고 */}
+      <AdSense adSlot="1357924680" className="my-8" />
 
       {/* CTA 섹션 */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-center text-white">

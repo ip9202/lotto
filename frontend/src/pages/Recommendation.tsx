@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import SimpleCombination from '../components/SimpleCombination';
 import AnalysisModal from '../components/AnalysisModal';
 import UnifiedNumberManager from '../components/UnifiedNumberManager';
+import AdSenseBanner from '../components/AdSense/AdSenseBanner';
+import AdSense from '../components/AdSense/AdSense';
 
 interface Recommendation {
   numbers: number[];
@@ -238,6 +240,9 @@ const Recommendation: React.FC = () => {
         {/* 하단 장식 라인 */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
+
+      {/* 상단 광고 */}
+      <AdSenseBanner className="my-8" />
 
       {/* 탭 네비게이션 */}
       <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
@@ -575,7 +580,11 @@ const Recommendation: React.FC = () => {
             )}
             </div>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="space-y-8">
+            {/* 추천 결과 상단 광고 */}
+            <AdSense adSlot="9876543210" className="my-6" />
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendations.map((rec, index) => (
                 <SimpleCombination
                   key={index}
@@ -593,6 +602,10 @@ const Recommendation: React.FC = () => {
                 />
               ))}
             </div>
+            
+            {/* 추천 결과 하단 광고 */}
+            <AdSense adSlot="5432109876" className="my-6" />
+          </div>
           )}
       </div>
 
