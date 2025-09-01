@@ -1,11 +1,11 @@
-# 🎯 LottoGenius - AI 기반 로또 번호 추천 시스템
+# 🎯 로또리아 AI - 인공지능 로또 번호 예측 서비스
 
-[![Status](https://img.shields.io/badge/Status-🚀%20배포%20준비%20완료-brightgreen)](https://github.com/your-username/lotto)
+[![Status](https://img.shields.io/badge/Status-🚀%20프로덕션%20배포%20완료-brightgreen)](https://lottoria.ai.kr)
 [![Python](https://img.shields.io/badge/Python-3.12-blue)](https://python.org)
 [![React](https://img.shields.io/badge/React-18-blue)](https://reactjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green)](https://fastapi.tiangolo.com)
 
-**AI 기술로 분석한 로또 번호 추천 서비스로 당신의 행운을 높여보세요!** 🍀
+**AI 머신러닝으로 로또 당첨번호를 분석하고 예측하는 로또리아. 과거 데이터 기반 통계 분석과 패턴 인식으로 더 스마트한 로또 번호 선택을 도와드립니다!** 🍀
 
 ## ✨ 주요 기능
 
@@ -18,6 +18,7 @@
 - **수동 조합**: 원하는 번호로 직접 조합 생성
 - **AI 자동 조합**: AI가 분석한 최적 조합 자동 생성
 - **하이브리드**: 수동 + AI 조합 혼합 생성
+- **신뢰도 점수**: AI 분석 결과에 대한 정확한 신뢰도 제공
 
 ### 📊 실시간 데이터
 - **자동 업데이트**: 매주 일요일 자동으로 최신 당첨 번호 수집
@@ -28,6 +29,7 @@
 - **반응형 디자인**: 모바일, 태블릿, 데스크톱 완벽 지원
 - **로또 볼 시스템**: 5가지 색상으로 구분된 직관적인 번호 선택
 - **세련된 디자인**: 그라데이션과 3D 효과로 현대적인 느낌
+- **PWA 지원**: 앱과 같은 사용자 경험 제공
 
 ## 🚀 빠른 시작
 
@@ -50,6 +52,10 @@ docker-compose up -d
 # 프론트엔드: http://localhost:5173
 # 백엔드 API: http://localhost:8000
 # 관리자: http://localhost:5173/admin
+
+# 🚀 프로덕션 환경
+# 메인 사이트: https://lottoria.ai.kr
+# API 문서: https://lottoria.ai.kr/api/docs
 ```
 
 ### 🔧 수동 설치
