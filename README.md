@@ -85,8 +85,7 @@ docker-compose ps
 #### 백엔드 설정
 ```bash
 # ⚠️ 중요: Python 개발 시 반드시 conda 가상환경 py3_12 사용
-# Python 3.12 설치 (conda 권장)
-conda create -n py3_12 python=3.12
+# 기존 가상환경 활성화
 conda activate py3_12
 
 # 가상환경 활성화 확인

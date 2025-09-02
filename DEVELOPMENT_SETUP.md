@@ -4,8 +4,7 @@
 
 ### 1. Python 개발환경 설정 (수동 개발 시) 🐍
 ```bash
-# Conda 가상환경 생성 및 활성화
-conda create -n py3_12 python=3.12
+# 기존 conda 가상환경 활성화
 conda activate py3_12
 
 # 가상환경 활성화 확인
@@ -128,7 +127,7 @@ docker-compose up -d
 
 ### 방법 2: 수동 개발 (Python 코드 수정 시)
 ```bash
-# 1. Conda 가상환경 활성화
+# 1. 기존 conda 가상환경 활성화
 conda activate py3_12
 
 # 2. 프로젝트 디렉토리로 이동
