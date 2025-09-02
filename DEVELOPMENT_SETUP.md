@@ -2,7 +2,22 @@
 
 ## ⚠️ **개발 시작 전 필수 확인사항**
 
-### 1. Docker Desktop 설치 및 실행 ✅
+### 1. Python 개발환경 설정 (수동 개발 시) 🐍
+```bash
+# Conda 가상환경 생성 및 활성화
+conda create -n py3_12 python=3.12
+conda activate py3_12
+
+# 가상환경 활성화 확인
+echo $CONDA_DEFAULT_ENV
+# 결과: py3_12
+
+# Python 버전 확인
+python --version
+# 결과: Python 3.12.x
+```
+
+### 2. Docker Desktop 설치 및 실행 ✅
 ```bash
 # Docker Desktop 다운로드 및 설치
 # https://www.docker.com/products/docker-desktop/
@@ -45,7 +60,24 @@ docker-compose ps
 
 ## 🚨 **자주 발생하는 문제들**
 
-### 문제 1: Docker Desktop이 실행되지 않음
+### 문제 1: Conda 가상환경 문제
+```bash
+# 문제: "conda: command not found"
+# 해결방법: Conda 초기화
+source ~/opt/anaconda3/etc/profile.d/conda.sh
+conda activate py3_12
+
+# 문제: 가상환경이 활성화되지 않음
+# 해결방법: 수동 활성화
+source ~/opt/anaconda3/envs/py3_12/bin/activate
+
+# 문제: Python 패키지 import 오류
+# 해결방법: 가상환경 재활성화
+conda deactivate
+conda activate py3_12
+```
+
+### 문제 2: Docker Desktop이 실행되지 않음
 ```bash
 # 해결방법:
 # 1. Docker Desktop 재시작
@@ -53,7 +85,7 @@ docker-compose ps
 # 3. Docker Desktop 재설치
 ```
 
-### 문제 2: 포트 충돌
+### 문제 3: 포트 충돌
 ```bash
 # 포트 사용 현황 확인
 lsof -i :5432  # PostgreSQL
@@ -66,7 +98,7 @@ pkill -f "uvicorn"
 pkill -f "postgres"
 ```
 
-### 문제 3: 컨테이너가 시작되지 않음
+### 문제 4: 컨테이너가 시작되지 않음
 ```bash
 # 컨테이너 재시작
 docker-compose down
@@ -80,7 +112,7 @@ docker logs lotto_frontend
 
 ## 📝 **개발 워크플로우**
 
-### 1. 개발 시작
+### 방법 1: Docker 사용 (권장)
 ```bash
 # 1. Docker Desktop 실행 확인
 docker ps
@@ -92,6 +124,27 @@ cd ~/develop/vibe/lotto
 docker-compose up -d
 
 # 4. 개발 시작! 🚀
+```
+
+### 방법 2: 수동 개발 (Python 코드 수정 시)
+```bash
+# 1. Conda 가상환경 활성화
+conda activate py3_12
+
+# 2. 프로젝트 디렉토리로 이동
+cd ~/develop/vibe/lotto
+
+# 3. 백엔드 의존성 설치 (처음 한 번만)
+cd backend
+pip install -r requirements.txt
+
+# 4. 백엔드 실행
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# 5. 새 터미널에서 프론트엔드 실행
+cd frontend
+npm install  # 처음 한 번만
+npm run dev
 ```
 
 ### 2. 코드 수정

@@ -84,9 +84,14 @@ docker-compose ps
 
 #### 백엔드 설정
 ```bash
+# ⚠️ 중요: Python 개발 시 반드시 conda 가상환경 py3_12 사용
 # Python 3.12 설치 (conda 권장)
 conda create -n py3_12 python=3.12
 conda activate py3_12
+
+# 가상환경 활성화 확인
+echo $CONDA_DEFAULT_ENV
+# 결과: py3_12
 
 # 백엔드 의존성 설치
 cd backend
@@ -208,6 +213,27 @@ lotto/
 - [x] 프로덕션 환경 배포 완료
 
 ## 🆘 문제 해결
+
+### Python/Conda 관련 문제
+```bash
+# 문제: "conda: command not found"
+# 해결방법: Conda 초기화
+source ~/opt/anaconda3/etc/profile.d/conda.sh
+conda activate py3_12
+
+# 문제: 가상환경이 활성화되지 않음
+# 해결방법: 수동 활성화
+source ~/opt/anaconda3/envs/py3_12/bin/activate
+
+# 문제: Python 패키지 import 오류
+# 해결방법: 가상환경 재활성화
+conda deactivate
+conda activate py3_12
+
+# 문제: pip install 실패
+# 해결방법: 가상환경에서 pip 업그레이드
+pip install --upgrade pip
+```
 
 ### Docker 관련 문제
 ```bash
