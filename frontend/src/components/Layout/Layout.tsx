@@ -146,6 +146,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             {/* 메인 텍스트 */}
             <div className="space-y-2">
+              <div className="flex justify-center space-x-4 mb-4 text-sm text-gray-600">
+                <Link to="/terms" className="hover:text-blue-600 transition-colors">이용약관</Link>
+                <Link to="/privacy-policy" className="hover:text-blue-600 transition-colors">개인정보처리방침</Link>
+                <Link to="/cookie-settings" className="hover:text-blue-600 transition-colors">쿠키 설정</Link>
+              </div>
               <p className="text-gray-700 font-medium">
                 &copy; 2024 로또리아 AI. 인공지능 로또 번호 예측 서비스
               </p>

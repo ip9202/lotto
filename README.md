@@ -18,7 +18,6 @@
 - **수동 조합**: 원하는 번호로 직접 조합 생성
 - **AI 자동 조합**: AI가 분석한 최적 조합 자동 생성
 - **하이브리드**: 수동 + AI 조합 혼합 생성
-- **신뢰도 점수**: AI 분석 결과에 대한 정확한 신뢰도 제공
 
 ### 📊 실시간 데이터
 - **자동 업데이트**: 매주 일요일 자동으로 최신 당첨 번호 수집
@@ -31,50 +30,84 @@
 - **세련된 디자인**: 그라데이션과 3D 효과로 현대적인 느낌
 - **PWA 지원**: 앱과 같은 사용자 경험 제공
 
-## 🚀 빠른 시작
+## 🚀 빠른 시작 (Docker 권장)
 
 ### 📋 요구사항
-- Docker & Docker Compose
-- Python 3.12 (conda 환경 권장)
-- Node.js 18+ (프론트엔드)
+- **Docker Desktop** (필수!)
+- **Git** (코드 다운로드용)
+- **브라우저** (Chrome, Firefox, Safari 등)
 
-### 🐳 Docker로 시작하기 (권장)
+### 🐳 Docker로 시작하기 (가장 쉬운 방법)
 
+#### 1단계: Docker Desktop 설치 및 실행
 ```bash
-# 1. 프로젝트 클론
+# Docker Desktop 다운로드 및 설치
+# https://www.docker.com/products/docker-desktop/
+
+# Docker Desktop 실행 확인
+docker --version
+# 결과: Docker version 24.x.x 이상이어야 함
+
+# Docker 서비스가 실행 중인지 확인
+docker ps
+# 결과: 빈 테이블이 표시되면 정상 (아직 컨테이너가 없음)
+```
+
+#### 2단계: 프로젝트 다운로드
+```bash
+# 프로젝트 클론
 git clone https://github.com/your-username/lotto.git
 cd lotto
 
-# 2. Docker 서비스 시작
-docker-compose up -d
-
-# 3. 브라우저에서 접속
-# 프론트엔드: http://localhost:5173
-# 백엔드 API: http://localhost:8000
-# 관리자: http://localhost:5173/admin
-
-# 🚀 프로덕션 환경
-# 메인 사이트: https://lottoria.ai.kr
-# API 문서: https://lottoria.ai.kr/api/docs
+# 또는 ZIP 파일로 다운로드 후 압축 해제
 ```
 
-### 🔧 수동 설치
-
+#### 3단계: Docker 서비스 시작
 ```bash
-# 1. 백엔드 설정
-cd backend
+# 모든 서비스 한 번에 시작 (PostgreSQL + Backend + Frontend)
+docker-compose up -d
+
+# 시작 상태 확인
+docker-compose ps
+# 결과: 3개 컨테이너가 모두 "Up" 상태여야 함
+```
+
+#### 4단계: 서비스 접속
+```bash
+# 브라우저에서 접속
+# 프론트엔드: http://localhost:5173
+# 백엔드 API: http://localhost:8000/docs
+# 관리자: http://localhost:5173/admin
+```
+
+### 🔧 수동 설치 (고급 사용자용)
+
+#### 백엔드 설정
+```bash
+# Python 3.12 설치 (conda 권장)
 conda create -n py3_12 python=3.12
 conda activate py3_12
+
+# 백엔드 의존성 설치
+cd backend
 pip install -r requirements.txt
 
-# 2. 프론트엔드 설정
-cd ../frontend
-npm install
-npm run dev
+# 백엔드 실행
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
 
-# 3. 백엔드 실행
-cd ../backend
-python -m uvicorn app.main:app --reload
+#### 프론트엔드 설정
+```bash
+# Node.js 18+ 설치 확인
+node --version
+npm --version
+
+# 프론트엔드 의존성 설치
+cd frontend
+npm install
+
+# 프론트엔드 실행
+npm run dev
 ```
 
 ## 🏗️ 프로젝트 구조
@@ -118,12 +151,11 @@ lotto/
 ### Infrastructure
 - **Docker**: 컨테이너화된 배포
 - **Docker Compose**: 멀티 서비스 오케스트레이션
-- **Nginx**: 리버스 프록시 (프로덕션)
+- **Railway**: 클라우드 호스팅 (프로덕션)
 
 ## 📚 API 문서
 
 ### 주요 엔드포인트
-
 - `POST /api/v1/recommendations/generate` - AI 추천 생성
 - `GET /api/v1/lotto/latest` - 최신 당첨 번호
 - `GET /api/v1/lotto/statistics` - 통계 정보
@@ -163,19 +195,60 @@ lotto/
 ## 🚀 배포
 
 ### 프로덕션 환경
-- **도메인**: 준비 필요
-- **SSL 인증서**: 준비 필요
-- **호스팅**: Docker 기반 배포 준비 완료
-- **데이터베이스**: PostgreSQL 프로덕션 설정 준비 완료
+- **도메인**: https://lottoria.ai.kr
+- **SSL 인증서**: Railway 자동 적용
+- **호스팅**: Railway (Docker 기반)
+- **데이터베이스**: Railway PostgreSQL
 
 ### 배포 체크리스트
 - [x] 기능 테스트 완료
 - [x] UI/UX 최적화 완료
-- [x] 코드 정리 완료
-- [x] 문서 정리 완료
-- [ ] 도메인 및 호스팅 설정
-- [ ] SSL 인증서 적용
-- [ ] 프로덕션 환경 배포
+- [x] SEO 최적화 완료
+- [x] 브랜딩 통일 완료
+- [x] 프로덕션 환경 배포 완료
+
+## 🆘 문제 해결
+
+### Docker 관련 문제
+```bash
+# Docker Desktop이 실행되지 않는 경우
+# 1. Docker Desktop 재시작
+# 2. 시스템 재부팅
+# 3. Docker Desktop 재설치
+
+# 컨테이너가 시작되지 않는 경우
+docker-compose down
+docker-compose up -d
+
+# 포트 충돌 문제
+# 5432, 8000, 5173 포트가 사용 중인지 확인
+lsof -i :5432
+lsof -i :8000
+lsof -i :5173
+```
+
+### 데이터베이스 연결 문제
+```bash
+# PostgreSQL 컨테이너 상태 확인
+docker ps | grep postgres
+
+# PostgreSQL 로그 확인
+docker logs lotto_postgres
+
+# 데이터베이스 연결 테스트
+docker exec lotto_postgres psql -U lotto_user -d lotto_db -c "SELECT COUNT(*) FROM lotto_draws;"
+```
+
+### 프론트엔드 문제
+```bash
+# Node.js 버전 확인 (18+ 필요)
+node --version
+
+# 의존성 재설치
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
 
 ## 🤝 기여하기
 
@@ -204,4 +277,6 @@ lotto/
 
 **⭐ 이 프로젝트가 도움이 되었다면 스타를 눌러주세요!**
 
-**�� 현재 상태: 배포 준비 완료**
+**🚀 현재 상태: 프로덕션 배포 완료 + SEO 최적화 완료**
+
+**🌐 라이브 사이트: https://lottoria.ai.kr**

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useCookieConsent } from '../../hooks/useCookieConsent';
 
 // AdSense 타입 정의
 declare global {
@@ -20,59 +21,43 @@ const AdSense: React.FC<AdSenseProps> = ({
   style = {}, 
   className = '' 
 }) => {
-  const [isAdLoaded, setIsAdLoaded] = React.useState(false);
-  const [shouldShow, setShouldShow] = React.useState(false);
+  const consentStatus = useCookieConsent();
+  const [isAdPushed, setIsAdPushed] = useState(false);
 
-  React.useEffect(() => {
-    const checkAdSense = async () => {
+  useEffect(() => {
+    // consentStatus가 null이 아니면(즉, CMP로부터 응답을 받으면) 광고 로직을 실행합니다.
+    if (consentStatus) {
       try {
-        // AdSense 스크립트가 로드되었는지 확인
         if (typeof window !== 'undefined' && window.adsbygoogle) {
-          // 광고를 푸시하고 로드 확인
+          console.log('Pushing AdSense ad with consent:', consentStatus);
           (window.adsbygoogle = window.adsbygoogle || []).push({});
-          
-          // 잠시 후 광고가 실제로 로드되었는지 확인
-          setTimeout(() => {
-            const adElements = document.querySelectorAll('.adsbygoogle');
-            let hasLoadedAd = false;
-            
-            adElements.forEach((ad) => {
-              const adElement = ad as HTMLElement;
-              // 광고가 로드되면 data-adsbygoogle-status가 설정됨
-              if (adElement.getAttribute('data-adsbygoogle-status') === 'done' ||
-                  adElement.offsetHeight > 0) {
-                hasLoadedAd = true;
-              }
-            });
-            
-            setIsAdLoaded(hasLoadedAd);
-            setShouldShow(hasLoadedAd);
-          }, 1000);
+          setIsAdPushed(true);
         }
       } catch (error) {
-        console.warn('AdSense 로드 중 오류:', error);
-        setIsAdLoaded(false);
-        setShouldShow(false);
+        console.error('AdSense push error:', error);
       }
-    };
+    }
+  }, [consentStatus]); // consentStatus가 변경될 때마다 이 효과를 재실행합니다.
 
-    checkAdSense();
-  }, []);
-
-  // 광고가 로드되지 않았으면 아무것도 렌더링하지 않음
-  if (!shouldShow) {
+  // CMP 응답이 없거나, 광고가 아직 푸시되지 않았다면 렌더링하지 않습니다.
+  if (!consentStatus || !isAdPushed) {
     return null;
   }
+
+  // 비개인화 광고(NPA) 설정을 동의 상태에 따라 결정합니다.
+  // ad_storage가 'granted'가 아니면 NPA를 활성화합니다.
+  const npaSetting = consentStatus.ad_storage !== 'granted' ? '1' : '0';
 
   return (
     <div className={`adsense-container ${className}`} style={style}>
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-1813089661807173"
+        data-ad-client="ca-pub-1813089661807173" // 환경 변수 사용을 권장합니다.
         data-ad-slot={adSlot}
         data-ad-format={adFormat}
         data-full-width-responsive="true"
+        data-npa-on-unknown-consent={npaSetting}
       />
     </div>
   );
