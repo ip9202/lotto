@@ -3,8 +3,10 @@
 ## ⚠️ **개발 시작 전 필수 확인사항**
 
 ### 1. Python 개발환경 설정 (수동 개발 시) 🐍
+**⚠️ 중요: Python 코드 수정 시 반드시 conda 가상환경을 활성화해야 합니다!**
+
 ```bash
-# 기존 conda 가상환경 활성화
+# 기존 conda 가상환경 활성화 (필수!)
 conda activate py3_12
 
 # 가상환경 활성화 확인
@@ -15,6 +17,10 @@ echo $CONDA_DEFAULT_ENV
 python --version
 # 결과: Python 3.12.x
 ```
+
+**💡 참고**: 
+- **Docker 개발**: 일반적인 개발은 Docker 사용 (가상환경 불필요)
+- **Python 수정**: 백엔드 Python 코드 수정 시에만 conda 가상환경 필요
 
 ### 2. Docker Desktop 설치 및 실행 ✅
 ```bash
@@ -111,7 +117,9 @@ docker logs lotto_frontend
 
 ## 📝 **개발 워크플로우**
 
-### 방법 1: Docker 사용 (권장)
+### 방법 1: Docker 사용 (권장) 🐳
+**일반적인 개발, 프론트엔드 수정, 테스트 등에 사용**
+
 ```bash
 # 1. Docker Desktop 실행 확인
 docker ps
@@ -123,11 +131,14 @@ cd ~/develop/vibe/lotto
 docker-compose up -d
 
 # 4. 개발 시작! 🚀
+# 접속: http://localhost:5173
 ```
 
-### 방법 2: 수동 개발 (Python 코드 수정 시)
+### 방법 2: 수동 개발 (Python 코드 수정 시) 🐍
+**⚠️ 백엔드 Python 코드 수정 시에만 사용**
+
 ```bash
-# 1. 기존 conda 가상환경 활성화
+# 1. conda 가상환경 활성화 (필수!)
 conda activate py3_12
 
 # 2. 프로젝트 디렉토리로 이동
@@ -145,6 +156,10 @@ cd frontend
 npm install  # 처음 한 번만
 npm run dev
 ```
+
+**💡 언제 어떤 방법을 사용할까요?**
+- **Docker**: 프론트엔드 수정, 일반 개발, 테스트
+- **수동**: 백엔드 Python 코드 수정, 디버깅
 
 ### 2. 코드 수정
 ```bash
@@ -188,3 +203,14 @@ git push origin main
 **마지막 업데이트**: 2025년 1월 26일  
 **상태**: 🚀 **개발환경 설정 가이드 완성**  
 **다음 단계**: 🎯 **개발 시작**
+
+## 📋 **최근 업데이트 내역**
+
+### 2025년 1월 26일 - AdSense 정책 위반 수정
+- **문제**: 구글 AdSense에서 "게시자 콘텐츠가 없는 화면에 광고" 정책 위반 통지
+- **원인**: AdSense 승인 전에 광고를 미리 배치한 것이 정책 위반
+- **해결**: 
+  - Home 페이지에서 모든 AdSense 광고 제거
+  - Recommendation 페이지에서 결과가 있을 때만 광고 표시
+  - 구글 AdSense에서 사이트 검토 재요청 완료
+- **상태**: 승인 대기 중, 승인 후 실제 광고 단위로 교체 예정
