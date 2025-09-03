@@ -138,8 +138,8 @@ const Home: React.FC = () => {
         )}
       </div>
 
-      {/* 중간 광고 */}
-      <AdSense adSlot="2468013579" className="my-8" />
+      {/* 중간 광고 - 정책 위반 방지를 위해 제거 */}
+      {/* <AdSense adSlot="2468013579" className="my-8" /> */}
 
       {/* 서비스 특징 */}
       <div className="grid md:grid-cols-3 gap-6">
@@ -174,8 +174,8 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* 하단 광고 */}
-      <AdSense adSlot="1357924680" className="my-8" />
+      {/* 하단 광고 - 정책 위반 방지를 위해 제거 */}
+      {/* <AdSense adSlot="1357924680" className="my-8" /> */}
 
       {/* CTA 섹션 */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-center text-white">

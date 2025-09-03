@@ -581,8 +581,10 @@ const Recommendation: React.FC = () => {
             </div>
           ) : (
           <div className="space-y-8">
-            {/* 추천 결과 상단 광고 */}
-            <AdSense adSlot="9876543210" className="my-6" />
+            {/* 추천 결과 상단 광고 - 결과가 있을 때만 표시 */}
+            {recommendations.length > 0 && (
+              <AdSense adSlot="9876543210" className="my-6" />
+            )}
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendations.map((rec, index) => (
@@ -603,8 +605,10 @@ const Recommendation: React.FC = () => {
               ))}
             </div>
             
-            {/* 추천 결과 하단 광고 */}
-            <AdSense adSlot="5432109876" className="my-6" />
+            {/* 추천 결과 하단 광고 - 결과가 있을 때만 표시 */}
+            {recommendations.length > 0 && (
+              <AdSense adSlot="5432109876" className="my-6" />
+            )}
           </div>
           )}
       </div>
