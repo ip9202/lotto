@@ -241,8 +241,8 @@ const Recommendation: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
-      {/* 상단 광고 */}
-      <AdSenseBanner className="my-8" />
+      {/* 상단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
+      {/* <AdSenseBanner className="my-8" /> */}
 
       {/* 탭 네비게이션 */}
       <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
