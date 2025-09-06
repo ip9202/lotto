@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+// import { useLocation } from 'react-router-dom'; // 현재 사용하지 않음
 import SimpleCombination from '../components/SimpleCombination';
 import AnalysisModal from '../components/AnalysisModal';
 import UnifiedNumberManager from '../components/UnifiedNumberManager';
-import AdSenseBanner from '../components/AdSense/AdSenseBanner';
-import AdSense from '../components/AdSense/AdSense';
+// import AdSenseBanner from '../components/AdSense/AdSenseBanner'; // AdSense 정책 위반 방지를 위해 제거
+// import AdSense from '../components/AdSense/AdSense'; // AdSense 정책 위반 방지를 위해 제거
 
 interface Recommendation {
   numbers: number[];
@@ -15,7 +15,7 @@ interface Recommendation {
 }
 
 const Recommendation: React.FC = () => {
-  const location = useLocation();
+  // const location = useLocation(); // 현재 사용하지 않음
   const [selectedNumbers, setSelectedNumbers] = useState<number[][]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -184,7 +184,7 @@ const Recommendation: React.FC = () => {
     }
   };
 
-  const handleRegenerateCombination = async (index: number) => {
+  const handleRegenerateCombination = async (_index: number) => {
     // 추천기록 기능 일시 비활성화로 재생성 기능도 비활성화
     alert('재생성 기능은 추천기록 기능과 함께 일시 비활성화되었습니다.');
     return;
@@ -581,10 +581,10 @@ const Recommendation: React.FC = () => {
             </div>
           ) : (
           <div className="space-y-8">
-            {/* 추천 결과 상단 광고 - 결과가 있을 때만 표시 */}
-            {recommendations.length > 0 && (
+            {/* 추천 결과 상단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
+            {/* {recommendations.length > 0 && (
               <AdSense adSlot="9876543210" className="my-6" />
-            )}
+            )} */}
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendations.map((rec, index) => (
@@ -605,10 +605,10 @@ const Recommendation: React.FC = () => {
               ))}
             </div>
             
-            {/* 추천 결과 하단 광고 - 결과가 있을 때만 표시 */}
-            {recommendations.length > 0 && (
+            {/* 추천 결과 하단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
+            {/* {recommendations.length > 0 && (
               <AdSense adSlot="5432109876" className="my-6" />
-            )}
+            )} */}
           </div>
           )}
       </div>
