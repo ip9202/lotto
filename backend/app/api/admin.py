@@ -22,9 +22,14 @@ async def check_latest_data(db: Session = Depends(get_db)) -> Dict[str, Any]:
         latest_db_draw = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
         latest_db_number = latest_db_draw.draw_number if latest_db_draw else 0
         
-        # 로또 사이트에서 최신 회차 확인 (실제 구현 필요)
-        # 테스트용으로 1186회차까지만 발표된 것으로 가정
-        latest_site_draw = 1186  # 고정값으로 1186회차까지만
+        # 로또 사이트에서 최신 회차 확인 (실제 스크래핑 사용)
+        try:
+            latest_site_draw = await auto_updater._get_latest_site_draw_number()
+            logger.info(f"사이트에서 최신 회차 확인: {latest_site_draw}회차")
+        except Exception as e:
+            logger.error(f"사이트 스크래핑 실패: {str(e)}")
+            # 사이트 접근 실패 시 DB와 동일하게 설정하여 새 데이터 없음으로 처리
+            latest_site_draw = latest_db_number
         
         has_new_data = latest_site_draw > latest_db_number
         
