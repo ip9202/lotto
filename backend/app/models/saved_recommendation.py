@@ -36,7 +36,7 @@ class SavedRecommendation(Base):
     winning_rank = Column(Integer, nullable=True)  # 당첨 순위 (1~5등)
     winning_amount = Column(Integer, nullable=True)  # 당첨 금액
     matched_count = Column(Integer, default=0)  # 맞춘 번호 개수
-    matched_numbers = Column(JSON, nullable=True)  # 맞춘 번호들
+    matched_numbers = Column(ARRAY(Integer), nullable=True)  # 맞춘 번호들
     
     # 즐겨찾기 및 상태
     is_favorite = Column(Boolean, default=False, index=True)  # 즐겨찾기 여부
@@ -74,6 +74,11 @@ class SavedRecommendation(Base):
     def is_winner(self):
         """당첨 여부"""
         return self.winning_rank is not None and self.winning_rank <= 5
+    
+    @is_winner.setter
+    def is_winner(self, value):
+        """당첨 여부 설정 (winning_rank 기반으로 자동 계산)"""
+        pass  # winning_rank가 설정되면 자동으로 계산됨
     
     @property
     def winning_status(self):

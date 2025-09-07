@@ -349,3 +349,113 @@ async def get_recommendation_stats(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="통계 조회 중 오류가 발생했습니다"
         )
+
+@router.post("/check-winning", summary="당첨 결과 확인")
+async def check_winning_results(
+    draw_number: int = Query(..., description="회차 번호"),
+    winning_numbers: List[int] = Query(..., min_items=6, max_items=6, description="당첨 번호 6개"),
+    bonus_number: int = Query(..., description="보너스 번호"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """저장된 추천번호들의 당첨 결과 확인"""
+    
+    try:
+        # 사용자의 모든 활성 추천번호 조회
+        saved_recs = db.query(SavedRecommendation).filter(
+            and_(
+                SavedRecommendation.user_id == current_user.id,
+                SavedRecommendation.is_active == True
+            )
+        ).all()
+        
+        if not saved_recs:
+            return {
+                "success": True,
+                "message": "확인할 추천번호가 없습니다",
+                "data": {
+                    "checked_count": 0,
+                    "winners": [],
+                    "total_winnings": 0
+                }
+            }
+        
+        winners = []
+        total_winnings = 0
+        
+        for rec in saved_recs:
+            # 번호 매칭 확인
+            matched_numbers = list(set(rec.numbers) & set(winning_numbers))
+            matched_count = len(matched_numbers)
+            
+            # 당첨 등수 계산
+            winning_rank = None
+            winning_amount = 0
+            
+            if matched_count == 6:
+                # 1등 (6개 모두 일치)
+                winning_rank = 1
+                winning_amount = 2000000000  # 20억원 (예시)
+            elif matched_count == 5 and bonus_number in rec.numbers:
+                # 2등 (5개 일치 + 보너스 번호)
+                winning_rank = 2
+                winning_amount = 50000000  # 5천만원 (예시)
+            elif matched_count == 5:
+                # 3등 (5개 일치)
+                winning_rank = 3
+                winning_amount = 1500000  # 150만원 (예시)
+            elif matched_count == 4:
+                # 4등 (4개 일치)
+                winning_rank = 4
+                winning_amount = 50000  # 5만원 (예시)
+            elif matched_count == 3:
+                # 5등 (3개 일치)
+                winning_rank = 5
+                winning_amount = 5000  # 5천원 (예시)
+            
+            # 추천번호 업데이트
+            rec.is_checked = True
+            rec.matched_count = matched_count
+            rec.matched_numbers = matched_numbers  # INTEGER[] 타입으로 자동 변환됨
+            rec.winning_rank = winning_rank
+            rec.winning_amount = winning_amount
+            # is_winner는 winning_rank 기반으로 자동 계산됨
+            
+            if winning_rank:
+                winners.append({
+                    "id": rec.id,
+                    "numbers": rec.numbers,
+                    "matched_numbers": matched_numbers,
+                    "winning_rank": winning_rank,
+                    "winning_amount": winning_amount,
+                    "title": rec.title
+                })
+                total_winnings += winning_amount
+        
+        # 사용자 통계 업데이트
+        if winners:
+            current_user.total_wins += len(winners)
+            current_user.total_winnings += total_winnings
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": f"당첨 결과 확인 완료: {len(winners)}개 당첨",
+            "data": {
+                "draw_number": draw_number,
+                "winning_numbers": winning_numbers,
+                "bonus_number": bonus_number,
+                "checked_count": len(saved_recs),
+                "winners": winners,
+                "total_winnings": total_winnings
+            }
+        }
+        
+    except Exception as e:
+        logger.error(f"Check winning results error: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="당첨 결과 확인 중 오류가 발생했습니다"
+        )

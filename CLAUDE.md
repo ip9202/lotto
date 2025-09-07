@@ -86,6 +86,7 @@ lotto/
   - `PUT /api/v1/saved-recommendations/{id}` - Update saved recommendation
   - `DELETE /api/v1/saved-recommendations/{id}` - Delete saved recommendation
   - `GET /api/v1/saved-recommendations/stats/summary` - Get recommendation statistics
+  - `POST /api/v1/saved-recommendations/check-winning` - Check winning results
 
 ### Frontend Architecture
 - **React 18** with TypeScript
@@ -164,9 +165,25 @@ The recommendation engine uses a multi-factor analysis approach:
   - `user_id`: String → Integer (Primary Key)
   - `numbers`: JSON → INTEGER[] (PostgreSQL array)
   - `tags`: character varying[] → JSONB
+  - `matched_numbers`: JSON → INTEGER[] (PostgreSQL array)
 - **Foreign Key Updates**: `saved_recommendations.user_id` now references `users.id` instead of `users.user_id`
 - **Enum Values**: All enum values converted to uppercase (KAKAO, NAVER, FREE, PREMIUM, PRO)
 - **Authentication Fix**: JWT token now uses `users.id` for authentication instead of `users.user_id`
+
+### New Features Added (2025-09-08)
+- **Winning Results Check API**: Complete implementation of lottery winning verification
+  - Endpoint: `POST /api/v1/saved-recommendations/check-winning`
+  - Parameters: `draw_number`, `winning_numbers[]`, `bonus_number`
+  - Features: Automatic rank calculation (1st-5th place), prize amount calculation
+  - Database Updates: `is_checked`, `matched_count`, `matched_numbers`, `winning_rank`, `winning_amount`
+  - User Stats: Automatic update of `total_wins` and `total_winnings`
+- **Winning Rank System**:
+  - 1st Place: 6 numbers match
+  - 2nd Place: 5 numbers + bonus number
+  - 3rd Place: 5 numbers match
+  - 4th Place: 4 numbers match
+  - 5th Place: 3 numbers match
+- **Prize Amounts** (Example): 1st: 2B won, 2nd: 50M won, 3rd: 1.5M won, 4th: 50K won, 5th: 5K won
 
 ## Testing and Debugging
 
