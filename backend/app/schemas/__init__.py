@@ -8,6 +8,14 @@ from .recommendation import (
     RecommendationResponse, 
     APIResponse
 )
+from .user import (
+    UserCreate, UserUpdate, UserResponse, LoginRequest, LoginResponse, 
+    TokenResponse, UserStats, UserProfile
+)
+from .saved_recommendation import (
+    SavedRecommendationCreate, SavedRecommendationUpdate, SavedRecommendationResponse,
+    SavedRecommendationList, RecommendationStats
+)
 
 __all__ = [
     "LottoNumber", 
@@ -18,7 +26,20 @@ __all__ = [
     "CombinationAnalysis", 
     "CombinationDetail", 
     "RecommendationResponse", 
-    "APIResponse"
+    "APIResponse",
+    "UserCreate",
+    "UserUpdate", 
+    "UserResponse",
+    "LoginRequest",
+    "LoginResponse",
+    "TokenResponse",
+    "UserStats",
+    "UserProfile",
+    "SavedRecommendationCreate",
+    "SavedRecommendationUpdate",
+    "SavedRecommendationResponse",
+    "SavedRecommendationList",
+    "RecommendationStats"
 ]
 
 

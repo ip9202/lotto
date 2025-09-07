@@ -3,8 +3,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import settings
 
-# 데이터베이스 URL 생성
-SQLALCHEMY_DATABASE_URL = settings.database_url
+# 데이터베이스 URL 생성 (환경별)
+SQLALCHEMY_DATABASE_URL = settings.database_url_with_fallback
 
 # 엔진 생성
 engine = create_engine(

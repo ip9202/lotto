@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# /save - Git staging 슬래시 명령어
+# 현재 디렉토리의 모든 변경사항을 git staging area에 추가
+
+echo "🔄 Git staging 시작..."
+
+# git status 확인
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
+    echo "❌ Git 저장소가 아닙니다."
+    exit 1
+fi
+
+# 변경사항 확인
+if git diff --quiet && git diff --cached --quiet && [ -z "$(git ls-files --others --exclude-standard)" ]; then
+    echo "✅ 변경사항이 없습니다."
+    exit 0
+fi
+
+# git add 실행
+git add .
+
+# 결과 확인
+echo "✅ Git staging 완료!"
+echo ""
+echo "📋 Staging된 파일들:"
+git diff --cached --name-status
+echo ""
+echo "💡 커밋하려면: git commit -m \"커밋 메시지\""

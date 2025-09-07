@@ -17,3 +17,6 @@ pytest==7.4.3
 pytest-asyncio==0.21.1
 APScheduler==3.10.4
 beautifulsoup4==4.12.2
+# 소셜 로그인을 위한 OAuth2 라이브러리
+authlib==1.2.1
+httpx==0.25.0
