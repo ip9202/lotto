@@ -48,7 +48,13 @@ def get_user_from_token(db: Session, token: str) -> Optional[User]:
     if not user_id:
         return None
     
-    user = db.query(User).filter(User.user_id == user_id).first()
+    # user_id가 숫자 문자열이면 id로 조회, 그렇지 않으면 user_id로 조회
+    try:
+        user_db_id = int(user_id)
+        user = db.query(User).filter(User.id == user_db_id).first()
+    except ValueError:
+        user = db.query(User).filter(User.user_id == user_id).first()
+    
     if user:
         user.update_last_login()
         db.commit()

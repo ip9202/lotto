@@ -36,11 +36,11 @@ async def save_recommendation(
     try:
         # 새 추천 생성
         saved_rec = SavedRecommendation(
-            user_id=current_user.user_id,
+            user_id=current_user.id,
             numbers=recommendation_data.numbers,
             confidence_score=recommendation_data.confidence_score,
             generation_method=recommendation_data.generation_method,
-            analysis_data=recommendation_data.analysis_data,
+            analysis_data=recommendation_data.analysis_data if recommendation_data.analysis_data else None,
             title=recommendation_data.title,
             memo=recommendation_data.memo,
             tags=recommendation_data.tags,
@@ -85,7 +85,7 @@ async def get_saved_recommendations(
         # 기본 쿼리
         query = db.query(SavedRecommendation).filter(
             and_(
-                SavedRecommendation.user_id == current_user.user_id,
+                SavedRecommendation.user_id == current_user.id,
                 SavedRecommendation.is_active == True
             )
         )
@@ -153,7 +153,7 @@ async def get_saved_recommendation(
     saved_rec = db.query(SavedRecommendation).filter(
         and_(
             SavedRecommendation.id == recommendation_id,
-            SavedRecommendation.user_id == current_user.user_id
+            SavedRecommendation.user_id == current_user.id
         )
     ).first()
     
@@ -177,7 +177,7 @@ async def update_saved_recommendation(
     saved_rec = db.query(SavedRecommendation).filter(
         and_(
             SavedRecommendation.id == recommendation_id,
-            SavedRecommendation.user_id == current_user.user_id
+            SavedRecommendation.user_id == current_user.id
         )
     ).first()
     
@@ -222,7 +222,7 @@ async def delete_saved_recommendation(
     saved_rec = db.query(SavedRecommendation).filter(
         and_(
             SavedRecommendation.id == recommendation_id,
-            SavedRecommendation.user_id == current_user.user_id
+            SavedRecommendation.user_id == current_user.id
         )
     ).first()
     
@@ -262,7 +262,7 @@ async def toggle_favorite(
     saved_rec = db.query(SavedRecommendation).filter(
         and_(
             SavedRecommendation.id == recommendation_id,
-            SavedRecommendation.user_id == current_user.user_id
+            SavedRecommendation.user_id == current_user.id
         )
     ).first()
     
@@ -299,7 +299,7 @@ async def get_recommendation_stats(
     
     try:
         saved_recs = db.query(SavedRecommendation).filter(
-            SavedRecommendation.user_id == current_user.user_id
+            SavedRecommendation.user_id == current_user.id
         ).all()
         
         total_saved = len(saved_recs)

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON, Float, ForeignKey, Index
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, JSON, Float, ForeignKey, Index, ARRAY
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from ..database import Base
@@ -10,10 +10,10 @@ class SavedRecommendation(Base):
     
     # 기본 정보
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(String(255), ForeignKey("users.user_id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     
     # 추천 번호 정보
-    numbers = Column(JSON, nullable=False)  # [1, 15, 23, 28, 35, 42] 형태
+    numbers = Column(ARRAY(Integer), nullable=False)  # [1, 15, 23, 28, 35, 42] 형태
     bonus_number = Column(Integer, nullable=True)  # 보너스 번호 (당첨 시 확인용)
     
     # AI 추천 관련 정보

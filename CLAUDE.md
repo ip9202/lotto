@@ -59,7 +59,17 @@ lotto/
 - **Recommendation**: Generated lottery recommendations
 - **UserSession**: User session management for storing preferences and history
 - **User**: User account management with social login (Kakao/Naver)
+  - Primary key: `id` (INTEGER)
+  - Unique identifier: `user_id` (VARCHAR)
+  - Social login: `social_provider`, `social_id`
+  - Subscription: `subscription_plan`, `subscription_status`
+  - Preferences: `preferences` (JSONB), `notification_settings` (JSONB)
 - **SavedRecommendation**: User's saved lottery number combinations
+  - Foreign key: `user_id` references `users(id)`
+  - Numbers: `numbers` (INTEGER[])
+  - Metadata: `title`, `memo`, `tags` (JSONB)
+  - Status: `is_active`, `is_favorite`, `is_purchased`
+  - Winning: `winning_rank`, `winning_amount`, `matched_count`
 
 #### API Architecture
 - **RESTful API** with FastAPI
@@ -70,7 +80,12 @@ lotto/
   - `GET /admin/*` - Admin dashboard endpoints
   - `POST /api/v1/auth/login` - Social login (Kakao/Naver)
   - `GET /api/v1/auth/me` - Get current user info
+  - `GET /api/v1/auth/profile` - Get user profile with stats
   - `POST /api/v1/saved-recommendations` - Save user's lottery numbers
+  - `GET /api/v1/saved-recommendations` - Get saved recommendations list
+  - `PUT /api/v1/saved-recommendations/{id}` - Update saved recommendation
+  - `DELETE /api/v1/saved-recommendations/{id}` - Delete saved recommendation
+  - `GET /api/v1/saved-recommendations/stats/summary` - Get recommendation statistics
 
 ### Frontend Architecture
 - **React 18** with TypeScript
@@ -141,37 +156,102 @@ The recommendation engine uses a multi-factor analysis approach:
 - **Authentication Flow**: Social OAuth2 → Backend verification → JWT token → Frontend localStorage
 - **IMPORTANT**: All responses and communication in this project should be in Korean (한글)
 
+### Recent Database Schema Changes (2025-09-07)
+- **Major Schema Updates**: Database structure significantly updated to match SQLAlchemy models
+- **User Table**: Added `user_id`, `is_verified`, `subscription_plan`, `preferences`, `notification_settings`, `last_login_at`
+- **SavedRecommendations Table**: Added `bonus_number`, `is_purchased`, `purchase_date`, `is_checked`, `winning_rank`, `winning_amount`, `matched_count`, `matched_numbers`
+- **Data Type Changes**: 
+  - `user_id`: String → Integer (Primary Key)
+  - `numbers`: JSON → INTEGER[] (PostgreSQL array)
+  - `tags`: character varying[] → JSONB
+- **Foreign Key Updates**: `saved_recommendations.user_id` now references `users.id` instead of `users.user_id`
+- **Enum Values**: All enum values converted to uppercase (KAKAO, NAVER, FREE, PREMIUM, PRO)
+- **Authentication Fix**: JWT token now uses `users.id` for authentication instead of `users.user_id`
+
 ## Testing and Debugging
 
 ### Authentication System Testing
 - **Social Login Test**: Use mock tokens in development for Kakao/Naver login
 - **JWT Token Validation**: Check `/api/v1/auth/me` endpoint with Bearer token
-- **Database Tables**: Ensure `users` and `saved_recommendations` tables exist
+- **Database Tables**: Ensure `users` and `saved_recommendations` tables exist with correct schema
 - **Frontend Auth Flow**: Test UserAuthContext state management and localStorage persistence
+- **CRUD Operations**: Test save, list, update, delete operations for saved recommendations
+- **User Profile**: Test `/api/v1/auth/profile` endpoint for complete user data
+- **Statistics**: Test `/api/v1/saved-recommendations/stats/summary` for user statistics
+
+### Database Schema Notes
+- **Primary Keys**: `users.id` (INTEGER), `saved_recommendations.id` (INTEGER)
+- **Foreign Keys**: `saved_recommendations.user_id` → `users.id`
+- **Data Types**: 
+  - `numbers`: INTEGER[] (PostgreSQL array)
+  - `tags`: JSONB (PostgreSQL JSON)
+  - `preferences`: JSONB
+  - `analysis_data`: JSONB
+- **Enum Values**: Use uppercase (KAKAO, NAVER, FREE, PREMIUM, PRO)
+- **Indexes**: Created on `user_id`, `is_active`, `created_at` for performance
 
 ### Database Setup
 If SQLAlchemy create_all fails, manually create tables:
 ```sql
 -- Connect to PostgreSQL in Docker
-docker exec -it lotto-db-1 psql -U lotto_user -d lotto_db
+docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 
--- User authentication table
+-- User authentication table (Updated schema)
 CREATE TABLE users (
-    user_id VARCHAR PRIMARY KEY,
-    nickname VARCHAR,
-    profile_image_url VARCHAR,
-    email VARCHAR,
-    social_provider VARCHAR NOT NULL,
-    subscription_plan VARCHAR DEFAULT 'FREE',
-    subscription_status VARCHAR DEFAULT 'ACTIVE',
-    -- ... other fields as defined in models/user.py
+    id SERIAL PRIMARY KEY,
+    user_id VARCHAR(255) UNIQUE,
+    social_provider VARCHAR(20) NOT NULL,
+    social_id VARCHAR(255) NOT NULL,
+    nickname VARCHAR(100),
+    email VARCHAR(255),
+    profile_image_url TEXT,
+    is_premium BOOLEAN DEFAULT FALSE,
+    subscription_status VARCHAR(50) DEFAULT 'free',
+    subscription_plan VARCHAR(20) DEFAULT 'free',
+    subscription_start_date TIMESTAMP,
+    subscription_end_date TIMESTAMP,
+    daily_recommendation_count INTEGER DEFAULT 0,
+    daily_recommendation_limit INTEGER DEFAULT 5,
+    total_saved_numbers INTEGER DEFAULT 0,
+    total_saved_limit INTEGER DEFAULT 10,
+    total_wins INTEGER DEFAULT 0,
+    total_winnings BIGINT DEFAULT 0,
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_verified BOOLEAN DEFAULT FALSE,
+    last_recommendation_date TIMESTAMP WITH TIME ZONE,
+    preferences JSONB,
+    notification_settings JSONB,
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    UNIQUE(social_id, social_provider)
 );
 
--- Saved recommendations table  
+-- Saved recommendations table (Updated schema)
 CREATE TABLE saved_recommendations (
     id SERIAL PRIMARY KEY,
-    user_id VARCHAR REFERENCES users(user_id),
-    numbers VARCHAR NOT NULL,
-    -- ... other fields as defined in models/saved_recommendation.py
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    numbers INTEGER[] NOT NULL,
+    bonus_number INTEGER,
+    confidence_score DOUBLE PRECISION,
+    generation_method VARCHAR(20) NOT NULL,
+    analysis_data JSONB,
+    title VARCHAR(255),
+    memo TEXT,
+    tags JSONB,
+    target_draw_number INTEGER,
+    is_active BOOLEAN DEFAULT TRUE,
+    is_favorite BOOLEAN DEFAULT FALSE,
+    winning_result JSONB,
+    prize_amount INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_purchased BOOLEAN DEFAULT FALSE,
+    purchase_date TIMESTAMP WITH TIME ZONE,
+    is_checked BOOLEAN DEFAULT FALSE,
+    winning_rank INTEGER,
+    winning_amount BIGINT,
+    matched_count INTEGER DEFAULT 0,
+    matched_numbers INTEGER[]
 );
 ```

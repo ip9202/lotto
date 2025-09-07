@@ -53,7 +53,7 @@ class SavedRecommendationUpdate(BaseModel):
 class SavedRecommendationResponse(BaseModel):
     """저장된 추천 응답"""
     id: int
-    user_id: str
+    user_id: int
     numbers: List[int]
     numbers_string: str
     confidence_score: float
