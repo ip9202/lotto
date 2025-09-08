@@ -381,15 +381,6 @@ const Admin: React.FC = () => {
   // 관리자 권한 확인
   const isAdmin = user?.role === 'admin';
   
-  // 디버깅용 로그
-  console.log('Admin 페이지 상태:', {
-    isAuthenticated,
-    user,
-    userRole: user?.role,
-    isAdmin,
-    isLoading
-  });
-  
   // 로그인하지 않은 경우 로그인 페이지로 리다이렉트 (로딩 완료 후에만)
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

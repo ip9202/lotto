@@ -588,4 +588,84 @@ const logout = () => {
 - ✅ **로그아웃 개선**: 로그아웃 시 메인페이지 자동 이동
 - ✅ **콘솔 로그 정리**: 프로덕션 환경 준비 완료
 - ✅ **사용자 경험**: 일관된 계정 관리 경험 제공
+
+## ✅ 관리자 로그인 시스템 통합 완료 (2025-09-08)
+
+### 🎯 주요 변경사항
+- **관리자 로그인 통합**: 별도 관리자 로그인 시스템을 일반 로그인으로 통합
+- **헤더 정리**: 관리자 메뉴 제거 및 불필요한 파일 삭제
+- **권한 기반 접근**: 관리자 페이지는 관리자 권한이 있는 계정만 접근 가능
+- **사용자 경험 개선**: 모든 로그인이 하나의 시스템으로 통합
+
+### 🔧 기술적 수정사항
+
+#### 1. 관리자 계정 설정
+**Backend (`ip9202@gmail.com` 계정)**
+```python
+# 관리자 계정 정보
+이메일: ip9202@gmail.com
+비밀번호: admin123
+역할: UserRole.ADMIN
+로그인 방식: LoginMethod.EMAIL
+```
+
+#### 2. Admin.tsx 통합
+**Frontend (`frontend/src/pages/Admin.tsx`)**
+```typescript
+// UnifiedAuthContext 사용으로 변경
+const { user, isAuthenticated, logout, isLoading } = useUnifiedAuth();
+
+// 관리자 권한 확인
+const isAdmin = user?.role === 'admin';
+
+// 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+useEffect(() => {
+  if (!isLoading && !isAuthenticated) {
+    navigate('/login');
+  }
+}, [isAuthenticated, isLoading, navigate]);
+
+// 관리자가 아닌 경우 접근 거부
+if (!isAdmin) {
+  return <AccessDeniedComponent />;
+}
+```
+
+#### 3. UserResponse 스키마 수정
+**Backend (`backend/app/schemas/user.py`)**
+```python
+class UserResponse(BaseModel):
+    """사용자 응답 데이터"""
+    user_id: str
+    nickname: Optional[str]
+    # ... 기존 필드들 ...
+    role: Optional[str] = None  # 추가된 필드
+    # ... 나머지 필드들 ...
+```
+
+#### 4. 불필요한 파일 제거
+- **AdminLogin.tsx**: 관리자 로그인 컴포넌트 삭제
+- **AdminAuthContext.tsx**: 관리자 인증 컨텍스트 삭제
+- **AdminAuth/ 디렉토리**: 빈 디렉토리 삭제
+- **Layout.tsx**: 헤더에서 관리자 메뉴 제거
+
+#### 5. App.tsx 라우트 단순화
+```typescript
+// 기존: AdminAuthProvider로 감싸진 복잡한 구조
+<Route path="/admin" element={
+  <AdminAuthProvider>
+    <Admin />
+  </AdminAuthProvider>
+} />
+
+// 수정: 단순한 라우트
+<Route path="/admin" element={<Admin />} />
+```
+
+### 📊 최종 결과
+- ✅ **통합 로그인**: 모든 사용자가 하나의 로그인 시스템 사용
+- ✅ **권한 기반 접근**: 관리자 페이지는 관리자 권한 계정만 접근
+- ✅ **코드 정리**: 불필요한 관리자 관련 파일들 제거
+- ✅ **사용자 경험**: 일관된 로그인 경험 제공
+- ✅ **유지보수성**: 단일 인증 시스템으로 관리 복잡도 감소
 ```
