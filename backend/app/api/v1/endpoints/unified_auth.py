@@ -236,7 +236,7 @@ async def change_password(
             )
         
         # 현재 비밀번호 확인
-        if not verify_password(current_password, current_user.hashed_password):
+        if not verify_password(current_password, current_user.password_hash):
             return AuthResponse(
                 success=False,
                 error={"message": "현재 비밀번호가 올바르지 않습니다."}
@@ -244,7 +244,7 @@ async def change_password(
         
         # 새 비밀번호 해시화
         new_hashed_password = get_password_hash(new_password)
-        current_user.hashed_password = new_hashed_password
+        current_user.password_hash = new_hashed_password
         
         db.commit()
         
