@@ -369,9 +369,23 @@ const Login: React.FC = () => {
   };
 
   // 이미 로그인된 경우 홈으로 리다이렉트
+  useEffect(() => {
+    if (isAuthenticated && !showKakaoLink) {
+      navigate('/');
+    }
+  }, [isAuthenticated, showKakaoLink, navigate]);
+
+  // 이미 로그인된 경우 로딩 표시
   if (isAuthenticated && !showKakaoLink) {
-    navigate('/');
-    return null;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">이미 로그인됨</h2>
+          <p className="text-gray-600">홈으로 이동 중...</p>
+        </div>
+      </div>
+    );
   }
 
   // 카카오 로그인 성공 후 로딩 중일 때 전체 화면 로딩 표시
