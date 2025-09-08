@@ -3,8 +3,11 @@ from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
 from ..models.user import User, SocialProvider
 from ..config import settings
+from ..database import get_db
 import httpx
 import logging
 
@@ -281,3 +284,17 @@ def verify_password(plain_password, hashed_password):
 def get_password_hash(password):
     """비밀번호 해싱 (admin용)"""
     return pwd_context.hash(password)
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
+    """현재 로그인한 사용자 정보 조회 (Dependency)"""
+    
+    user = get_user_from_token(db, token)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="인증되지 않은 사용자입니다.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return user

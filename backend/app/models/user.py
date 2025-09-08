@@ -12,6 +12,16 @@ class SocialProvider(enum.Enum):
     NAVER = "naver"
     # 추후 구글, 애플 등 확장 가능
 
+class LoginMethod(enum.Enum):
+    """로그인 방식"""
+    SOCIAL = "social"
+    EMAIL = "email"
+
+class UserRole(enum.Enum):
+    """사용자 역할"""
+    USER = "user"
+    ADMIN = "admin"
+
 class SubscriptionPlan(enum.Enum):
     """구독 플랜"""
     FREE = "free"
@@ -26,12 +36,22 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(String(255), unique=True, nullable=False, index=True)  # 고유 사용자 ID
     
-    # 소셜 로그인 정보
-    social_provider = Column(SQLEnum(SocialProvider), nullable=False)
-    social_id = Column(String(255), nullable=False)  # 카카오/네이버에서 제공하는 ID
+    # 인증 정보
+    login_method = Column(SQLEnum(LoginMethod), nullable=False, default=LoginMethod.SOCIAL)  # 로그인 방식
+    role = Column(SQLEnum(UserRole), nullable=False, default=UserRole.USER)  # 사용자 역할
+    
+    # 소셜 로그인 정보 (소셜 로그인인 경우에만 사용)
+    social_provider = Column(SQLEnum(SocialProvider), nullable=True)  # 소셜 제공자
+    social_id = Column(String(255), nullable=True)  # 카카오/네이버에서 제공하는 ID
+    
+    # 이메일 로그인 정보 (직접 회원가입인 경우에만 사용)
+    password_hash = Column(String(255), nullable=True)  # 비밀번호 해시
+    
+    # 소셜 연동 정보 (연동된 소셜 제공자들)
+    linked_social_providers = Column(JSON, nullable=True, default=list)  # ["kakao", "naver"]
     
     # 프로필 정보
-    email = Column(String(255), nullable=True, index=True)  # 소셜에서 제공받는 이메일
+    email = Column(String(255), nullable=True, index=True)  # 이메일 (소셜/직접 모두)
     nickname = Column(String(100), nullable=True)  # 표시용 닉네임
     profile_image_url = Column(String(500), nullable=True)  # 프로필 이미지 URL
     
@@ -68,6 +88,8 @@ class User(Base):
     # 복합 인덱스
     __table_args__ = (
         Index('idx_social_provider_id', 'social_provider', 'social_id'),  # 소셜 로그인 조회용
+        Index('idx_email_login', 'email', 'login_method'),  # 이메일 로그인 조회용
+        Index('idx_user_role', 'role', 'is_active'),  # 역할 기반 조회용
         Index('idx_user_active', 'is_active', 'created_at'),
         Index('idx_subscription', 'subscription_plan', 'subscription_end_date'),
         Index('idx_daily_limit', 'last_recommendation_date', 'daily_recommendation_count'),
@@ -181,14 +203,19 @@ class User(Base):
     def to_dict(self):
         """딕셔너리 변환 (API 응답용)"""
         return {
+            "id": self.id,
             "user_id": self.user_id,
             "nickname": self.nickname,
             "profile_image_url": self.profile_image_url,
             "email": self.email,
+            "login_method": self.login_method.value if self.login_method else None,
+            "role": self.role.value if self.role else None,
             "social_provider": self.social_provider.value if self.social_provider else None,
+            "linked_social_providers": self.linked_social_providers or [],
             "subscription_plan": self.subscription_plan.value if self.subscription_plan else "free",
             "subscription_status": self.subscription_status,
             "is_premium": self.is_premium,
+            "is_verified": self.is_verified,
             "preferences": self.preferences,
             "notification_settings": self.notification_settings,
             "total_wins": self.total_wins,

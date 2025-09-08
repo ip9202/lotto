@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useUserAuth } from '../../contexts/UserAuthContext';
+import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 const UserProfile: React.FC = () => {
-  const { user, logout, isAuthenticated } = useUserAuth();
+  const { user, logout, isAuthenticated } = useUnifiedAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   if (!isAuthenticated || !user) {

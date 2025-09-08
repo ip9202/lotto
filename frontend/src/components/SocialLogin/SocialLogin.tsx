@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useUserAuth } from '../../contexts/UserAuthContext';
+import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 interface SocialLoginProps {
   onLogin?: (token: string, user: any) => void;
@@ -8,7 +8,7 @@ interface SocialLoginProps {
 }
 
 const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className = '' }) => {
-  const { login } = useUserAuth();
+  const { socialLogin } = useUnifiedAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

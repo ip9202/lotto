@@ -4,8 +4,11 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Recommendation from './pages/Recommendation';
 import Admin from './pages/Admin';
+import Login from './pages/Login';
+import Register from './pages/Register';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
 import { UserAuthProvider, useUserAuth } from './contexts/UserAuthContext';
+import { UnifiedAuthProvider, useUnifiedAuth } from './contexts/UnifiedAuthContext';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookieSettings from './pages/CookieSettings';
 import Terms from './pages/Terms';
@@ -13,7 +16,7 @@ import Terms from './pages/Terms';
 
 // 전역 콜백 처리 컴포넌트
 const CallbackHandler: React.FC = () => {
-  const { login } = useUserAuth();
+  const { socialLogin } = useUnifiedAuth();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -38,8 +41,8 @@ const CallbackHandler: React.FC = () => {
               if (result.success && result.data) {
                 console.log('전역 카카오 로그인 성공:', result.data);
                 
-                // 로그인 처리
-                login(result.data.access_token, result.data.user);
+                // 통합 인증으로 로그인 처리
+                await socialLogin('kakao', result.data.access_token);
                 
                 // URL 정리
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -62,8 +65,8 @@ const CallbackHandler: React.FC = () => {
               if (result.success && result.data) {
                 console.log('전역 네이버 로그인 성공:', result.data);
                 
-                // 로그인 처리
-                login(result.data.access_token, result.data.user);
+                // 통합 인증으로 로그인 처리
+                await socialLogin('naver', result.data.access_token);
                 
                 // URL 정리
                 window.history.replaceState({}, document.title, window.location.pathname);
@@ -84,19 +87,21 @@ const CallbackHandler: React.FC = () => {
     };
 
     handleCallback();
-  }, [login]);
+  }, [socialLogin]);
 
   return null;
 };
 
 const App: React.FC = () => {
   return (
-    <UserAuthProvider>
+    <UnifiedAuthProvider>
       <CallbackHandler />
       <Layout>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/recommendation" element={<Recommendation />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/admin" element={
             <AdminAuthProvider>
               <Admin />
@@ -108,7 +113,7 @@ const App: React.FC = () => {
           {/* <Route path="/history" element={<History />} /> 이전기록 기능 개발 중 - 일시 비활성화 */}
         </Routes>
       </Layout>
-    </UserAuthProvider>
+    </UnifiedAuthProvider>
   );
 };
 

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { UserProfile } from '../UserProfile';
 import { SocialLogin } from '../SocialLogin';
-import { useUserAuth } from '../../contexts/UserAuthContext';
+import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,7 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const { isAuthenticated } = useUserAuth();
+  const { isAuthenticated } = useUnifiedAuth();
 
   // 디버깅을 위한 로그
   console.log('Layout rendered, current location:', location.pathname);

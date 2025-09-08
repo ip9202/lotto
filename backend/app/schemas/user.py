@@ -27,7 +27,7 @@ class UserResponse(BaseModel):
     nickname: Optional[str]
     profile_image_url: Optional[str]
     email: Optional[str]
-    social_provider: str
+    social_provider: Optional[str]
     subscription_plan: str
     subscription_status: str
     is_premium: bool

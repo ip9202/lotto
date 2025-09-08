@@ -175,6 +175,16 @@ The recommendation engine uses a multi-factor analysis approach:
 - **Authentication Fix**: JWT token now uses `users.id` for authentication instead of `users.user_id`
 
 ### New Features Added (2025-09-08)
+- **Unified Authentication System**: Complete implementation of email + social login system
+  - **Email Registration/Login**: Direct email/password authentication
+  - **Social Login Integration**: Kakao login with account linking
+  - **Admin Management**: Role-based access control with admin panel
+  - **Login Persistence**: Page refresh maintains authentication state
+  - **Database Schema**: Extended User model with password_hash, role, login_method fields
+  - **API Endpoints**: `/api/v1/auth/*` for unified authentication
+  - **Frontend Context**: `UnifiedAuthContext` for state management
+  - **Pages**: `/login`, `/register` for user authentication
+
 - **Winning Results Check API**: Complete implementation of lottery winning verification
   - Endpoint: `POST /api/v1/saved-recommendations/check-winning`
   - Parameters: `draw_number`, `winning_numbers[]`, `bonus_number`
