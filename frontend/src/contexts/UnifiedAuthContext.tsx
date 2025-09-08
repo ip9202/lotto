@@ -110,17 +110,25 @@ export const UnifiedAuthProvider: React.FC<{ children: ReactNode }> = ({ childre
       }
 
       const result = await AuthService.getCurrentUser();
+      console.log('checkAuthStatus API 응답:', result);
       
       // API 응답이 직접 사용자 데이터인 경우
       if (result && result.user_id) {
+        console.log('직접 사용자 데이터로 설정:', result);
         setUser(result);
+        console.log('setUser 호출 완료');
       } else if (result && result.success && result.data && result.data.user) {
         // success 필드가 있고 data.user가 있는 경우
+        console.log('data.user로 설정:', result.data.user);
         setUser(result.data.user);
+        console.log('setUser 호출 완료');
       } else if (result && result.success && result.data) {
         // success 필드가 있고 data가 사용자 데이터인 경우
+        console.log('data로 설정:', result.data);
         setUser(result.data);
+        console.log('setUser 호출 완료');
       } else {
+        console.log('사용자 데이터 없음, 토큰 제거');
         localStorage.removeItem('access_token');
         setUser(null);
       }
