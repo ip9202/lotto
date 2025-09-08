@@ -195,7 +195,8 @@ The recommendation engine uses a multi-factor analysis approach:
   - 백엔드에서 카카오 API 토큰 교환 (`get_kakao_access_token`)
   - 사용자 정보 조회 (고유 ID만 수집, 개인정보 최소화)
   - JWT 토큰 생성 및 프론트엔드 로그인 상태 관리
-  - URL 콜백 처리 및 자동 로그인 완료
+  - **전역 콜백 처리**: App.tsx의 CallbackHandler로 안정적인 로그인 처리
+  - **즉시 로그인 완료**: 새로고침 없이도 로그인 상태 즉시 반영
 - **네이버 소셜 로그인 준비 완료** (검수 대기 중):
   - 네이버 OAuth 2.0 플로우 구현 완료
   - 백엔드 토큰 교환 로직 구현 (`get_naver_access_token`)
@@ -209,6 +210,10 @@ The recommendation engine uses a multi-factor analysis approach:
   - 최소한의 개인정보만 수집 (고유 ID, 닉네임)
   - 이메일, 프로필 이미지 등은 선택적 수집
   - 법적 리스크 최소화를 위한 데이터 수집 정책 적용
+- **AdSense 통합** (심사용):
+  - Google AdSense 스크립트 복원 (심사 진행 중)
+  - 에러 방지 처리가 포함된 안전한 로드
+  - 심사 완료 후 정상 운영 예정
 
 ## Testing and Debugging
 

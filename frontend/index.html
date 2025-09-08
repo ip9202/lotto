@@ -36,6 +36,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#3B82F6" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="로또리아 AI" />
@@ -86,11 +87,16 @@
       });
     </script>
     
-    <!-- 🎯 Google AdSense -->
+    <!-- 🎯 Google AdSense (심사용) -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1813089661807173"
      crossorigin="anonymous"></script>
     <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
+      // AdSense 초기화 (에러 방지)
+      try {
+        (adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (e) {
+        console.log('AdSense initialization skipped:', e.message);
+      }
     </script>
     
     <!-- 🔐 소셜 로그인 SDK -->

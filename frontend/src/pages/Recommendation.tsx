@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import SimpleCombination from '../components/SimpleCombination';
 import AnalysisModal from '../components/AnalysisModal';
 import UnifiedNumberManager from '../components/UnifiedNumberManager';
-// import AdSenseBanner from '../components/AdSense/AdSenseBanner'; // AdSense 정책 위반 방지를 위해 제거
-// import AdSense from '../components/AdSense/AdSense'; // AdSense 정책 위반 방지를 위해 제거
+// AdSense 관련 import 제거 (심사 완료 후 추가 예정)
 
 interface Recommendation {
   numbers: number[];
@@ -227,8 +226,7 @@ const Recommendation: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
-      {/* 상단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
-      {/* <AdSenseBanner className="my-8" /> */}
+      {/* AdSense 배너 제거 (심사 완료 후 추가 예정) */}
 
       {/* 탭 네비게이션 */}
       <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
@@ -567,10 +565,7 @@ const Recommendation: React.FC = () => {
             </div>
           ) : (
           <div className="space-y-8">
-            {/* 추천 결과 상단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
-            {/* {recommendations.length > 0 && (
-              <AdSense adSlot="9876543210" className="my-6" />
-            )} */}
+            {/* AdSense 광고 제거 (심사 완료 후 추가 예정) */}
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendations.map((rec, index) => (
@@ -591,10 +586,7 @@ const Recommendation: React.FC = () => {
               ))}
             </div>
             
-            {/* 추천 결과 하단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
-            {/* {recommendations.length > 0 && (
-              <AdSense adSlot="5432109876" className="my-6" />
-            )} */}
+            {/* AdSense 광고 제거 (심사 완료 후 추가 예정) */}
           </div>
           )}
       </div>

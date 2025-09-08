@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AdSense 스타일 import */
-@import './components/adsense.css';
+/* AdSense 스타일 제거 (심사 완료 후 추가 예정) */
 
 @layer base {
   html {

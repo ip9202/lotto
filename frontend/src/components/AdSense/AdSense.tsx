@@ -25,22 +25,26 @@ const AdSense: React.FC<AdSenseProps> = ({
   const [isAdPushed, setIsAdPushed] = useState(false);
 
   useEffect(() => {
-    // consentStatus가 null이 아니면(즉, CMP로부터 응답을 받으면) 광고 로직을 실행합니다.
-    if (consentStatus) {
-      try {
-        if (typeof window !== 'undefined' && window.adsbygoogle) {
-          console.log('Pushing AdSense ad with consent:', consentStatus);
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-          setIsAdPushed(true);
+    // consentStatus가 null이 아니고, 아직 광고가 푸시되지 않았을 때만 실행
+    if (consentStatus && !isAdPushed) {
+      const timer = setTimeout(() => {
+        try {
+          if (typeof window !== 'undefined' && window.adsbygoogle) {
+            console.log('Pushing AdSense ad with consent:', consentStatus);
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            setIsAdPushed(true);
+          }
+        } catch (error) {
+          console.log('AdSense push error (ignored):', error);
         }
-      } catch (error) {
-        console.error('AdSense push error:', error);
-      }
-    }
-  }, [consentStatus]); // consentStatus가 변경될 때마다 이 효과를 재실행합니다.
+      }, 1000); // 1초 지연으로 안전하게 처리
 
-  // CMP 응답이 없거나, 광고가 아직 푸시되지 않았다면 렌더링하지 않습니다.
-  if (!consentStatus || !isAdPushed) {
+      return () => clearTimeout(timer);
+    }
+  }, [consentStatus, isAdPushed]);
+
+  // CMP 응답이 없으면 렌더링하지 않습니다.
+  if (!consentStatus) {
     return null;
   }
 
@@ -53,7 +57,7 @@ const AdSense: React.FC<AdSenseProps> = ({
       <ins
         className="adsbygoogle"
         style={{ display: 'block' }}
-        data-ad-client="ca-pub-1813089661807173" // 환경 변수 사용을 권장합니다.
+        data-ad-client="ca-pub-1813089661807173"
         data-ad-slot={adSlot}
         data-ad-format={adFormat}
         data-full-width-responsive="true"

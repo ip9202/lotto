@@ -104,7 +104,7 @@ const CookieSettings: React.FC = () => {
             </label>
           </div>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-            귀하의 관심사에 맞는 맞춤형 광고를 제공하는 데 사용됩니다. (예: Google AdSense)
+            귀하의 관심사에 맞는 맞춤형 광고를 제공하는 데 사용됩니다. (현재 비활성화)
           </p>
         </div>
       </div>

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LottoBall from '../components/LottoBall';
 import AdSenseBanner from '../components/AdSense/AdSenseBanner';
-// import AdSense from '../components/AdSense/AdSense'; // AdSense 정책 위반 방지를 위해 제거
 
 interface LottoDraw {
   draw_number: number;
