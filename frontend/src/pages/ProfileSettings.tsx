@@ -181,8 +181,8 @@ const ProfileSettings: React.FC = () => {
               <div className="flex justify-between">
                 <span className="text-gray-600">로그인 방식</span>
                 <span className="font-medium">
-                  {user.social_provider === 'KAKAO' ? '카카오 로그인' : 
-                   user.social_provider === 'NAVER' ? '네이버 로그인' : '이메일 로그인'}
+                  {user.social_provider === 'kakao' ? '카카오 로그인' : 
+                   user.social_provider === 'naver' ? '네이버 로그인' : '이메일 로그인'}
                 </span>
               </div>
               {user.linked_social_providers && user.linked_social_providers.length > 0 && (
@@ -190,8 +190,8 @@ const ProfileSettings: React.FC = () => {
                   <span className="text-gray-600">연동된 소셜 계정</span>
                   <span className="font-medium">
                     {user.linked_social_providers.map(provider => 
-                      provider === 'KAKAO' ? '카카오' : 
-                      provider === 'NAVER' ? '네이버' : provider
+                      provider === 'kakao' ? '카카오' : 
+                      provider === 'naver' ? '네이버' : provider
                     ).join(', ')}
                   </span>
                 </div>
@@ -200,7 +200,7 @@ const ProfileSettings: React.FC = () => {
           </div>
 
           {/* 비밀번호 변경 섹션 */}
-          {user.social_provider !== 'KAKAO' && user.social_provider !== 'NAVER' && (
+          {(
             <div>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">비밀번호 변경</h2>
               <form onSubmit={handlePasswordSubmit} className="space-y-6">
@@ -296,13 +296,16 @@ const ProfileSettings: React.FC = () => {
             </div>
           )}
 
-          {/* 소셜 로그인 사용자 안내 */}
-          {(user.social_provider === 'KAKAO' || user.social_provider === 'NAVER') && (
+          {/* 소셜 계정 연동 안내 */}
+          {user.linked_social_providers && user.linked_social_providers.length > 0 && (
             <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <h3 className="text-lg font-medium text-blue-900 mb-2">소셜 로그인 계정</h3>
+              <h3 className="text-lg font-medium text-blue-900 mb-2">연동된 소셜 계정</h3>
               <p className="text-blue-800">
-                {user.social_provider === 'KAKAO' ? '카카오' : '네이버'}로 로그인한 계정입니다. 
-                비밀번호 변경은 {user.social_provider === 'KAKAO' ? '카카오' : '네이버'} 계정 설정에서 진행해주세요.
+                {user.linked_social_providers.map(provider => 
+                  provider === 'kakao' ? '카카오' : 
+                  provider === 'naver' ? '네이버' : provider
+                ).join(', ')} 계정이 연동되어 있습니다. 
+                소셜 계정으로도 로그인할 수 있으며, 비밀번호는 언제든지 변경 가능합니다.
               </p>
             </div>
           )}
