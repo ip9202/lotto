@@ -157,8 +157,34 @@ const Login: React.FC = () => {
           await handleKakaoLink(pendingKakaoData.accessToken);
           setPendingKakaoData(null);
         } else {
-          // 일반 로그인인 경우 카카오 연동 옵션 표시
-          setShowKakaoLink(true);
+          // 일반 로그인인 경우 사용자 정보 확인 후 카카오 연동 상태 체크
+          try {
+            const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+              }
+            });
+            
+            if (response.ok) {
+              const userData = await response.json();
+              
+              // 이미 카카오 연동된 계정이면 바로 메인 페이지로 이동
+              if (userData.linked_social_providers && userData.linked_social_providers.includes('KAKAO')) {
+                window.location.href = '/';
+                return;
+              }
+              
+              // 카카오 연동되지 않은 계정이면 연동 옵션 표시
+              setShowKakaoLink(true);
+            } else {
+              // 사용자 정보를 가져올 수 없으면 바로 메인 페이지로 이동
+              window.location.href = '/';
+            }
+          } catch (error) {
+            console.error('사용자 정보 확인 오류:', error);
+            // 오류 발생 시에도 메인 페이지로 이동
+            window.location.href = '/';
+          }
         }
       } else {
         setErrors({ submit: '이메일 또는 비밀번호가 올바르지 않습니다.' });
@@ -215,7 +241,10 @@ const Login: React.FC = () => {
           if (loginResult.success) {
             // 로그인 성공 - 토큰 저장 및 상태 업데이트
             localStorage.setItem('access_token', loginResult.data.access_token);
-            setErrors({ submit: '로그인 성공! 잠시 후 메인 페이지로 이동합니다...' });
+            
+            // 전체 화면 로딩 표시
+            setShowKakaoLink(false);
+            setPendingKakaoData(null);
             
             // 1초 후 메인 페이지로 이동
             setTimeout(() => {
@@ -350,6 +379,19 @@ const Login: React.FC = () => {
   if (isAuthenticated && !showKakaoLink) {
     navigate('/');
     return null;
+  }
+
+  // 카카오 로그인 성공 후 로딩 중일 때 전체 화면 로딩 표시
+  if (isLoading && !showKakaoLink && !pendingKakaoData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">로그인 성공!</h2>
+          <p className="text-gray-600">잠시 후 메인 페이지로 이동합니다...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

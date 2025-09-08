@@ -182,13 +182,15 @@ async def check_kakao_user(
         
         # 소셜 ID로 기존 계정 찾기
         if not existing_user:
+            logger.info(f"이메일로 계정을 찾지 못함. 소셜 ID로 검색: {user_info.get('id')}")
             existing_user = db.query(User).filter(
                 and_(
                     User.social_provider == "KAKAO",
-                    User.social_id == user_info.get("id"),
+                    User.social_id == str(user_info.get("id")),  # 문자열로 변환
                     User.is_active == True
                 )
             ).first()
+            logger.info(f"소셜 ID로 찾은 계정: {existing_user}")
         
         if existing_user:
             return AuthResponse(
