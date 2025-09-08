@@ -209,6 +209,8 @@ export const UnifiedAuthProvider: React.FC<{ children: ReactNode }> = ({ childre
   const logout = () => {
     localStorage.removeItem('access_token');
     setUser(null);
+    // 메인페이지로 리다이렉트
+    window.location.href = '/';
   };
 
   // 사용자 정보 새로고침

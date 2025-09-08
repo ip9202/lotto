@@ -56,6 +56,8 @@ export const UserAuthProvider: React.FC<UserAuthProviderProps> = ({ children }) 
     setUser(null);
     localStorage.removeItem('userToken');
     localStorage.removeItem('userData');
+    // 메인페이지로 리다이렉트
+    window.location.href = '/';
   };
 
   const updateUser = (userData: Partial<User>) => {

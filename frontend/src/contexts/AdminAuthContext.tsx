@@ -110,6 +110,8 @@ export const AdminAuthProvider: React.FC<AdminAuthProviderProps> = ({ children }
     setIsAuthenticated(false);
     setAdminInfo(null);
     localStorage.removeItem('adminAuth');
+    // 메인페이지로 리다이렉트
+    window.location.href = '/';
   };
 
   // 활동 시간 업데이트
