@@ -234,6 +234,27 @@ The recommendation engine uses a multi-factor analysis approach:
   - 에러 방지 처리가 포함된 안전한 로드
   - 심사 완료 후 정상 운영 예정
 
+### 카카오 로그인 중복 요청 문제 (2025-09-08)
+- **현재 상태**: 카카오 로그인 플로우는 작동하지만 중복 요청으로 인한 400 에러 발생
+- **문제 원인**: 
+  - React의 Strict Mode와 useEffect 중복 실행으로 인한 중복 토큰 교환 요청
+  - 첫 번째 요청은 `invalid_grant` 에러 (이미 사용된 authorization code)
+  - 두 번째 요청은 성공하지만 사용자 경험 저하
+- **해결 시도**:
+  - `useRef`를 사용한 중복 실행 방지 시도
+  - `useState`를 사용한 처리 상태 관리 시도
+  - `useEffect` 의존성 배열 조정 시도
+- **현재 구현**:
+  - `Login.tsx`에서 카카오 콜백 처리
+  - `isProcessingKakao` 상태로 중복 실행 방지 시도
+  - 카카오 토큰 교환 성공 후 사용자 정보 조회 성공
+  - 기존 계정 확인 및 자동 가입/로그인 처리 구현
+- **남은 문제**: 여전히 중복 요청 발생, 완전한 해결 필요
+- **다음 단계**: 
+  - 더 강력한 중복 방지 로직 구현 필요
+  - 또는 서버 사이드에서 중복 요청 처리 로직 추가
+  - 또는 프론트엔드에서 완전히 다른 방식으로 콜백 처리
+
 ## Testing and Debugging
 
 ### Authentication System Testing

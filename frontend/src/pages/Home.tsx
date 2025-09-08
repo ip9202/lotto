@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LottoBall from '../components/LottoBall';
 import AdSenseBanner from '../components/AdSense/AdSenseBanner';
+import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 
 interface LottoDraw {
   draw_number: number;
@@ -13,8 +14,140 @@ interface LottoDraw {
 }
 
 const Home: React.FC = () => {
+  const navigate = useNavigate();
+  const { socialLogin } = useUnifiedAuth();
   const [latestDraw, setLatestDraw] = useState<LottoDraw | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // 카카오 콜백 처리
+  useEffect(() => {
+    const handleKakaoCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      
+      if (code && state && state.startsWith('kakao_login_')) {
+        console.log('홈 페이지에서 카카오 콜백 처리:', { code, state });
+        
+        try {
+          // 카카오 SDK 초기화
+          if (!window.Kakao || !window.Kakao.isInitialized()) {
+            window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+          }
+          
+          // 카카오에서 액세스 토큰 가져오기
+          const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              grant_type: 'authorization_code',
+              client_id: import.meta.env.VITE_KAKAO_APP_KEY,
+              redirect_uri: `${window.location.origin}/`,
+              code: code
+            })
+          });
+          
+          const tokenData = await tokenResponse.json();
+          
+          if (tokenData.access_token) {
+            // 카카오 사용자 정보 가져오기
+            const userResponse = await fetch('https://kapi.kakao.com/v2/user/me', {
+              headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`
+              }
+            });
+            
+            const userData = await userResponse.json();
+            
+            // 카카오 사용자 정보 확인
+            const checkResponse = await fetch('http://localhost:8000/api/v1/auth/check-kakao-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                provider: 'kakao',
+                access_token: tokenData.access_token
+              })
+            });
+
+            const checkResult = await checkResponse.json();
+            
+            if (checkResult.success) {
+              if (checkResult.data.is_registered) {
+                // 기존 계정이 있으면 자동 로그인
+                const success = await socialLogin('kakao', tokenData.access_token);
+                if (success) {
+                  console.log('카카오 자동 로그인 성공');
+                  // URL 정리
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                }
+              } else {
+                // 가입된 계정이 없으면 자동 회원가입 후 로그인
+                await handleKakaoRegister(checkResult.data.user_info, tokenData.access_token);
+              }
+            }
+          } else {
+            console.error('카카오 인증 실패');
+          }
+        } catch (error) {
+          console.error('카카오 콜백 처리 오류:', error);
+        }
+      }
+    };
+
+    handleKakaoCallback();
+  }, [socialLogin]);
+
+  const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
+    try {
+      // 카카오 사용자 정보로 자동 회원가입
+      const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: kakaoUser.email || `${kakaoUser.id}@kakao.temp`,
+          password: `kakao_${kakaoUser.id}_${Date.now()}`,
+          nickname: kakaoUser.nickname || '카카오 사용자'
+        })
+      });
+
+      const registerResult = await registerResponse.json();
+      
+      if (registerResult.success) {
+        // 회원가입 성공 후 카카오 연동
+        const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${registerResult.data.access_token}`
+          },
+          body: JSON.stringify({
+            provider: 'kakao',
+            access_token: accessToken
+          })
+        });
+
+        const linkResult = await linkResponse.json();
+        
+        if (linkResult.success) {
+          // 연동 성공 후 자동 로그인
+          const loginSuccess = await socialLogin('kakao', accessToken);
+          if (loginSuccess) {
+            console.log('카카오 자동 회원가입 및 로그인 성공');
+            // URL 정리
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('카카오 회원가입 오류:', error);
+    }
+  };
 
   useEffect(() => {
       const fetchLatestDraw = async () => {

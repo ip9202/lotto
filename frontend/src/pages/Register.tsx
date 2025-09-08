@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { register } = useUnifiedAuth();
   
   const [formData, setFormData] = useState({
@@ -15,6 +16,23 @@ const Register: React.FC = () => {
   
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [kakaoUser, setKakaoUser] = useState<any>(null);
+  const [accessToken, setAccessToken] = useState<string>('');
+
+  // 카카오 사용자 정보가 있으면 폼에 자동 채우기
+  useEffect(() => {
+    if (location.state?.kakaoUser) {
+      const kakaoData = location.state.kakaoUser;
+      setKakaoUser(kakaoData);
+      setAccessToken(location.state.accessToken);
+      
+      setFormData(prev => ({
+        ...prev,
+        email: kakaoData.email || '',
+        nickname: kakaoData.nickname || ''
+      }));
+    }
+  }, [location.state]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -80,8 +98,19 @@ const Register: React.FC = () => {
       const success = await register(formData.email, formData.password, formData.nickname);
       
       if (success) {
-        // 회원가입 성공 시 홈으로 이동
-        navigate('/');
+        // 회원가입 성공 시
+        if (kakaoUser && accessToken) {
+          // 카카오 사용자 정보가 있으면 카카오 연동 페이지로 이동
+          navigate('/kakao-link', { 
+            state: { 
+              kakaoUser: kakaoUser,
+              accessToken: accessToken
+            } 
+          });
+        } else {
+          // 일반 회원가입이면 홈으로 이동
+          navigate('/');
+        }
       } else {
         setErrors({ submit: '회원가입에 실패했습니다. 다시 시도해주세요.' });
       }

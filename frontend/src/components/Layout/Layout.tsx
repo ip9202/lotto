@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
 import { UserProfile } from '../UserProfile';
-import { SocialLogin } from '../SocialLogin';
 import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 interface LayoutProps {
@@ -13,8 +12,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const { isAuthenticated } = useUnifiedAuth();
+  const { isAuthenticated, user } = useUnifiedAuth();
 
   // 디버깅을 위한 로그
   console.log('Layout rendered, current location:', location.pathname);
@@ -89,12 +87,22 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               </nav>
 
               {/* 사용자 인증 영역 */}
-              <div className="hidden md:flex items-center">
+              <div className="hidden md:flex items-center space-x-2">
                 {isAuthenticated ? (
-                  <UserProfile />
+                  <>
+                    <UserProfile />
+                    {user && !user.linked_social_providers?.includes('kakao') && (
+                      <button
+                        onClick={() => navigate('/kakao-link')}
+                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
+                      >
+                        카카오 연동
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <button
-                    onClick={() => setShowLoginModal(true)}
+                    onClick={() => navigate('/login')}
                     className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
                   >
                     로그인
@@ -139,11 +147,24 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 ))}
                 
                 {/* 모바일 로그인 버튼 */}
+                {isAuthenticated && user && !user.linked_social_providers?.includes('kakao') && (
+                  <div className="px-3 py-2 border-t border-gray-200 mt-2 pt-4">
+                    <button
+                      onClick={() => {
+                        navigate('/kakao-link');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                    >
+                      카카오 연동
+                    </button>
+                  </div>
+                )}
                 {!isAuthenticated && (
                   <div className="px-3 py-2 border-t border-gray-200 mt-2 pt-4">
                     <button
                       onClick={() => {
-                        setShowLoginModal(true);
+                        navigate('/login');
                         setIsMobileMenuOpen(false);
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
@@ -211,34 +232,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </footer>
 
-      {/* 소셜 로그인 모달 */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">로그인</h2>
-              <button
-                onClick={() => setShowLoginModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <SocialLogin onClose={() => setShowLoginModal(false)} />
-          </div>
-        </div>
-      )}
-
-      {/* 모달 외부 클릭시 닫기 */}
-      {showLoginModal && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setShowLoginModal(false)}
-        />
-      )}
     </div>
   );
 };

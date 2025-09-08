@@ -3,11 +3,12 @@ import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 interface SocialLoginProps {
   onLogin?: (token: string, user: any) => void;
+  onClick?: () => void;
   onClose?: () => void;
   className?: string;
 }
 
-const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className = '' }) => {
+const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClick, onClose, className = '' }) => {
   const { socialLogin } = useUnifiedAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,6 +16,12 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className =
   // 콜백 처리는 App.tsx의 CallbackHandler에서 처리
 
   const handleKakaoLogin = async () => {
+    // onClick이 있으면 onClick 호출 (안내 페이지로 이동)
+    if (onClick) {
+      onClick();
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
@@ -49,7 +56,7 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className =
       if (window.Kakao.Auth && window.Kakao.Auth.authorize) {
         // 카카오 로그인 실행 (콜백 방식)
         window.Kakao.Auth.authorize({
-          redirectUri: window.location.origin,
+          redirectUri: `${window.location.origin}/login`, // /login 경로로 수정
           state: 'kakao_login_' + Date.now(),
           scope: 'profile_nickname'  // 이메일 scope 제거
         });

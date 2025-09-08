@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 import SocialLogin from '../components/SocialLogin/SocialLogin';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, socialLogin } = useUnifiedAuth();
+  const { login, socialLogin, user, isAuthenticated } = useUnifiedAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -14,6 +14,79 @@ const Login: React.FC = () => {
   
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showKakaoLink, setShowKakaoLink] = useState(false);
+  const [isProcessingKakao, setIsProcessingKakao] = useState(false);
+
+  // 카카오 콜백 처리
+  useEffect(() => {
+    const handleKakaoCallback = async () => {
+      // 이미 처리 중이거나 처리된 경우 중복 실행 방지
+      if (isProcessingKakao) {
+        return;
+      }
+      
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      
+      if (code && state && state.startsWith('kakao_login_')) {
+        setIsProcessingKakao(true); // 처리 시작 표시
+        console.log('로그인 페이지에서 카카오 콜백 처리:', { code, state });
+        
+        try {
+          // 카카오 SDK 초기화
+          if (!window.Kakao || !window.Kakao.isInitialized()) {
+            window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+          }
+          
+          // 카카오에서 액세스 토큰 가져오기
+          const redirectUri = `${window.location.origin}/login`; // /login 경로로 수정
+          console.log('사용할 redirect_uri:', redirectUri);
+          
+          const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              grant_type: 'authorization_code',
+              client_id: import.meta.env.VITE_KAKAO_APP_KEY,
+              redirect_uri: redirectUri,
+              code: code
+            })
+          });
+          
+          const tokenData = await tokenResponse.json();
+          console.log('카카오 토큰 응답:', tokenData);
+          
+          if (tokenData.access_token) {
+            // 카카오 사용자 정보 가져오기
+            const userResponse = await fetch('https://kapi.kakao.com/v2/user/me', {
+              headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`
+              }
+            });
+            
+            const userData = await userResponse.json();
+            console.log('카카오 사용자 정보:', userData);
+            
+            // handleKakaoLogin 함수 호출
+            await handleKakaoLogin(tokenData.access_token, userData);
+            
+            // URL 정리
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            setErrors({ submit: '카카오 인증에 실패했습니다.' });
+          }
+        } catch (error) {
+          console.error('카카오 콜백 처리 오류:', error);
+          setErrors({ submit: '카카오 로그인 중 오류가 발생했습니다.' });
+        }
+      }
+    };
+
+    handleKakaoCallback();
+  }, [isProcessingKakao]); // isProcessingKakao 의존성 추가
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -63,8 +136,8 @@ const Login: React.FC = () => {
       const success = await login(formData.email, formData.password);
       
       if (success) {
-        // 로그인 성공 시 홈으로 이동
-        navigate('/');
+        // 로그인 성공 시 카카오 연동 옵션 표시
+        setShowKakaoLink(true);
       } else {
         setErrors({ submit: '이메일 또는 비밀번호가 올바르지 않습니다.' });
       }
@@ -76,131 +149,309 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleSocialLogin = async (accessToken: string, user: any) => {
+  const handleKakaoLoginClick = () => {
+    // 카카오 로그인 버튼 클릭 시 바로 카카오 인증 진행
+    // SocialLogin 컴포넌트에서 카카오 인증 후 결과 처리
+  };
+
+  const handleKakaoLogin = async (accessToken: string, user: any) => {
+    try {
+      // 1. 먼저 카카오 사용자 정보 확인
+      const checkResponse = await fetch('http://localhost:8000/api/v1/auth/check-kakao-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'kakao',
+          access_token: accessToken
+        })
+      });
+
+      const checkResult = await checkResponse.json();
+      
+      if (checkResult.success) {
+        if (checkResult.data.is_registered) {
+          // 기존 계정이 있으면 자동 로그인
+          // socialLogin은 authorization_code를 받으므로, 직접 API 호출
+          const loginResponse = await fetch('http://localhost:8000/api/v1/auth/login/social', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              provider: 'kakao',
+              access_token: accessToken
+            })
+          });
+          
+          const loginResult = await loginResponse.json();
+          
+          if (loginResult.success) {
+            // 로그인 성공 - 토큰 저장 및 상태 업데이트
+            localStorage.setItem('access_token', loginResult.data.access_token);
+            window.location.href = '/';
+          } else {
+            setErrors({ submit: '카카오 로그인에 실패했습니다.' });
+          }
+        } else {
+          // 가입된 계정이 없으면 회원가입 후 자동 로그인
+          await handleKakaoRegister(checkResult.data.user_info, accessToken);
+        }
+      } else {
+        setErrors({ submit: '카카오 사용자 확인에 실패했습니다.' });
+      }
+    } catch (error) {
+      console.error('카카오 로그인 오류:', error);
+      setErrors({ submit: '카카오 로그인 중 오류가 발생했습니다.' });
+    }
+  };
+
+  const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
+    try {
+      // 카카오 사용자 정보로 자동 회원가입
+      const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: kakaoUser.email || `${kakaoUser.id}@kakao.temp`,
+          password: `kakao_${kakaoUser.id}_${Date.now()}`, // 임시 비밀번호
+          nickname: kakaoUser.nickname || '카카오 사용자'
+        })
+      });
+
+      const registerResult = await registerResponse.json();
+      
+      if (registerResult.success) {
+        // 회원가입 성공 후 카카오 연동
+        const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${registerResult.data.access_token}`
+          },
+          body: JSON.stringify({
+            provider: 'kakao',
+            access_token: accessToken
+          })
+        });
+
+        const linkResult = await linkResponse.json();
+        
+        if (linkResult.success) {
+          // 연동 성공 후 자동 로그인
+          const loginResponse = await fetch('http://localhost:8000/api/v1/auth/login/social', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              provider: 'kakao',
+              access_token: accessToken
+            })
+          });
+          
+          const loginResult = await loginResponse.json();
+          
+          if (loginResult.success) {
+            // 로그인 성공 - 토큰 저장 및 상태 업데이트
+            localStorage.setItem('access_token', loginResult.data.access_token);
+            window.location.href = '/';
+          } else {
+            setErrors({ submit: '자동 로그인에 실패했습니다.' });
+          }
+        } else {
+          setErrors({ submit: '카카오 연동에 실패했습니다.' });
+        }
+      } else {
+        setErrors({ submit: '회원가입에 실패했습니다.' });
+      }
+    } catch (error) {
+      console.error('카카오 회원가입 오류:', error);
+      setErrors({ submit: '카카오 회원가입 중 오류가 발생했습니다.' });
+    }
+  };
+
+  const handleKakaoLink = async (accessToken: string, user: any) => {
     try {
       const success = await socialLogin('kakao', accessToken);
       if (success) {
         navigate('/');
       } else {
-        setErrors({ submit: '소셜 로그인에 실패했습니다. 먼저 이메일로 회원가입해주세요.' });
+        setErrors({ submit: '카카오 연동에 실패했습니다.' });
       }
     } catch (error) {
-      console.error('소셜 로그인 오류:', error);
-      setErrors({ submit: '소셜 로그인 중 오류가 발생했습니다.' });
+      console.error('카카오 연동 오류:', error);
+      setErrors({ submit: '카카오 연동 중 오류가 발생했습니다.' });
     }
   };
+
+  const handleSkipKakaoLink = () => {
+    navigate('/');
+  };
+
+  // 이미 로그인된 경우 홈으로 리다이렉트
+  if (isAuthenticated && !showKakaoLink) {
+    navigate('/');
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            로그인
+            {showKakaoLink ? '카카오 연동' : '로그인'}
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            계정이 없으신가요?{' '}
-            <Link
-              to="/register"
-              className="font-medium text-indigo-600 hover:text-indigo-500"
-            >
-              회원가입하기
-            </Link>
+            {showKakaoLink ? (
+              '카카오 계정을 연동하시겠어요?'
+            ) : (
+              <>
+                계정이 없으신가요?{' '}
+                <Link
+                  to="/register"
+                  className="font-medium text-indigo-600 hover:text-indigo-500"
+                >
+                  회원가입하기
+                </Link>
+              </>
+            )}
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* 이메일 */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                이메일 주소
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={formData.email}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.email ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                placeholder="이메일을 입력하세요"
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-              )}
+        {!showKakaoLink ? (
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              {/* 이메일 */}
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  이메일 주소
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                    errors.email ? 'border-red-300' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  placeholder="이메일을 입력하세요"
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                )}
+              </div>
+
+              {/* 비밀번호 */}
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  비밀번호
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
+                    errors.password ? 'border-red-300' : 'border-gray-300'
+                  } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
+                  placeholder="비밀번호를 입력하세요"
+                />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                )}
+              </div>
             </div>
 
-            {/* 비밀번호 */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                비밀번호
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={formData.password}
-                onChange={handleInputChange}
-                className={`mt-1 appearance-none relative block w-full px-3 py-2 border ${
-                  errors.password ? 'border-red-300' : 'border-gray-300'
-                } placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm`}
-                placeholder="비밀번호를 입력하세요"
-              />
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
-              )}
-            </div>
-          </div>
+            {/* 제출 에러 */}
+            {errors.submit && (
+              <div className="text-center">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
 
-          {/* 제출 에러 */}
-          {errors.submit && (
+            {/* 제출 버튼 */}
+            <div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? '로그인 중...' : '로그인'}
+              </button>
+            </div>
+
+            {/* 소셜 로그인 */}
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">또는</span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <SocialLogin 
+                  onLogin={handleKakaoLogin}
+                  onClose={() => {}}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-600">
+                  카카오 로그인 시 자동으로 가입/로그인됩니다.
+                </p>
+              </div>
+            </div>
+          </form>
+        ) : (
+          <div className="mt-8 space-y-6">
+            {/* 로그인 성공 메시지 */}
             <div className="text-center">
-              <p className="text-sm text-red-600">{errors.submit}</p>
-            </div>
-          )}
-
-          {/* 제출 버튼 */}
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? '로그인 중...' : '로그인'}
-            </button>
-          </div>
-
-          {/* 소셜 로그인 */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">또는</span>
-              </div>
+              <p className="text-sm text-gray-600">
+                로그인 성공! 카카오 계정을 연동하시겠어요?
+              </p>
             </div>
 
+            {/* 카카오 연동 버튼 */}
             <div className="mt-6">
               <SocialLogin 
-                onLogin={handleSocialLogin}
+                onLogin={handleKakaoLink}
                 onClose={() => {}}
                 className="w-full"
               />
             </div>
 
-            <div className="mt-4 text-center">
-              <p className="text-sm text-gray-600">
-                카카오 로그인은 회원가입 후 연동이 필요합니다.
-              </p>
+            {/* 건너뛰기 버튼 */}
+            <div className="mt-4">
+              <button
+                onClick={handleSkipKakaoLink}
+                className="w-full flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                나중에 연동하기
+              </button>
             </div>
+
+            {/* 제출 에러 */}
+            {errors.submit && (
+              <div className="text-center">
+                <p className="text-sm text-red-600">{errors.submit}</p>
+              </div>
+            )}
           </div>
-        </form>
+        )}
       </div>
     </div>
   );

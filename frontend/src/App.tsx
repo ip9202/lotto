@@ -7,6 +7,8 @@ import Statistics from './pages/Statistics';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import KakaoLink from './pages/KakaoLink';
+import KakaoLoginGuide from './pages/KakaoLoginGuide';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
 import { UserAuthProvider, useUserAuth } from './contexts/UserAuthContext';
 import { UnifiedAuthProvider, useUnifiedAuth } from './contexts/UnifiedAuthContext';
@@ -19,6 +21,54 @@ import Terms from './pages/Terms';
 const CallbackHandler: React.FC = () => {
   const { socialLogin } = useUnifiedAuth();
 
+  const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
+    try {
+      // 카카오 사용자 정보로 자동 회원가입
+      const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: kakaoUser.email || `${kakaoUser.id}@kakao.temp`,
+          password: `kakao_${kakaoUser.id}_${Date.now()}`,
+          nickname: kakaoUser.nickname || '카카오 사용자'
+        })
+      });
+
+      const registerResult = await registerResponse.json();
+      
+      if (registerResult.success) {
+        // 회원가입 성공 후 카카오 연동
+        const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${registerResult.data.access_token}`
+          },
+          body: JSON.stringify({
+            provider: 'kakao',
+            access_token: accessToken
+          })
+        });
+
+        const linkResult = await linkResponse.json();
+        
+        if (linkResult.success) {
+          // 연동 성공 후 자동 로그인
+          const loginSuccess = await socialLogin('kakao', accessToken);
+          if (loginSuccess) {
+            console.log('카카오 자동 회원가입 및 로그인 성공');
+            // URL 정리
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('카카오 회원가입 오류:', error);
+    }
+  };
+
   useEffect(() => {
     const handleCallback = async () => {
       try {
@@ -29,33 +79,8 @@ const CallbackHandler: React.FC = () => {
         if (code && state) {
           if (state.startsWith('kakao_login_')) {
             console.log('전역 카카오 로그인 콜백 감지:', { code, state });
-            
-            // 카카오 SDK 초기화
-            if (!window.Kakao || !window.Kakao.isInitialized()) {
-              window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
-            }
-            
-            try {
-              const { authAPI } = await import('./services/apiService');
-              const result = await authAPI.socialLogin('kakao', code);
-
-              if (result.success && result.data) {
-                console.log('전역 카카오 로그인 성공:', result.data);
-                
-                // 통합 인증으로 로그인 처리
-                await socialLogin('kakao', result.data.access_token);
-                
-                // URL 정리
-                window.history.replaceState({}, document.title, window.location.pathname);
-                
-                // 새로고침
-                window.location.reload();
-              } else {
-                console.error('전역 카카오 로그인 실패:', result.error);
-              }
-            } catch (err) {
-              console.error('전역 카카오 로그인 오류:', err);
-            }
+            // 로그인 페이지에서만 처리하도록 전역 처리 비활성화
+            return;
           } else if (state.startsWith('naver_login_')) {
             console.log('전역 네이버 로그인 콜백 감지:', { code, state });
             
@@ -104,6 +129,8 @@ const App: React.FC = () => {
           <Route path="/statistics" element={<Statistics />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/kakao-link" element={<KakaoLink />} />
+          <Route path="/kakao-login-guide" element={<KakaoLoginGuide />} />
           <Route path="/admin" element={
             <AdminAuthProvider>
               <Admin />

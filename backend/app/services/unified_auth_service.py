@@ -53,19 +53,46 @@ class UnifiedAuthService:
             if not user_info:
                 return None
             
-            # 이메일로 기존 계정 찾기
-            existing_user = db.query(User).filter(
-                and_(
-                    User.email == user_info.get("email"),
-                    User.is_active == True
-                )
-            ).first()
+            # 이메일이 있는 경우에만 이메일로 기존 계정 찾기
+            existing_user = None
+            if user_info.get("email"):
+                existing_user = db.query(User).filter(
+                    and_(
+                        User.email == user_info.get("email"),
+                        User.is_active == True
+                    )
+                ).first()
             
+            # 이메일로 찾지 못한 경우, 소셜 ID로 기존 계정 찾기
             if not existing_user:
-                return {
-                    "success": False,
-                    "error": {"message": "연동된 계정이 없습니다. 먼저 이메일로 회원가입해주세요."}
-                }
+                existing_user = db.query(User).filter(
+                    and_(
+                        User.social_provider == SocialProvider(provider),
+                        User.social_id == user_info.get("id"),
+                        User.is_active == True
+                    )
+                ).first()
+            
+            # 기존 계정이 없으면 새로 생성
+            if not existing_user:
+                # 이메일이 없으면 임시 이메일 생성
+                email = user_info.get("email") or f"{provider}_{user_info.get('id')}@temp.local"
+                
+                new_user = User(
+                    social_provider=SocialProvider(provider),
+                    social_id=user_info.get("id"),
+                    email=email,
+                    nickname=user_info.get("nickname", f"{provider} 사용자"),
+                    profile_image_url=user_info.get("profile_image_url"),
+                    login_method=LoginMethod.SOCIAL,
+                    role=UserRole.USER,
+                    is_active=True
+                )
+                
+                db.add(new_user)
+                db.commit()
+                db.refresh(new_user)
+                existing_user = new_user
             
             # 소셜 연동 정보 업데이트
             if not existing_user.linked_social_providers:
@@ -259,3 +286,40 @@ class UnifiedAuthService:
             logger.error(f"이메일 인증 오류: {e}")
             db.rollback()
             return False
+    
+    @staticmethod
+    async def get_social_user_info(provider: str, token_or_code: str) -> Dict[str, Any]:
+        """소셜 로그인에서 사용자 정보만 가져오기 (계정 생성/로그인 없이)"""
+        try:
+            # provider에 따라 사용자 정보 가져오기
+            if provider == "kakao":
+                # 카카오의 경우 token_or_code는 access_token
+                user_info = await SocialAuthService.get_kakao_user_info(token_or_code)
+            elif provider == "naver":
+                # 네이버의 경우 token_or_code는 access_token
+                user_info = await SocialAuthService.get_naver_user_info(token_or_code)
+            else:
+                return {
+                    "success": False,
+                    "error": "지원하지 않는 소셜 제공자입니다."
+                }
+            
+            if user_info:
+                # social_id를 id로 변경하여 통일
+                user_info["id"] = user_info.pop("social_id", user_info.get("id"))
+                return {
+                    "success": True,
+                    "data": user_info
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": "사용자 정보를 가져올 수 없습니다."
+                }
+                
+        except Exception as e:
+            logger.error(f"소셜 사용자 정보 조회 오류: {e}")
+            return {
+                "success": False,
+                "error": f"사용자 정보 조회 중 오류가 발생했습니다: {str(e)}"
+            }

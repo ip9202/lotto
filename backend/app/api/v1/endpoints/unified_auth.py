@@ -4,6 +4,7 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 from ....database import get_db
@@ -144,6 +145,119 @@ async def get_current_user_info(
         return AuthResponse(
             success=False,
             error={"message": "사용자 정보 조회 중 오류가 발생했습니다."}
+        )
+
+@router.post("/check-kakao-user", response_model=AuthResponse, summary="카카오 사용자 가입 여부 확인")
+async def check_kakao_user(
+    check_data: SocialLinkRequest,
+    db: Session = Depends(get_db)
+):
+    """카카오 로그인 전 사용자 가입 여부 확인"""
+    try:
+        # 카카오에서 사용자 정보 가져오기
+        result = await UnifiedAuthService.get_social_user_info(
+            provider=check_data.provider,
+            token_or_code=check_data.access_token
+        )
+        
+        if not result or not result.get("success"):
+            return AuthResponse(
+                success=False,
+                error={"message": "카카오 사용자 정보를 가져올 수 없습니다."}
+            )
+        
+        user_info = result["data"]
+        
+        # 이메일로 기존 계정 찾기
+        existing_user = None
+        if user_info.get("email"):
+            existing_user = db.query(User).filter(
+                and_(
+                    User.email == user_info.get("email"),
+                    User.is_active == True
+                )
+            ).first()
+        
+        # 소셜 ID로 기존 계정 찾기
+        if not existing_user:
+            existing_user = db.query(User).filter(
+                and_(
+                    User.social_provider == "kakao",
+                    User.social_id == user_info.get("id"),
+                    User.is_active == True
+                )
+            ).first()
+        
+        if existing_user:
+            return AuthResponse(
+                success=True,
+                data={
+                    "is_registered": True,
+                    "user": existing_user.to_dict(),
+                    "message": "기존 계정이 있습니다. 로그인하시겠어요?"
+                }
+            )
+        else:
+            return AuthResponse(
+                success=True,
+                data={
+                    "is_registered": False,
+                    "user_info": user_info,
+                    "message": "가입된 계정이 없습니다. 먼저 이메일로 회원가입해주세요."
+                }
+            )
+        
+    except Exception as e:
+        logger.error(f"카카오 사용자 확인 오류: {e}")
+        return AuthResponse(
+            success=False,
+            error={"message": "카카오 사용자 확인 중 오류가 발생했습니다."}
+        )
+
+@router.post("/link/kakao", response_model=AuthResponse, summary="카카오 계정 연동")
+async def link_kakao_account(
+    link_data: SocialLinkRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """로그인된 사용자의 카카오 계정 연동"""
+    try:
+        # 카카오에서 사용자 정보 가져오기
+        result = await UnifiedAuthService.get_social_user_info(
+            provider=link_data.provider,
+            token_or_code=link_data.access_token
+        )
+        
+        if not result or not result.get("success"):
+            return AuthResponse(
+                success=False,
+                error={"message": "카카오 사용자 정보를 가져올 수 없습니다."}
+            )
+        
+        user_info = result["data"]
+        
+        # 현재 사용자에게 카카오 계정 연결
+        current_user.social_provider = "kakao"
+        current_user.social_id = user_info.get("id")
+        
+        if not current_user.linked_social_providers:
+            current_user.linked_social_providers = []
+        
+        if "kakao" not in current_user.linked_social_providers:
+            current_user.linked_social_providers.append("kakao")
+        
+        db.commit()
+        
+        return AuthResponse(
+            success=True,
+            data={"message": "카카오 계정이 연결되었습니다."}
+        )
+        
+    except Exception as e:
+        logger.error(f"카카오 연동 오류: {e}")
+        return AuthResponse(
+            success=False,
+            error={"message": "카카오 연동 중 오류가 발생했습니다."}
         )
 
 @router.post("/admin/update-role", response_model=AuthResponse, summary="사용자 역할 업데이트")
