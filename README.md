@@ -34,16 +34,17 @@ docker-compose up -d
 - **소셜 계정 연결**: 기존 이메일 계정에 카카오 계정 연결 가능
 - **관리자 시스템**: 역할 기반 접근 제어 및 관리자 패널 완료
 - **로그인 지속성**: 페이지 새로고침 시 로그인 상태 유지 완료
+- **통계 대시보드**: 사용자 통계, 로또 번호 분석, 추천 성과 차트 완료
 - **추천번호 관리**: CRUD 작업, 즐겨찾기, 태그 시스템 완료
 - **당첨 결과 확인**: 회차별 당첨번호 입력, 자동 등수 계산, 상금 계산 완료
 - **사용자 통계**: 당첨률, 총 당첨금, 최고 등수 실시간 업데이트 완료
 - **데이터베이스**: PostgreSQL과 SQLAlchemy 모델 완전 일치 완료
 
-### 🔧 API 엔드포인트 (20개 구현 완료)
+### 🔧 API 엔드포인트 (22개 구현 완료)
 - **통합 인증**: `/api/v1/auth/register/email`, `/api/v1/auth/login/email`, `/api/v1/auth/login/social`, `/api/v1/auth/link/social`, `/api/v1/auth/me`
 - **관리자**: `/api/v1/auth/admin/users`, `/api/v1/auth/admin/update-role`
 - **추천번호**: `/api/v1/saved-recommendations` (CRUD)
-- **통계**: `/api/v1/saved-recommendations/stats/summary`
+- **통계**: `/api/v1/saved-recommendations/stats/summary`, `/api/v1/lotto/statistics`
 - **당첨확인**: `/api/v1/saved-recommendations/check-winning`
 
 ### 🔐 통합 인증 시스템
@@ -52,6 +53,14 @@ docker-compose up -d
 - **계정 연결**: 이메일 계정에 여러 소셜 계정 연결 가능
 - **관리자 시스템**: 역할 기반 접근 제어 (USER/ADMIN)
 - **로그인 지속성**: 페이지 새로고침 시에도 로그인 상태 유지
+
+### 📊 통계 대시보드
+- **사용자 통계**: 총 추천 수, 당첨 수, 당첨률, 총 당첨금, 최고 등수
+- **로또 번호 분석**: 번호별 출현 빈도 차트, 핫/콜드 넘버 시각화
+- **추천 성과 분석**: 생성 방법별 성과, 등수별 당첨 분포, 시간별 활동
+- **인터랙티브 차트**: Recharts 기반 깔끔한 디자인의 차트 컴포넌트
+- **실시간 데이터**: API 연동으로 실시간 통계 업데이트
+- **반응형 디자인**: 모바일/데스크톱 최적화된 대시보드
   - **전역 콜백 처리**: App.tsx의 CallbackHandler로 안정적인 로그인 처리
   - **즉시 로그인 완료**: 새로고침 없이도 로그인 상태 즉시 반영
 - **네이버 로그인**: 구현 완료 (검수 대기 중)

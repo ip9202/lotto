@@ -27,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const navItems = [
     { path: '/', label: '홈' },
     { path: '/recommendation', label: '번호 추천' },
+    { path: '/statistics', label: '통계' },
     { path: '/admin', label: '관리자' },
     // { path: '/history', label: '기록 보기' }, // 이전기록 기능 개발 중 - 일시 비활성화
   ];
