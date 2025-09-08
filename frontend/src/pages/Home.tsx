@@ -27,7 +27,6 @@ const Home: React.FC = () => {
       const state = urlParams.get('state');
       
       if (code && state && state.startsWith('kakao_login_')) {
-        console.log('홈 페이지에서 카카오 콜백 처리:', { code, state });
         
         try {
           // 카카오 SDK 초기화
@@ -80,7 +79,6 @@ const Home: React.FC = () => {
                 // 기존 계정이 있으면 자동 로그인
                 const success = await socialLogin('kakao', tokenData.access_token);
                 if (success) {
-                  console.log('카카오 자동 로그인 성공');
                   // URL 정리
                   window.history.replaceState({}, document.title, window.location.pathname);
                 }
@@ -138,7 +136,6 @@ const Home: React.FC = () => {
           // 연동 성공 후 자동 로그인
           const loginSuccess = await socialLogin('kakao', accessToken);
           if (loginSuccess) {
-            console.log('카카오 자동 회원가입 및 로그인 성공');
             // URL 정리
             window.history.replaceState({}, document.title, window.location.pathname);
           }

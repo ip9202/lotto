@@ -35,7 +35,6 @@ const Login: React.FC = () => {
       const isAlreadyProcessing = sessionStorage.getItem(processKey);
       
       if (isAlreadyProcessing || processingRef.current) {
-        console.log('카카오 콜백 이미 처리 중 또는 완료됨');
         return;
       }
 
@@ -46,7 +45,6 @@ const Login: React.FC = () => {
       sessionStorage.setItem(processKey, 'true');
       processingRef.current = true;
       
-      console.log('로그인 페이지에서 카카오 콜백 처리:', { code, state });
       
       try {
         // 카카오 SDK 초기화
@@ -56,7 +54,6 @@ const Login: React.FC = () => {
         
         // 카카오에서 액세스 토큰 가져오기
         const redirectUri = `${window.location.origin}/login`;
-        console.log('사용할 redirect_uri:', redirectUri);
         
         const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
           method: 'POST',
@@ -72,7 +69,6 @@ const Login: React.FC = () => {
         });
         
         const tokenData = await tokenResponse.json();
-        console.log('카카오 토큰 응답:', tokenData);
         
         if (tokenData.access_token) {
           // 카카오 사용자 정보 가져오기
@@ -83,8 +79,6 @@ const Login: React.FC = () => {
           });
           
           const userData = await userResponse.json();
-          console.log('카카오 사용자 정보:', userData);
-      console.log('카카오 이메일:', userData.kakao_account?.email);
           
           // handleKakaoLogin 함수 호출
           await handleKakaoLogin(tokenData.access_token, userData);
@@ -217,7 +211,6 @@ const Login: React.FC = () => {
       });
 
       const checkResult = await checkResponse.json();
-      console.log('카카오 사용자 확인 응답:', checkResult);
       
       if (checkResult.success) {
         if (checkResult.data.is_registered) {

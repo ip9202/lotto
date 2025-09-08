@@ -30,12 +30,10 @@ const AdSense: React.FC<AdSenseProps> = ({
       const timer = setTimeout(() => {
         try {
           if (typeof window !== 'undefined' && window.adsbygoogle) {
-            console.log('Pushing AdSense ad with consent:', consentStatus);
             (window.adsbygoogle = window.adsbygoogle || []).push({});
             setIsAdPushed(true);
           }
         } catch (error) {
-          console.log('AdSense push error (ignored):', error);
         }
       }, 1000); // 1초 지연으로 안전하게 처리
 

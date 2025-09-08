@@ -59,7 +59,6 @@ const CallbackHandler: React.FC = () => {
           // 연동 성공 후 자동 로그인
           const loginSuccess = await socialLogin('kakao', accessToken);
           if (loginSuccess) {
-            console.log('카카오 자동 회원가입 및 로그인 성공');
             // URL 정리
             window.history.replaceState({}, document.title, window.location.pathname);
           }
@@ -79,18 +78,15 @@ const CallbackHandler: React.FC = () => {
         
         if (code && state) {
           if (state.startsWith('kakao_login_')) {
-            console.log('전역 카카오 로그인 콜백 감지:', { code, state });
             // 로그인 페이지에서만 처리하도록 전역 처리 비활성화
             return;
           } else if (state.startsWith('naver_login_')) {
-            console.log('전역 네이버 로그인 콜백 감지:', { code, state });
             
             try {
               const { authAPI } = await import('./services/apiService');
               const result = await authAPI.socialLogin('naver', code);
 
               if (result.success && result.data) {
-                console.log('전역 네이버 로그인 성공:', result.data);
                 
                 // 통합 인증으로 로그인 처리
                 await socialLogin('naver', result.data.access_token);

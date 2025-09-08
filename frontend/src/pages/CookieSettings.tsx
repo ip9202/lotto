@@ -47,7 +47,6 @@ const CookieSettings: React.FC = () => {
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000); // 2초 후 메시지 숨김
 
-    console.log('Cookie settings updated:', settings);
   };
 
   return (

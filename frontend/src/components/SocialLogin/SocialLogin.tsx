@@ -41,16 +41,13 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClick, onClose, cl
         return;
       }
       
-      console.log('카카오 SDK 로드 확인됨:', window.Kakao);
       
       // 카카오 SDK 초기화
       if (!window.Kakao.isInitialized()) {
-        console.log('카카오 SDK 초기화 중...', import.meta.env.VITE_KAKAO_APP_KEY);
         window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
       }
       
       // 초기화 후 Auth 객체 확인
-      console.log('카카오 Auth 객체:', window.Kakao.Auth);
       
       // 카카오 로그인 실행 (새로운 API 방식 - authorize 사용)
       if (window.Kakao.Auth && window.Kakao.Auth.authorize) {
@@ -93,7 +90,6 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClick, onClose, cl
         return;
       }
       
-      console.log('네이버 SDK 로드 확인됨:', window.naver);
       
       // 네이버 로그인 URL 생성 및 리다이렉트
       const naverClientId = import.meta.env.VITE_NAVER_CLIENT_ID;
@@ -102,9 +98,6 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClick, onClose, cl
       
       const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}&redirect_uri=${redirectUri}&state=${state}`;
       
-      console.log('네이버 로그인 URL:', naverAuthUrl);
-      console.log('네이버 Client ID:', naverClientId);
-      console.log('Redirect URI:', redirectUri);
       
       // 네이버 로그인 페이지로 리다이렉트
       window.location.href = naverAuthUrl;

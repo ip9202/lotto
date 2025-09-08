@@ -15,11 +15,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { isAuthenticated, user } = useUnifiedAuth();
 
   // 디버깅을 위한 로그
-  console.log('Layout rendered, current location:', location.pathname);
-  console.log('Location object:', location);
 
   useEffect(() => {
-    console.log('Location changed to:', location.pathname);
   }, [location]);
 
   const navItems = [
@@ -31,8 +28,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   const handleNavClick = (path: string) => {
-    console.log('Navigation clicked:', path);
-    console.log('Current location before navigation:', location.pathname);
     
     // 모바일 메뉴 닫기
     setIsMobileMenuOpen(false);
@@ -40,14 +35,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     // 프로그래밍 방식으로도 네비게이션 시도
     try {
       navigate(path);
-      console.log('Navigation successful to:', path);
     } catch (error) {
       console.error('Navigation error:', error);
     }
   };
 
   const toggleMobileMenu = () => {
-    console.log('Mobile menu clicked');
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 

@@ -27,11 +27,9 @@ export const useCookieConsent = () => {
       if (consentEvent.data && consentEvent.data.type === 'consent_response') {
         const consent = consentEvent.data.consent;
         if (consent) {
-          console.log('Received consent state from CMP:', consent);
           setConsentStatus(consent);
 
           // AdSense 관련 로직 제거 (심사 완료 후 추가 예정)
-          console.log('Cookie consent received:', consent);
         }
       }
     };

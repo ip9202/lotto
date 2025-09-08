@@ -69,7 +69,6 @@ const Recommendation: React.FC = () => {
         target_draw: null
       };
 
-      console.log('기본 추천 요청 데이터:', requestData);
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/recommendations/generate`, {
         method: 'POST',
@@ -86,12 +85,10 @@ const Recommendation: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('기본 추천 응답 데이터:', data);
       
       if (data.success) {
         const recommendations = data.data.combinations || [];
         setRecommendations(recommendations);
-        console.log('기본 추천 조합 생성 완료');
       } else {
         alert('기본 추천 조합 생성에 실패했습니다.');
       }
@@ -143,21 +140,17 @@ const Recommendation: React.FC = () => {
         target_draw: null
       };
 
-      console.log('요청 데이터:', requestData);
       
       const { recommendationsAPI } = await import('../services/apiService');
       const result = await recommendationsAPI.generateRecommendations(requestData);
 
-      console.log('응답 데이터:', result);
       
       if (result.success && result.data) {
-        console.log('추천 데이터:', result.data);
         const recommendations = result.data.combinations || [];
         
         // 추천기록 기능 일시 비활성화로 history_id 처리 불필요
         setRecommendations(recommendations);
         
-        console.log('추천 조합 생성 완료');
       } else {
         alert(result.error?.message || '추천 조합 생성에 실패했습니다.');
       }

@@ -218,7 +218,6 @@ const History: React.FC = () => {
           limit={20} 
           showPagination={true}
           onDrawSelect={(draw) => {
-            console.log('선택된 회차:', draw);
             // 필요시 상세 보기 모달 등을 추가할 수 있음
           }}
         />
