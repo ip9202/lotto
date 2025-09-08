@@ -492,4 +492,100 @@ async def change_password(
 - ✅ **비밀번호 변경**: 8자 이상, 현재 비밀번호 확인, 실시간 검증
 - ✅ **소셜 로그인 안내**: 카카오/네이버 사용자에게 적절한 안내 메시지
 - ✅ **보안**: 현재 비밀번호 확인 후 변경, 해시화 저장
+
+## ✅ 비밀번호 변경 정책 개선 및 로그아웃 개선 (2025-09-08)
+
+### 🎯 주요 변경사항
+- **비밀번호 변경 정책 수정**: 모든 계정에서 비밀번호 변경 가능
+- **소셜 로그인 역할 변경**: 단순 계정 연동용으로 처리
+- **로그아웃 개선**: 로그아웃 시 메인페이지 자동 이동
+- **콘솔 로그 정리**: 프로덕션 환경에 적합하게 정리
+
+### 🔧 기술적 수정사항
+
+#### 1. 비밀번호 변경 정책 수정
+**Frontend (`frontend/src/pages/ProfileSettings.tsx`)**
+```typescript
+// 기존: 소셜 로그인 사용자는 비밀번호 변경 불가
+{user.social_provider !== 'kakao' && user.social_provider !== 'naver' && (
+  <div>비밀번호 변경 섹션</div>
+)}
+
+// 수정: 모든 사용자에게 비밀번호 변경 가능
+{(
+  <div>비밀번호 변경 섹션</div>
+)}
+```
+
+**Backend (`backend/app/api/v1/endpoints/unified_auth.py`)**
+```python
+# 비밀번호 필드명 수정
+# 기존: current_user.hashed_password
+# 수정: current_user.password_hash
+if not verify_password(current_password, current_user.password_hash):
+    return AuthResponse(success=False, error={"message": "현재 비밀번호가 올바르지 않습니다."})
+```
+
+#### 2. 소셜 계정 연동 안내 개선
+```typescript
+// 연동된 소셜 계정 안내 메시지
+{user.linked_social_providers && user.linked_social_providers.length > 0 && (
+  <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
+    <h3 className="text-lg font-medium text-blue-900 mb-2">연동된 소셜 계정</h3>
+    <p className="text-blue-800">
+      {user.linked_social_providers.map(provider => 
+        provider === 'kakao' ? '카카오' : 
+        provider === 'naver' ? '네이버' : provider
+      ).join(', ')} 계정이 연동되어 있습니다. 
+      소셜 계정으로도 로그인할 수 있으며, 비밀번호는 언제든지 변경 가능합니다.
+    </p>
+  </div>
+)}
+```
+
+#### 3. 로그아웃 시 메인페이지 리다이렉트
+**UnifiedAuthContext (`frontend/src/contexts/UnifiedAuthContext.tsx`)**
+```typescript
+const logout = () => {
+  localStorage.removeItem('access_token');
+  setUser(null);
+  // 메인페이지로 리다이렉트
+  window.location.href = '/';
+};
+```
+
+**UserAuthContext (`frontend/src/contexts/UserAuthContext.tsx`)**
+```typescript
+const logout = () => {
+  setToken(null);
+  setUser(null);
+  localStorage.removeItem('userToken');
+  localStorage.removeItem('userData');
+  // 메인페이지로 리다이렉트
+  window.location.href = '/';
+};
+```
+
+**AdminAuthContext (`frontend/src/contexts/AdminAuthContext.tsx`)**
+```typescript
+const logout = () => {
+  setIsAuthenticated(false);
+  setAdminInfo(null);
+  localStorage.removeItem('adminAuth');
+  // 메인페이지로 리다이렉트
+  window.location.href = '/';
+};
+```
+
+#### 4. 콘솔 로그 정리
+- **11개 파일**에서 **47개의 console.log** 제거
+- **프로덕션 환경**에 적합하게 정리
+- **사용자 경험** 개선 (콘솔 로그 노이즈 제거)
+
+### 📊 최종 결과
+- ✅ **비밀번호 변경**: 모든 계정에서 비밀번호 변경 가능
+- ✅ **소셜 로그인**: 단순 계정 연동용으로 처리
+- ✅ **로그아웃 개선**: 로그아웃 시 메인페이지 자동 이동
+- ✅ **콘솔 로그 정리**: 프로덕션 환경 준비 완료
+- ✅ **사용자 경험**: 일관된 계정 관리 경험 제공
 ```
