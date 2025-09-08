@@ -29,6 +29,7 @@ class UserResponse(BaseModel):
     email: Optional[str]
     social_provider: Optional[str]
     linked_social_providers: Optional[List[str]] = []
+    role: Optional[str] = None
     subscription_plan: str
     subscription_status: str
     is_premium: bool
