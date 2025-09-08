@@ -378,4 +378,118 @@ CREATE TABLE saved_recommendations (
 - **신규 사용자**: 카카오 로그인 → 회원가입 페이지 → 자동 로그인 → 카카오 연동
 - **기존 사용자 (연동됨)**: 카카오 로그인 → 자동 로그인 → 메인 페이지
 - **기존 사용자 (미연동)**: 이메일 로그인 → 카카오 연동 옵션 표시
+
+## ✅ 카카오 로그인 중복 사용자 생성 문제 완전 해결 (2025-09-08)
+
+### 🎯 핵심 문제
+- **문제**: 카카오 로그인 시 기존 계정이 있음에도 불구하고 중복 사용자 계속 생성
+- **원인**: `check-kakao-user`와 `login/social` API에서 서로 다른 검색 로직 사용
+
+### 🔧 해결 과정
+
+#### 1. SocialProvider enum 비교 문제
+- **문제**: `check-kakao-user`에서 `"KAKAO"` (문자열)로 검색, `login/social`에서 `SocialProvider.KAKAO` (enum)로 검색
+- **해결**: 두 API 모두 `SocialProvider.KAKAO` (enum)로 통일
+
+#### 2. 소셜 ID 키 불일치 문제
+- **문제**: `check-kakao-user`에서 `user_info.get("id")` 사용, `login/social`에서 `user_info.get("social_id")` 사용
+- **해결**: `unified_auth_service.py`에서 `user_info.get("social_id")`로 통일
+
+#### 3. 데이터 일관성 문제
+- **문제**: `linked_social_providers`에 대문자 `['KAKAO']`와 소문자 `['kakao']` 혼재
+- **해결**: 소문자 `['kakao']`로 통일하고 대소문자 구분 없이 비교
+
+### 🔧 기술적 수정사항
+
+#### Backend (`backend/app/api/v1/endpoints/unified_auth.py`)
+```python
+# check-kakao-user API 수정
+existing_user = db.query(User).filter(
+    and_(
+        User.social_provider == SocialProvider.KAKAO,  # enum으로 수정
+        User.social_id == str(user_info.get("id")),
+        User.is_active == True
+    )
+).first()
+```
+
+#### Backend (`backend/app/services/unified_auth_service.py`)
+```python
+# 소셜 ID 검색 로직 수정
+existing_user = db.query(User).filter(
+    and_(
+        User.social_provider == SocialProvider.KAKAO if provider.lower() == 'kakao' else SocialProvider.NAVER,
+        User.social_id == str(user_info.get("social_id")),  # social_id 키로 수정
+        User.is_active == True
+    )
+).first()
+
+# linked_social_providers 비교 로직 수정
+if provider.lower() not in [p.lower() for p in existing_user.linked_social_providers]:
+    existing_user.linked_social_providers.append(provider.lower())
+```
+
+### 📊 최종 결과
+- ✅ **중복 사용자 생성 완전 방지**: 기존 계정으로 정상 로그인
+- ✅ **데이터 일관성**: enum과 문자열 비교 통일
+- ✅ **소셜 ID 검색**: 올바른 키로 검색하여 기존 계정 발견
+- ✅ **사용자 경험**: 카카오 로그인 시 기존 계정으로 즉시 로그인
+
+## ✅ 프로필 설정 및 비밀번호 변경 기능 구현 (2025-09-08)
+
+### 🎯 구현된 기능
+- **프로필 설정 페이지**: `/profile-settings` 경로
+- **비밀번호 변경**: 이메일 로그인 사용자만 가능
+- **계정 정보 표시**: 이메일, 닉네임, 로그인 방식, 연동된 소셜 계정
+- **소셜 로그인 안내**: 카카오/네이버 사용자는 해당 플랫폼에서 변경 안내
+
+### 🔧 기술적 구현
+
+#### Frontend (`frontend/src/pages/ProfileSettings.tsx`)
+```typescript
+// 비밀번호 변경 폼
+const handlePasswordSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  
+  if (!validatePasswordForm()) {
+    return;
+  }
+
+  const response = await fetch('http://localhost:8000/api/v1/auth/change-password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+    },
+    body: JSON.stringify({
+      current_password: passwordData.currentPassword,
+      new_password: passwordData.newPassword
+    })
+  });
+};
+```
+
+#### Backend (`backend/app/api/v1/endpoints/unified_auth.py`)
+```python
+@router.post("/change-password", response_model=AuthResponse, summary="비밀번호 변경")
+async def change_password(
+    password_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # 현재 비밀번호 확인
+    if not verify_password(current_password, current_user.hashed_password):
+        return AuthResponse(success=False, error={"message": "현재 비밀번호가 올바르지 않습니다."})
+    
+    # 새 비밀번호 해시화
+    new_hashed_password = get_password_hash(new_password)
+    current_user.hashed_password = new_hashed_password
+    db.commit()
+```
+
+### 📊 결과
+- ✅ **프로필 설정 페이지**: 사용자 정보 확인 및 비밀번호 변경 가능
+- ✅ **비밀번호 변경**: 8자 이상, 현재 비밀번호 확인, 실시간 검증
+- ✅ **소셜 로그인 안내**: 카카오/네이버 사용자에게 적절한 안내 메시지
+- ✅ **보안**: 현재 비밀번호 확인 후 변경, 해시화 저장
 ```

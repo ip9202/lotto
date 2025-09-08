@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 const UserProfile: React.FC = () => {
   const { user, logout, isAuthenticated } = useUnifiedAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   if (!isAuthenticated || !user) {
     return null;
@@ -130,7 +132,13 @@ const UserProfile: React.FC = () => {
             <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
               당첨 이력
             </button>
-            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            <button 
+              onClick={() => {
+                navigate('/profile-settings');
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
               프로필 설정
             </button>
             {!user.is_premium && (

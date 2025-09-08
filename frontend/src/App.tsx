@@ -7,6 +7,7 @@ import Statistics from './pages/Statistics';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ProfileSettings from './pages/ProfileSettings';
 import KakaoLink from './pages/KakaoLink';
 import KakaoLoginGuide from './pages/KakaoLoginGuide';
 import { AdminAuthProvider } from './contexts/AdminAuthContext';
@@ -127,8 +128,9 @@ const App: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/recommendation" element={<Recommendation />} />
           <Route path="/statistics" element={<Statistics />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/profile-settings" element={<ProfileSettings />} />
           <Route path="/kakao-link" element={<KakaoLink />} />
           <Route path="/kakao-login-guide" element={<KakaoLoginGuide />} />
           <Route path="/admin" element={

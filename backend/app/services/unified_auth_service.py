@@ -61,6 +61,11 @@ class UnifiedAuthService:
             if not user_info:
                 return None
             
+            logger.info(f"unified_auth_service user_info: {user_info}")
+            logger.info(f"user_info keys: {list(user_info.keys())}")
+            logger.info(f"user_info.get('id'): {user_info.get('id')}")
+            logger.info(f"user_info.get('social_id'): {user_info.get('social_id')}")
+            
             # 이메일이 있는 경우에만 이메일로 기존 계정 찾기
             existing_user = None
             if user_info.get("email"):
@@ -70,25 +75,28 @@ class UnifiedAuthService:
                         User.is_active == True
                     )
                 ).first()
+                logger.info(f"이메일로 검색 결과: {existing_user}")
             
             # 이메일로 찾지 못한 경우, 소셜 ID로 기존 계정 찾기
             if not existing_user:
                 existing_user = db.query(User).filter(
                     and_(
-                        User.social_provider == SocialProvider(provider),
-                        User.social_id == user_info.get("id"),
+                        User.social_provider == SocialProvider.KAKAO if provider.lower() == 'kakao' else SocialProvider.NAVER,
+                        User.social_id == str(user_info.get("social_id")),  # 문자열로 변환
                         User.is_active == True
                     )
                 ).first()
+                logger.info(f"소셜 ID로 검색 결과: {existing_user}")
             
             # 기존 계정이 없으면 새로 생성
             if not existing_user:
+                logger.info(f"기존 계정이 없어서 새로 생성합니다. user_info: {user_info}")
                 # 이메일이 없으면 임시 이메일 생성
                 email = user_info.get("email") or f"{provider}_{user_info.get('id')}@temp.local"
                 
                 new_user = User(
-                    social_provider=SocialProvider(provider),
-                    social_id=user_info.get("id"),
+                    social_provider=SocialProvider(provider.lower()),
+                    social_id=str(user_info.get("social_id")),  # 문자열로 변환
                     email=email,
                     nickname=user_info.get("nickname", f"{provider} 사용자"),
                     profile_image_url=user_info.get("profile_image_url"),
@@ -106,10 +114,10 @@ class UnifiedAuthService:
             if not existing_user.linked_social_providers:
                 existing_user.linked_social_providers = []
             
-            if provider not in existing_user.linked_social_providers:
-                existing_user.linked_social_providers.append(provider)
-                existing_user.social_provider = SocialProvider(provider)
-                existing_user.social_id = user_info.get("id")
+            if provider.lower() not in [p.lower() for p in existing_user.linked_social_providers]:
+                existing_user.linked_social_providers.append(provider.lower())
+                existing_user.social_provider = SocialProvider(provider.lower())
+                existing_user.social_id = str(user_info.get("social_id"))  # 문자열로 변환
             
             # 로그인 시간 업데이트
             existing_user.update_last_login()

@@ -9,8 +9,8 @@ from typing import Dict, Any, Optional
 from pydantic import BaseModel, EmailStr
 from ....database import get_db
 from ....services.unified_auth_service import UnifiedAuthService
-from ....utils.auth import get_current_user
-from ....models.user import User
+from ....utils.auth import get_current_user, verify_password, get_password_hash
+from ....models.user import User, SocialProvider
 import logging
 
 logger = logging.getLogger(__name__)
@@ -185,7 +185,7 @@ async def check_kakao_user(
             logger.info(f"이메일로 계정을 찾지 못함. 소셜 ID로 검색: {user_info.get('id')}")
             existing_user = db.query(User).filter(
                 and_(
-                    User.social_provider == "KAKAO",
+                    User.social_provider == SocialProvider.KAKAO,
                     User.social_id == str(user_info.get("id")),  # 문자열로 변환
                     User.is_active == True
                 )
@@ -216,6 +216,48 @@ async def check_kakao_user(
         return AuthResponse(
             success=False,
             error={"message": "카카오 사용자 확인 중 오류가 발생했습니다."}
+        )
+
+@router.post("/change-password", response_model=AuthResponse, summary="비밀번호 변경")
+async def change_password(
+    password_data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """비밀번호 변경"""
+    try:
+        current_password = password_data.get("current_password")
+        new_password = password_data.get("new_password")
+        
+        if not current_password or not new_password:
+            return AuthResponse(
+                success=False,
+                error={"message": "현재 비밀번호와 새 비밀번호를 입력해주세요."}
+            )
+        
+        # 현재 비밀번호 확인
+        if not verify_password(current_password, current_user.hashed_password):
+            return AuthResponse(
+                success=False,
+                error={"message": "현재 비밀번호가 올바르지 않습니다."}
+            )
+        
+        # 새 비밀번호 해시화
+        new_hashed_password = get_password_hash(new_password)
+        current_user.hashed_password = new_hashed_password
+        
+        db.commit()
+        
+        return AuthResponse(
+            success=True,
+            data={"message": "비밀번호가 성공적으로 변경되었습니다."}
+        )
+        
+    except Exception as e:
+        logger.error(f"비밀번호 변경 오류: {e}")
+        return AuthResponse(
+            success=False,
+            error={"message": "비밀번호 변경 중 오류가 발생했습니다."}
         )
 
 @router.post("/link/kakao", response_model=AuthResponse, summary="카카오 계정 연동")
