@@ -13,8 +13,8 @@ import {
 import { SessionList, SessionForm, SessionDetailModal } from '../components/SessionManagement';
 import { UserSession, SessionCreate, SessionUpdate } from '../types/session';
 import { createSession, updateSession } from '../services/sessionService';
-import { useAdminAuth } from '../contexts/AdminAuthContext';
-import AdminLogin from '../components/AdminAuth/AdminLogin';
+import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SystemStatus {
   latest_db_draw: number;
@@ -48,7 +48,8 @@ interface SchedulerStatus {
 }
 
 const Admin: React.FC = () => {
-  const { isAuthenticated, adminInfo, logout, login, loading } = useAdminAuth();
+  const { user, isAuthenticated, logout, isLoading } = useUnifiedAuth();
+  const navigate = useNavigate();
   const [loginError, setLoginError] = useState<string>('');
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
@@ -377,18 +378,34 @@ const Admin: React.FC = () => {
     );
   };
 
-  // 로그인 처리 함수
-  const handleLogin = async (username: string, password: string) => {
-    setLoginError('');
-    const success = await login(username, password);
-    if (!success) {
-      setLoginError('관리자 ID 또는 비밀번호가 올바르지 않습니다.');
-    }
-  };
-
-  // 로그인하지 않은 경우 로그인 폼 표시
+  // 관리자 권한 확인
+  const isAdmin = user?.role === 'admin' || user?.role === 'ADMIN';
+  
+  // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
   if (!isAuthenticated) {
-    return <AdminLogin onLogin={handleLogin} loading={loading} error={loginError} />;
+    navigate('/login');
+    return null;
+  }
+  
+  // 관리자가 아닌 경우 접근 거부
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <ExclamationTriangleIcon className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">접근 권한 없음</h2>
+          <p className="text-gray-600 mb-6">
+            관리자 권한이 필요한 페이지입니다.
+          </p>
+          <button
+            onClick={() => navigate('/')}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+          >
+            메인페이지로 이동
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -406,10 +423,10 @@ const Admin: React.FC = () => {
             <div className="flex items-center space-x-3 sm:space-x-4">
               <div className="text-right">
                 <p className="text-xs sm:text-sm font-medium text-gray-900">
-                  {adminInfo?.username} 관리자
+                  {user?.nickname || user?.email} 관리자
                 </p>
                 <p className="text-xs text-gray-500">
-                  로그인: {adminInfo?.loginTime ? new Date(adminInfo.loginTime).toLocaleString('ko-KR') : ''}
+                  로그인: {user?.last_login_at ? new Date(user.last_login_at).toLocaleString('ko-KR') : ''}
                 </p>
               </div>
               <button

@@ -10,7 +10,6 @@ import Register from './pages/Register';
 import ProfileSettings from './pages/ProfileSettings';
 import KakaoLink from './pages/KakaoLink';
 import KakaoLoginGuide from './pages/KakaoLoginGuide';
-import { AdminAuthProvider } from './contexts/AdminAuthContext';
 import { UserAuthProvider, useUserAuth } from './contexts/UserAuthContext';
 import { UnifiedAuthProvider, useUnifiedAuth } from './contexts/UnifiedAuthContext';
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -129,11 +128,7 @@ const App: React.FC = () => {
         <Route path="/profile-settings" element={<ProfileSettings />} />
           <Route path="/kakao-link" element={<KakaoLink />} />
           <Route path="/kakao-login-guide" element={<KakaoLoginGuide />} />
-          <Route path="/admin" element={
-            <AdminAuthProvider>
-              <Admin />
-            </AdminAuthProvider>
-          } />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/cookie-settings" element={<CookieSettings />} />
           <Route path="/terms" element={<Terms />} />
