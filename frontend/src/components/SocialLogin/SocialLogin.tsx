@@ -12,50 +12,138 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className =
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 카카오 로그인 콜백 처리 (페이지 로드 시 자동 실행)
+  React.useEffect(() => {
+    const handleKakaoCallback = async () => {
+      try {
+        // URL 파라미터 확인
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+        
+        if (code && state) {
+          if (state.startsWith('kakao_login_')) {
+            console.log('카카오 로그인 콜백 감지:', { code, state });
+            
+            // 카카오 SDK 초기화 확인
+            if (!window.Kakao || !window.Kakao.isInitialized()) {
+              console.log('카카오 SDK 초기화 중...');
+              window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+            }
+            
+            console.log('카카오 인증 코드:', code);
+            
+            // 백엔드로 인증 코드를 보내서 액세스 토큰으로 교환
+            try {
+              const { authAPI } = await import('../../services/apiService');
+              const result = await authAPI.socialLogin('kakao', code);
+
+              if (result.success && result.data) {
+                console.log('카카오 로그인 성공:', result.data);
+                await login(result.data.access_token, result.data.user);
+                if (onLogin) {
+                  onLogin(result.data.access_token, result.data.user);
+                }
+                if (onClose) {
+                  onClose();
+                }
+                
+                // URL에서 code 파라미터 제거
+                window.history.replaceState({}, document.title, window.location.pathname);
+              } else {
+                setError(result.error?.message || '로그인에 실패했습니다.');
+              }
+            } catch (err) {
+              console.error('백엔드 로그인 오류:', err);
+              setError('로그인 중 오류가 발생했습니다.');
+            }
+          } else if (state.startsWith('naver_login_')) {
+            console.log('네이버 로그인 콜백 감지:', { code, state });
+            
+            // 백엔드로 인증 코드를 보내서 액세스 토큰으로 교환
+            try {
+              const { authAPI } = await import('../../services/apiService');
+              const result = await authAPI.socialLogin('naver', code);
+
+              if (result.success && result.data) {
+                console.log('네이버 로그인 성공:', result.data);
+                await login(result.data.access_token, result.data.user);
+                if (onLogin) {
+                  onLogin(result.data.access_token, result.data.user);
+                }
+                if (onClose) {
+                  onClose();
+                }
+                
+                // URL에서 code 파라미터 제거
+                window.history.replaceState({}, document.title, window.location.pathname);
+              } else {
+                setError(result.error?.message || '로그인에 실패했습니다.');
+              }
+            } catch (err) {
+              console.error('백엔드 로그인 오류:', err);
+              setError('로그인 중 오류가 발생했습니다.');
+            }
+          }
+        }
+      } catch (err) {
+        console.error('카카오 로그인 처리 오류:', err);
+        setError('로그인 중 오류가 발생했습니다.');
+      }
+    };
+
+    // 페이지 로드 시 콜백 처리 실행
+    handleKakaoCallback();
+  }, [login, onLogin, onClose]);
+
   const handleKakaoLogin = async () => {
     setIsLoading(true);
     setError(null);
     
     try {
-      // 실제 구현에서는 Kakao SDK를 사용
-      // 현재는 개발용 모의 구현
-      console.log('카카오 로그인 시작...');
+      // 카카오 SDK 로딩 대기 및 확인
+      let retryCount = 0;
+      const maxRetries = 50; // 5초 대기
       
-      // 모의 카카오 액세스 토큰 (실제로는 Kakao SDK에서 받아옴)
-      const mockKakaoToken = 'mock_kakao_access_token_' + Date.now();
+      while ((typeof window.Kakao === 'undefined' || !window.kakaoSDKLoaded) && retryCount < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retryCount++;
+      }
       
-      // 백엔드 소셜 로그인 API 호출
-      const response = await fetch('http://localhost:8000/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          provider: 'kakao',
-          access_token: mockKakaoToken
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          await login(data.data.access_token, data.data.user);
-          if (onLogin) {
-            onLogin(data.data.access_token, data.data.user);
-          }
-          if (onClose) {
-            onClose();
-          }
-        } else {
-          setError('로그인에 실패했습니다.');
-        }
+      if (typeof window.Kakao === 'undefined' || !window.kakaoSDKLoaded) {
+        setError('카카오 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('카카오 SDK 로드 확인됨:', window.Kakao);
+      
+      // 카카오 SDK 초기화
+      if (!window.Kakao.isInitialized()) {
+        console.log('카카오 SDK 초기화 중...', import.meta.env.VITE_KAKAO_APP_KEY);
+        window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+      }
+      
+      // 초기화 후 Auth 객체 확인
+      console.log('카카오 Auth 객체:', window.Kakao.Auth);
+      
+      // 카카오 로그인 실행 (새로운 API 방식 - authorize 사용)
+      if (window.Kakao.Auth && window.Kakao.Auth.authorize) {
+        // 카카오 로그인 실행 (콜백 방식)
+        window.Kakao.Auth.authorize({
+          redirectUri: window.location.origin,
+          state: 'kakao_login_' + Date.now(),
+          scope: 'profile_nickname'  // 이메일 scope 제거
+        });
+        
       } else {
-        setError('로그인 요청 중 오류가 발생했습니다.');
+        console.error('카카오 Auth.authorize 함수를 찾을 수 없습니다:', window.Kakao);
+        setError('카카오 로그인 API를 사용할 수 없습니다.');
+        setIsLoading(false);
       }
     } catch (err) {
       console.error('카카오 로그인 오류:', err);
       setError('로그인 중 오류가 발생했습니다.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -65,43 +153,39 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className =
     setError(null);
     
     try {
-      // 실제 구현에서는 Naver SDK를 사용
-      console.log('네이버 로그인 시작...');
+      // 네이버 SDK 로딩 대기 및 확인
+      let retryCount = 0;
+      const maxRetries = 50; // 5초 대기
       
-      // 모의 네이버 액세스 토큰
-      const mockNaverToken = 'mock_naver_access_token_' + Date.now();
-      
-      const response = await fetch('http://localhost:8000/api/v1/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          provider: 'naver',
-          access_token: mockNaverToken
-        }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          await login(data.data.access_token, data.data.user);
-          if (onLogin) {
-            onLogin(data.data.access_token, data.data.user);
-          }
-          if (onClose) {
-            onClose();
-          }
-        } else {
-          setError('로그인에 실패했습니다.');
-        }
-      } else {
-        setError('로그인 요청 중 오류가 발생했습니다.');
+      while ((typeof window.naver === 'undefined' || !window.naverSDKLoaded) && retryCount < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        retryCount++;
       }
+      
+      if (typeof window.naver === 'undefined' || !window.naverSDKLoaded) {
+        setError('네이버 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
+        setIsLoading(false);
+        return;
+      }
+      
+      console.log('네이버 SDK 로드 확인됨:', window.naver);
+      
+      // 네이버 로그인 URL 생성 및 리다이렉트
+      const naverClientId = import.meta.env.VITE_NAVER_CLIENT_ID;
+      const redirectUri = encodeURIComponent(window.location.origin);
+      const state = 'naver_login_' + Date.now();
+      
+      const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}&redirect_uri=${redirectUri}&state=${state}`;
+      
+      console.log('네이버 로그인 URL:', naverAuthUrl);
+      console.log('네이버 Client ID:', naverClientId);
+      console.log('Redirect URI:', redirectUri);
+      
+      // 네이버 로그인 페이지로 리다이렉트
+      window.location.href = naverAuthUrl;
     } catch (err) {
       console.error('네이버 로그인 오류:', err);
       setError('로그인 중 오류가 발생했습니다.');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -140,7 +224,8 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className =
           카카오 로그인
         </button>
 
-        {/* 네이버 로그인 버튼 */}
+        {/* 네이버 로그인 버튼 - 검수 완료 후 활성화 예정 */}
+        {/* 
         <button
           onClick={handleNaverLogin}
           disabled={isLoading}
@@ -155,6 +240,7 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClose, className =
           )}
           네이버 로그인
         </button>
+        */}
       </div>
 
       <div className="mt-6 text-center">

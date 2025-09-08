@@ -7,6 +7,26 @@
 
 **AI 머신러닝으로 로또 당첨번호를 분석하고 예측하는 로또리아. 과거 데이터 기반 통계 분석과 패턴 인식으로 더 스마트한 로또 번호 선택을 도와드립니다!** 🍀
 
+## 🐳 Docker로 시작하기
+
+> **⚠️ 중요**: 모든 서비스는 Docker를 통해 실행됩니다. Docker Desktop을 설치하고 `docker-compose up -d` 명령어로 시작하세요.
+
+```bash
+# 1. Docker Desktop 설치 및 실행
+# https://www.docker.com/products/docker-desktop/
+
+# 2. 프로젝트 클론
+git clone https://github.com/your-username/lotto.git
+cd lotto
+
+# 3. 모든 서비스 시작 (PostgreSQL + Backend + Frontend)
+docker-compose up -d
+
+# 4. 브라우저에서 접속
+# 프론트엔드: http://localhost:5173
+# 백엔드 API: http://localhost:8000/docs
+```
+
 ## 🚀 현재 개발 상태 (2025-09-08)
 
 ### ✅ 완료된 기능들
@@ -15,17 +35,27 @@
 - **당첨 결과 확인**: 회차별 당첨번호 입력, 자동 등수 계산, 상금 계산 완료
 - **사용자 통계**: 당첨률, 총 당첨금, 최고 등수 실시간 업데이트 완료
 - **데이터베이스**: PostgreSQL과 SQLAlchemy 모델 완전 일치 완료
+- **소셜 로그인**: 카카오 로그인 완전 구현 (OAuth 2.0 플로우)
 
-### 🔧 API 엔드포인트 (11개 구현 완료)
-- **인증**: `/api/v1/auth/me`, `/api/v1/auth/profile`
+### 🔧 API 엔드포인트 (13개 구현 완료)
+- **인증**: `/api/v1/auth/me`, `/api/v1/auth/profile`, `/api/v1/auth/login` (소셜 로그인)
 - **추천번호**: `/api/v1/saved-recommendations` (CRUD)
 - **통계**: `/api/v1/saved-recommendations/stats/summary`
 - **당첨확인**: `/api/v1/saved-recommendations/check-winning`
 
+### 🔐 소셜 로그인 시스템
+- **카카오 로그인**: OAuth 2.0 인증 코드 플로우 완전 구현
+  - 프론트엔드: 카카오 JavaScript SDK 연동
+  - 백엔드: 토큰 교환 및 사용자 정보 조회
+  - 보안: 최소한의 개인정보만 수집 (고유 ID, 닉네임)
+- **네이버 로그인**: 구현 완료 (검수 대기 중)
+  - 백엔드 로직 완성, UI에서 숨김 처리
+  - 검수 완료 후 즉시 활성화 가능
+
 ### 📋 다음 개발 예정
-- 소셜 로그인 실제 연동 (카카오/네이버)
-- 프론트엔드와 백엔드 연동
+- 통계 대시보드 개발
 - 관리자 기능 확장
+- 네이버 로그인 활성화 (검수 완료 후)
 
 ## ✨ 주요 기능
 
@@ -50,14 +80,14 @@
 - **세련된 디자인**: 그라데이션과 3D 효과로 현대적인 느낌
 - **PWA 지원**: 앱과 같은 사용자 경험 제공
 
-## 🚀 빠른 시작 (Docker 권장)
+## 🚀 빠른 시작 (Docker 필수)
 
 ### 📋 요구사항
-- **Docker Desktop** (필수!)
+- **Docker Desktop** (필수! - 모든 서비스는 Docker로 실행)
 - **Git** (코드 다운로드용)
 - **브라우저** (Chrome, Firefox, Safari 등)
 
-### 🐳 Docker로 시작하기 (가장 쉬운 방법)
+### 🐳 Docker로 시작하기 (유일한 방법)
 
 #### 1단계: Docker Desktop 설치 및 실행
 ```bash
@@ -100,9 +130,11 @@ docker-compose ps
 # 관리자: http://localhost:5173/admin
 ```
 
-### 🔧 수동 설치 (고급 사용자용)
+### 🔧 수동 설치 (Docker 외부 개발용 - 권장하지 않음)
 
-#### 백엔드 설정
+> **⚠️ 주의**: 모든 서비스는 Docker를 통해 실행하는 것이 권장됩니다. 수동 설치는 특별한 디버깅 목적으로만 사용하세요.
+
+#### 백엔드 설정 (Docker 외부)
 ```bash
 # ⚠️ 중요: Python 개발 시 반드시 conda 가상환경 py3_12 사용
 # 기존 가상환경 활성화
@@ -120,7 +152,7 @@ pip install -r requirements.txt
 python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-#### 프론트엔드 설정
+#### 프론트엔드 설정 (Docker 외부)
 ```bash
 # Node.js 18+ 설치 확인
 node --version
@@ -133,6 +165,8 @@ npm install
 # 프론트엔드 실행
 npm run dev
 ```
+
+> **💡 권장사항**: 개발은 `docker-compose up -d`로 시작하는 것이 가장 안정적입니다.
 
 ## 🏗️ 프로젝트 구조
 
@@ -233,7 +267,31 @@ lotto/
 
 ## 🆘 문제 해결
 
-### Python/Conda 관련 문제
+### Docker 관련 문제 (주요 해결 방법)
+```bash
+# 문제: Docker Desktop이 실행되지 않음
+# 해결방법: Docker Desktop 재시작
+# 1. Docker Desktop 종료
+# 2. Docker Desktop 재시작
+# 3. 시스템 재부팅 (필요시)
+
+# 문제: 컨테이너가 시작되지 않음
+# 해결방법: 컨테이너 재시작
+docker-compose down
+docker-compose up -d
+
+# 문제: 포트 충돌
+# 해결방법: 포트 사용 현황 확인
+lsof -i :5432  # PostgreSQL
+lsof -i :8000  # Backend
+lsof -i :5173  # Frontend
+
+# 문제: 서비스 상태 확인
+docker-compose ps
+docker-compose logs -f [service_name]
+```
+
+### Python/Conda 관련 문제 (Docker 외부 개발시만)
 ```bash
 # 문제: "conda: command not found"
 # 해결방법: Conda 초기화

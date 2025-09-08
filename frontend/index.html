@@ -93,6 +93,19 @@
       (adsbygoogle = window.adsbygoogle || []).push({});
     </script>
     
+    <!-- 🔐 소셜 로그인 SDK -->
+    <!-- 카카오 JavaScript SDK (최신 버전) -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" 
+            crossorigin="anonymous"
+            onload="console.log('카카오 SDK 로드 완료'); window.kakaoSDKLoaded = true;"
+            onerror="console.error('카카오 SDK 로드 실패'); window.kakaoSDKLoaded = false;"></script>
+    
+    <!-- 네이버 JavaScript SDK -->
+    <script type="text/javascript" 
+            src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"
+            onload="console.log('네이버 SDK 로드 완료'); window.naverSDKLoaded = true;"
+            onerror="console.error('네이버 SDK 로드 실패'); window.naverSDKLoaded = false;"></script>
+    
     <style>
       body {
         font-family: 'Pretendard', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;

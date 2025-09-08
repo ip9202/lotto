@@ -65,6 +65,65 @@ class SocialAuthService:
     """소셜 로그인 서비스"""
     
     @staticmethod
+    async def get_kakao_access_token(authorization_code: str) -> Optional[str]:
+        """카카오 인증 코드를 액세스 토큰으로 교환"""
+        try:
+            async with httpx.AsyncClient() as client:
+                data = {
+                    "grant_type": "authorization_code",
+                    "client_id": settings.kakao_rest_api_key,
+                    "redirect_uri": "http://localhost:5173",  # 개발환경
+                    "code": authorization_code
+                }
+                
+                response = await client.post(
+                    "https://kauth.kakao.com/oauth/token",
+                    data=data,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                )
+                
+                if response.status_code == 200:
+                    token_data = response.json()
+                    return token_data.get("access_token")
+                else:
+                    logger.error(f"Kakao token exchange error: {response.status_code} - {response.text}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Kakao token exchange error: {e}")
+            return None
+    
+    @staticmethod
+    async def get_naver_access_token(authorization_code: str) -> Optional[str]:
+        """네이버 인증 코드를 액세스 토큰으로 교환"""
+        try:
+            async with httpx.AsyncClient() as client:
+                data = {
+                    "grant_type": "authorization_code",
+                    "client_id": settings.naver_client_id,
+                    "client_secret": settings.naver_client_secret,
+                    "code": authorization_code,
+                    "state": "naver_login_state"  # 네이버는 state 파라미터도 필요
+                }
+                
+                response = await client.post(
+                    "https://nid.naver.com/oauth2.0/token",
+                    data=data,
+                    headers={"Content-Type": "application/x-www-form-urlencoded"}
+                )
+                
+                if response.status_code == 200:
+                    token_data = response.json()
+                    return token_data.get("access_token")
+                else:
+                    logger.error(f"Naver token exchange error: {response.status_code} - {response.text}")
+                    return None
+                    
+        except Exception as e:
+            logger.error(f"Naver token exchange error: {e}")
+            return None
+    
+    @staticmethod
     async def get_kakao_user_info(access_token: str) -> Optional[Dict[str, Any]]:
         """카카오 사용자 정보 가져오기"""
         try:
@@ -168,15 +227,27 @@ class SocialAuthService:
     async def authenticate_social_user(
         db: Session, 
         provider: str, 
-        access_token: str
+        token_or_code: str
     ) -> Optional[Dict[str, Any]]:
         """소셜 로그인 인증 및 JWT 토큰 생성"""
         try:
             # 소셜 제공자별 사용자 정보 가져오기
             if provider == "kakao":
+                # 카카오의 경우 인증 코드를 액세스 토큰으로 교환
+                access_token = await SocialAuthService.get_kakao_access_token(token_or_code)
+                if not access_token:
+                    logger.error("Failed to get Kakao access token")
+                    return None
+                
                 user_info = await SocialAuthService.get_kakao_user_info(access_token)
                 social_provider = SocialProvider.KAKAO
             elif provider == "naver":
+                # 네이버의 경우 인증 코드를 액세스 토큰으로 교환
+                access_token = await SocialAuthService.get_naver_access_token(token_or_code)
+                if not access_token:
+                    logger.error("Failed to get Naver access token")
+                    return None
+                
                 user_info = await SocialAuthService.get_naver_user_info(access_token)
                 social_provider = SocialProvider.NAVER
             else:

@@ -48,33 +48,25 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/saved-recommendations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          numbers,
-          confidence_score: confidenceScore,
-          generation_method: generationMethod,
-          analysis_data: analysisData,
-          title: `${generationMethod === 'ai' ? 'AI' : '수동'} 추천 ${new Date().toLocaleDateString()}`,
-          memo: null,
-          tags: null
-        }),
+      const { savedRecommendationsAPI } = await import('../../services/apiService');
+      const result = await savedRecommendationsAPI.saveRecommendation(token!, {
+        numbers,
+        confidence_score: confidenceScore,
+        generation_method: generationMethod,
+        analysis_data: analysisData,
+        title: `${generationMethod === 'ai' ? 'AI' : '수동'} 추천 ${new Date().toLocaleDateString()}`,
+        memo: null,
+        tags: null
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (result.success && result.data) {
         if (onSaved) {
-          onSaved(data.id);
+          onSaved(result.data.id);
         }
         // 성공 알림 (간단한 알림)
         alert('추천번호가 저장되었습니다!');
       } else {
-        const errorData = await response.json();
-        setError(errorData.error?.message || '저장에 실패했습니다.');
+        setError(result.error?.message || '저장에 실패했습니다.');
       }
     } catch (err) {
       console.error('저장 오류:', err);
@@ -91,35 +83,27 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/saved-recommendations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          numbers,
-          confidence_score: confidenceScore,
-          generation_method: generationMethod,
-          analysis_data: analysisData,
-          title: formData.title || `${generationMethod === 'ai' ? 'AI' : '수동'} 추천`,
-          memo: formData.memo || null,
-          tags: formData.tags.length > 0 ? formData.tags : null,
-          target_draw_number: formData.targetDrawNumber
-        }),
+      const { savedRecommendationsAPI } = await import('../../services/apiService');
+      const result = await savedRecommendationsAPI.saveRecommendation(token!, {
+        numbers,
+        confidence_score: confidenceScore,
+        generation_method: generationMethod,
+        analysis_data: analysisData,
+        title: formData.title || `${generationMethod === 'ai' ? 'AI' : '수동'} 추천`,
+        memo: formData.memo || null,
+        tags: formData.tags.length > 0 ? formData.tags : null,
+        target_draw_number: formData.targetDrawNumber
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (result.success && result.data) {
         if (onSaved) {
-          onSaved(data.id);
+          onSaved(result.data.id);
         }
         setIsModalOpen(false);
         setFormData({ title: '', memo: '', tags: [] });
         alert('추천번호가 저장되었습니다!');
       } else {
-        const errorData = await response.json();
-        setError(errorData.error?.message || '저장에 실패했습니다.');
+        setError(result.error?.message || '저장에 실패했습니다.');
       }
     } catch (err) {
       console.error('저장 오류:', err);

@@ -1,23 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-export interface User {
-  user_id: string;
-  nickname?: string;
-  profile_image_url?: string;
-  email?: string;
-  social_provider: string;
-  subscription_plan: string;
-  subscription_status: string;
-  is_premium: boolean;
-  total_wins: number;
-  total_winnings: number;
-  daily_recommendation_count: number;
-  total_saved_numbers: number;
-  can_generate_recommendation: boolean;
-  can_save_number: boolean;
-  created_at: string;
-  last_login_at?: string;
-}
+import { User } from '../types/user';
 
 interface UserAuthContextType {
   user: User | null;
@@ -88,19 +70,12 @@ export const UserAuthProvider: React.FC<UserAuthProviderProps> = ({ children }) 
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success) {
-          updateUser(data);
-        }
-      } else if (response.status === 401) {
+      const { authAPI } = await import('../services/apiService');
+      const result = await authAPI.getCurrentUser(token);
+      
+      if (result.success && result.data) {
+        updateUser(result.data);
+      } else if (result.error?.code === 'HTTP_401') {
         // 토큰이 만료되었거나 유효하지 않음
         logout();
       }

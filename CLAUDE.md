@@ -4,24 +4,28 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-### Backend (FastAPI)
-- **⚠️ FIRST: Activate conda environment**: `conda activate py3_12` (MANDATORY!)
-- **Check environment**: `echo $CONDA_DEFAULT_ENV` → should show `py3_12`
-- **Start development server**: `cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000`
-- **Install dependencies**: `cd backend && pip install -r requirements.txt`
-- **Database URL**: `postgresql://lotto_user:lotto_password@localhost:5432/lotto_db`
-
-### Frontend (React + Vite)
-- **Development server**: `cd frontend && npm run dev` (runs on http://localhost:5173)
-- **Build**: `cd frontend && npm run build`
-- **Lint**: `cd frontend && npm run lint`
-- **Install dependencies**: `cd frontend && npm install`
-
-### Docker (Recommended)
+### 🐳 Docker (PRIMARY METHOD - 모든 서비스는 Docker로 실행)
+- **⚠️ IMPORTANT: 모든 개발은 Docker를 통해 진행합니다**
 - **Start all services**: `docker-compose up -d`
 - **Stop all services**: `docker-compose down`
 - **Check service status**: `docker-compose ps`
-- **Quick start script**: `./start_dev.sh` (handles conda activation and Docker setup)
+- **View logs**: `docker-compose logs -f [service_name]`
+- **Quick start script**: `./start_dev.sh` (Docker 자동 설정)
+
+### Backend (FastAPI) - Docker 내부에서 실행
+- **⚠️ NOTE: 백엔드는 Docker 컨테이너 내부에서 자동 실행됩니다**
+- **Manual conda setup** (Docker 외부에서만 필요): `conda activate py3_12`
+- **Database URL**: `postgresql://lotto_user:lotto_password@localhost:5432/lotto_db`
+- **API Documentation**: http://localhost:8000/docs
+
+### Frontend (React + Vite) - Docker 내부에서 실행
+- **⚠️ NOTE: 프론트엔드는 Docker 컨테이너 내부에서 자동 실행됩니다**
+- **Access URL**: http://localhost:5173
+- **Manual setup** (Docker 외부에서만 필요):
+  - `cd frontend && npm install`
+  - `cd frontend && npm run dev`
+  - `cd frontend && npm run build`
+  - `cd frontend && npm run lint`
 
 ## Architecture Overview
 
@@ -127,19 +131,19 @@ The recommendation engine uses a multi-factor analysis approach:
 - **Production**: Railway hosting with custom domain `lottoria.ai.kr`
 
 ### Development Notes
-- **⚠️ CRITICAL: CONDA ENVIRONMENT**: 
-  - **ALL Python/Backend work MUST use `py3_12` conda environment**
-  - **NEVER run Python commands without activating conda environment first**
-  - **Before ANY backend work**: `conda activate py3_12`
-  - **Check environment**: `echo $CONDA_DEFAULT_ENV` should show `py3_12`
-  - **If not activated**: Backend development will FAIL
-
 - **🐳 CRITICAL: ALWAYS USE DOCKER**:
-  - **Primary development method**: `docker-compose up -d`
+  - **PRIMARY METHOD**: 모든 개발은 `docker-compose up -d`로 시작
   - **NEVER run services individually** unless debugging specific issues
   - **All services containerized**: PostgreSQL + Backend + Frontend
   - **Check service status**: `docker-compose ps`
   - **Stop services**: `docker-compose down`
+  - **View logs**: `docker-compose logs -f [service_name]`
+
+- **⚠️ CONDA ENVIRONMENT** (Docker 외부에서만 필요):
+  - **ONLY for manual Python development**: `conda activate py3_12`
+  - **Docker 내부에서는 자동으로 Python 3.12 환경 제공**
+  - **Check environment**: `echo $CONDA_DEFAULT_ENV` should show `py3_12`
+  - **If not activated**: Manual backend development will FAIL
 
 - **🌍 ENVIRONMENT SEPARATION**:
   - **Development**: Local Docker containers
@@ -184,6 +188,27 @@ The recommendation engine uses a multi-factor analysis approach:
   - 4th Place: 4 numbers match
   - 5th Place: 3 numbers match
 - **Prize Amounts** (Example): 1st: 2B won, 2nd: 50M won, 3rd: 1.5M won, 4th: 50K won, 5th: 5K won
+
+### Social Login Implementation (2025-09-08)
+- **카카오 소셜 로그인 완전 구현**:
+  - OAuth 2.0 인증 코드 플로우 구현
+  - 백엔드에서 카카오 API 토큰 교환 (`get_kakao_access_token`)
+  - 사용자 정보 조회 (고유 ID만 수집, 개인정보 최소화)
+  - JWT 토큰 생성 및 프론트엔드 로그인 상태 관리
+  - URL 콜백 처리 및 자동 로그인 완료
+- **네이버 소셜 로그인 준비 완료** (검수 대기 중):
+  - 네이버 OAuth 2.0 플로우 구현 완료
+  - 백엔드 토큰 교환 로직 구현 (`get_naver_access_token`)
+  - UI에서 네이버 로그인 버튼 숨김 처리 (검수 완료 후 활성화 예정)
+  - 설정 파일들은 보존하여 나중에 쉽게 활성화 가능
+- **환경변수 설정**:
+  - `VITE_KAKAO_APP_KEY`: 카카오 JavaScript SDK 키
+  - `KAKAO_REST_API_KEY`: 카카오 REST API 키 (백엔드 토큰 교환용)
+  - `VITE_NAVER_CLIENT_ID`, `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`: 네이버 로그인용
+- **보안 및 개인정보 보호**:
+  - 최소한의 개인정보만 수집 (고유 ID, 닉네임)
+  - 이메일, 프로필 이미지 등은 선택적 수집
+  - 법적 리스크 최소화를 위한 데이터 수집 정책 적용
 
 ## Testing and Debugging
 

@@ -30,8 +30,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 60 * 24 * 7  # 7일
     
     # 소셜 로그인 설정 (환경변수에서 로드)
-    kakao_client_id: str = ""
-    kakao_client_secret: str = ""
+    kakao_rest_api_key: str = ""
     naver_client_id: str = ""
     naver_client_secret: str = ""
     

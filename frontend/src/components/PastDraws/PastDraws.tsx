@@ -35,19 +35,13 @@ const PastDraws: React.FC<PastDrawsProps> = ({
       setLoading(true);
       
       const offset = currentPage * limit;
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/v1/lotto/draws?limit=${limit}&offset=${offset}`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
+      const { lottoAPI } = await import('../../services/apiService');
+      const result = await lottoAPI.getDraws(limit, offset);
       
       if (result.success && result.data) {
         setDraws(result.data);
       } else {
-        throw new Error(result.message || '데이터를 불러올 수 없습니다');
+        throw new Error(result.error?.message || '데이터를 불러올 수 없습니다');
       }
     } catch (error) {
       console.error('당첨번호 데이터 조회 실패:', error);

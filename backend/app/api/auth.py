@@ -55,7 +55,7 @@ async def social_login(
         auth_result = await SocialAuthService.authenticate_social_user(
             db=db,
             provider=login_data.provider,
-            access_token=login_data.access_token
+            token_or_code=login_data.access_token
         )
         
         if not auth_result:

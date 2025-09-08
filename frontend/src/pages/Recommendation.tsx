@@ -146,35 +146,21 @@ const Recommendation: React.FC = () => {
 
       console.log('요청 데이터:', requestData);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/recommendations/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
+      const { recommendationsAPI } = await import('../services/apiService');
+      const result = await recommendationsAPI.generateRecommendations(requestData);
 
-      console.log('응답 상태:', response.status);
+      console.log('응답 데이터:', result);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API 오류 응답:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('응답 데이터:', data);
-      
-      if (data.success) {
-        console.log('추천 데이터:', data.data);
-        const recommendations = data.data.combinations || [];
+      if (result.success && result.data) {
+        console.log('추천 데이터:', result.data);
+        const recommendations = result.data.combinations || [];
         
         // 추천기록 기능 일시 비활성화로 history_id 처리 불필요
         setRecommendations(recommendations);
         
         console.log('추천 조합 생성 완료');
       } else {
-        alert('추천 조합 생성에 실패했습니다.');
+        alert(result.error?.message || '추천 조합 생성에 실패했습니다.');
       }
     } catch (error) {
       console.error('추천 생성 오류:', error);
