@@ -1,32 +1,37 @@
 User-agent: *
 Allow: /
 
+# 주요 페이지
+Allow: /
+Allow: /recommendation
+Allow: /privacy-policy
+Allow: /terms
+Allow: /cookie-settings
+
+# 관리자 페이지 차단
+Disallow: /admin/
+
+# Sitemap 위치
+Sitemap: https://lottoria.ai.kr/sitemap.xml
+
+# 크롤링 딜레이 (서버 부하 방지)
+Crawl-delay: 1
+
+# 검색엔진별 특별 설정
 User-agent: Googlebot
 Allow: /
 
-User-agent: NaverBot  
+User-agent: Bingbot
+Allow: /
+
+User-agent: NaverBot
 Allow: /
 
 User-agent: Yeti
 Allow: /
 
-User-agent: facebookexternalhit
+User-agent: DaumOA
 Allow: /
 
-# AI 크롤러 차단 (Cloudflare에서 이미 설정했지만 추가 보안)
-User-agent: GPTBot
-Disallow: /
-
-User-agent: ChatGPT-User
-Disallow: /
-
-User-agent: CCBot
-Disallow: /
-
-User-agent: anthropic-ai
-Disallow: /
-
-User-agent: Claude-Web
-Disallow: /
-
-Sitemap: https://lottoria.ai.kr/sitemap.xml
+User-agent: facebookexternalhit
+Allow: /
