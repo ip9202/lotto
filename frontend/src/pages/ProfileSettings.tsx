@@ -45,6 +45,8 @@ const ProfileSettings: React.FC = () => {
 
         if (response.ok) {
           const userData = await response.json();
+          console.log('사용자 데이터:', userData);
+          console.log('연동된 소셜 계정:', userData.linked_social_providers);
           setUser(userData);
         } else {
           navigate('/login');
