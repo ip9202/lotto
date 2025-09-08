@@ -50,7 +50,6 @@ const ProfileSettings: React.FC = () => {
           navigate('/login');
         }
       } catch (error) {
-        console.error('사용자 정보 가져오기 오류:', error);
         navigate('/login');
       } finally {
         setIsLoading(false);
@@ -140,7 +139,6 @@ const ProfileSettings: React.FC = () => {
         setErrors({ submit: result.message || '비밀번호 변경에 실패했습니다.' });
       }
     } catch (error) {
-      console.error('비밀번호 변경 오류:', error);
       setErrors({ submit: '비밀번호 변경 중 오류가 발생했습니다.' });
     } finally {
       setIsPasswordLoading(false);
