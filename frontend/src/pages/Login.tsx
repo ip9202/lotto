@@ -15,78 +15,91 @@ const Login: React.FC = () => {
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showKakaoLink, setShowKakaoLink] = useState(false);
-  const [isProcessingKakao, setIsProcessingKakao] = useState(false);
+  const processingRef = useRef(false);
 
   // 카카오 콜백 처리
   useEffect(() => {
     const handleKakaoCallback = async () => {
-      // 이미 처리 중이거나 처리된 경우 중복 실행 방지
-      if (isProcessingKakao) {
-        return;
-      }
-      
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const state = urlParams.get('state');
       
-      if (code && state && state.startsWith('kakao_login_')) {
-        setIsProcessingKakao(true); // 처리 시작 표시
-        console.log('로그인 페이지에서 카카오 콜백 처리:', { code, state });
+      if (!code || !state || !state.startsWith('kakao_login_')) {
+        return;
+      }
+
+      // 세션 스토리지 기반 중복 방지 (더 강력함)
+      const processKey = `kakao_processing_${code}`;
+      const isAlreadyProcessing = sessionStorage.getItem(processKey);
+      
+      if (isAlreadyProcessing || processingRef.current) {
+        console.log('카카오 콜백 이미 처리 중 또는 완료됨');
+        return;
+      }
+
+      // 즉시 URL 정리하여 중복 실행 방지
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      // 처리 시작 마킹
+      sessionStorage.setItem(processKey, 'true');
+      processingRef.current = true;
+      
+      console.log('로그인 페이지에서 카카오 콜백 처리:', { code, state });
+      
+      try {
+        // 카카오 SDK 초기화
+        if (!window.Kakao || !window.Kakao.isInitialized()) {
+          window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+        }
         
-        try {
-          // 카카오 SDK 초기화
-          if (!window.Kakao || !window.Kakao.isInitialized()) {
-            window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
-          }
-          
-          // 카카오에서 액세스 토큰 가져오기
-          const redirectUri = `${window.location.origin}/login`; // /login 경로로 수정
-          console.log('사용할 redirect_uri:', redirectUri);
-          
-          const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
-            method: 'POST',
+        // 카카오에서 액세스 토큰 가져오기
+        const redirectUri = `${window.location.origin}/login`;
+        console.log('사용할 redirect_uri:', redirectUri);
+        
+        const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            client_id: import.meta.env.VITE_KAKAO_APP_KEY,
+            redirect_uri: redirectUri,
+            code: code
+          })
+        });
+        
+        const tokenData = await tokenResponse.json();
+        console.log('카카오 토큰 응답:', tokenData);
+        
+        if (tokenData.access_token) {
+          // 카카오 사용자 정보 가져오기
+          const userResponse = await fetch('https://kapi.kakao.com/v2/user/me', {
             headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-              grant_type: 'authorization_code',
-              client_id: import.meta.env.VITE_KAKAO_APP_KEY,
-              redirect_uri: redirectUri,
-              code: code
-            })
+              'Authorization': `Bearer ${tokenData.access_token}`
+            }
           });
           
-          const tokenData = await tokenResponse.json();
-          console.log('카카오 토큰 응답:', tokenData);
+          const userData = await userResponse.json();
+          console.log('카카오 사용자 정보:', userData);
           
-          if (tokenData.access_token) {
-            // 카카오 사용자 정보 가져오기
-            const userResponse = await fetch('https://kapi.kakao.com/v2/user/me', {
-              headers: {
-                'Authorization': `Bearer ${tokenData.access_token}`
-              }
-            });
-            
-            const userData = await userResponse.json();
-            console.log('카카오 사용자 정보:', userData);
-            
-            // handleKakaoLogin 함수 호출
-            await handleKakaoLogin(tokenData.access_token, userData);
-            
-            // URL 정리
-            window.history.replaceState({}, document.title, window.location.pathname);
-          } else {
-            setErrors({ submit: '카카오 인증에 실패했습니다.' });
-          }
-        } catch (error) {
-          console.error('카카오 콜백 처리 오류:', error);
-          setErrors({ submit: '카카오 로그인 중 오류가 발생했습니다.' });
+          // handleKakaoLogin 함수 호출
+          await handleKakaoLogin(tokenData.access_token, userData);
+        } else {
+          setErrors({ submit: '카카오 인증에 실패했습니다.' });
         }
+      } catch (error) {
+        console.error('카카오 콜백 처리 오류:', error);
+        setErrors({ submit: '카카오 로그인 중 오류가 발생했습니다.' });
+      } finally {
+        // 처리 완료 후 정리
+        sessionStorage.removeItem(processKey);
+        processingRef.current = false;
       }
     };
 
     handleKakaoCallback();
-  }, [isProcessingKakao]); // isProcessingKakao 의존성 추가
+  }, []); // 의존성 배열을 비워서 한 번만 실행되도록 수정
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -209,7 +222,7 @@ const Login: React.FC = () => {
 
   const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
     try {
-      // 카카오 사용자 정보로 자동 회원가입
+      // 카카오 사용자 정보로 자동 회원가입 (기존 로직 유지)
       const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
         method: 'POST',
         headers: {
