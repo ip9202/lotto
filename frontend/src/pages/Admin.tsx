@@ -390,9 +390,19 @@ const Admin: React.FC = () => {
   });
   
   // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-  if (!isAuthenticated) {
-    navigate('/login');
-    return null;
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, navigate]);
+  
+  // 로딩 중이거나 로그인하지 않은 경우
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
   }
   
   // 관리자가 아닌 경우 접근 거부
