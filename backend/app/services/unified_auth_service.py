@@ -38,14 +38,22 @@ class UnifiedAuthService:
         try:
             # 소셜 제공자에서 사용자 정보 조회
             if provider == "kakao":
-                access_token = await SocialAuthService.get_kakao_access_token(token_or_code)
-                if not access_token:
-                    return None
+                # token_or_code가 이미 access_token인 경우 (authorization_code는 보통 더 짧음)
+                if len(token_or_code) > 50:  # access_token은 보통 50자 이상
+                    access_token = token_or_code
+                else:  # authorization_code인 경우
+                    access_token = await SocialAuthService.get_kakao_access_token(token_or_code)
+                    if not access_token:
+                        return None
                 user_info = await SocialAuthService.get_kakao_user_info(access_token)
             elif provider == "naver":
-                access_token = await SocialAuthService.get_naver_access_token(token_or_code)
-                if not access_token:
-                    return None
+                # token_or_code가 이미 access_token인 경우 (authorization_code는 보통 더 짧음)
+                if len(token_or_code) > 50:  # access_token은 보통 50자 이상
+                    access_token = token_or_code
+                else:  # authorization_code인 경우
+                    access_token = await SocialAuthService.get_naver_access_token(token_or_code)
+                    if not access_token:
+                        return None
                 user_info = await SocialAuthService.get_naver_user_info(access_token)
             else:
                 return None

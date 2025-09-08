@@ -100,13 +100,32 @@ const Register: React.FC = () => {
       if (success) {
         // 회원가입 성공 시
         if (kakaoUser && accessToken) {
-          // 카카오 사용자 정보가 있으면 카카오 연동 페이지로 이동
-          navigate('/kakao-link', { 
-            state: { 
-              kakaoUser: kakaoUser,
-              accessToken: accessToken
-            } 
-          });
+          // 카카오 사용자 정보가 있으면 바로 카카오 연동 진행
+          try {
+            const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+              },
+              body: JSON.stringify({
+                provider: 'kakao',
+                access_token: accessToken
+              })
+            });
+
+            const linkResult = await linkResponse.json();
+            
+            if (linkResult.success) {
+              // 연동 성공 - 메인 페이지로 이동
+              navigate('/');
+            } else {
+              setErrors({ submit: '카카오 연동에 실패했습니다.' });
+            }
+          } catch (error) {
+            console.error('카카오 연동 오류:', error);
+            setErrors({ submit: '카카오 연동 중 오류가 발생했습니다.' });
+          }
         } else {
           // 일반 회원가입이면 홈으로 이동
           navigate('/');

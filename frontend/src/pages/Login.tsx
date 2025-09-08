@@ -9,12 +9,14 @@ const Login: React.FC = () => {
   
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    nickname: ''
   });
   
   const [errors, setErrors] = useState<{[key: string]: string}>({});
   const [isLoading, setIsLoading] = useState(false);
   const [showKakaoLink, setShowKakaoLink] = useState(false);
+  const [pendingKakaoData, setPendingKakaoData] = useState<{accessToken: string, userInfo: any} | null>(null);
   const processingRef = useRef(false);
 
   // 카카오 콜백 처리
@@ -82,6 +84,7 @@ const Login: React.FC = () => {
           
           const userData = await userResponse.json();
           console.log('카카오 사용자 정보:', userData);
+      console.log('카카오 이메일:', userData.kakao_account?.email);
           
           // handleKakaoLogin 함수 호출
           await handleKakaoLogin(tokenData.access_token, userData);
@@ -149,8 +152,14 @@ const Login: React.FC = () => {
       const success = await login(formData.email, formData.password);
       
       if (success) {
-        // 로그인 성공 시 카카오 연동 옵션 표시
-        setShowKakaoLink(true);
+        // 로그인 성공 후 카카오 연동이 대기 중이면 연동 진행
+        if (pendingKakaoData) {
+          await handleKakaoLink(pendingKakaoData.accessToken);
+          setPendingKakaoData(null);
+        } else {
+          // 일반 로그인인 경우 카카오 연동 옵션 표시
+          setShowKakaoLink(true);
+        }
       } else {
         setErrors({ submit: '이메일 또는 비밀번호가 올바르지 않습니다.' });
       }
@@ -182,11 +191,14 @@ const Login: React.FC = () => {
       });
 
       const checkResult = await checkResponse.json();
+      console.log('카카오 사용자 확인 응답:', checkResult);
       
       if (checkResult.success) {
         if (checkResult.data.is_registered) {
           // 기존 계정이 있으면 자동 로그인
-          // socialLogin은 authorization_code를 받으므로, 직접 API 호출
+          setIsLoading(true);
+          setErrors({ submit: '카카오 로그인 중...' });
+          
           const loginResponse = await fetch('http://localhost:8000/api/v1/auth/login/social', {
             method: 'POST',
             headers: {
@@ -203,13 +215,26 @@ const Login: React.FC = () => {
           if (loginResult.success) {
             // 로그인 성공 - 토큰 저장 및 상태 업데이트
             localStorage.setItem('access_token', loginResult.data.access_token);
-            window.location.href = '/';
+            setErrors({ submit: '로그인 성공! 잠시 후 메인 페이지로 이동합니다...' });
+            
+            // 1초 후 메인 페이지로 이동
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 1000);
           } else {
+            setIsLoading(false);
             setErrors({ submit: '카카오 로그인에 실패했습니다.' });
           }
         } else {
-          // 가입된 계정이 없으면 회원가입 후 자동 로그인
-          await handleKakaoRegister(checkResult.data.user_info, accessToken);
+          // 가입된 계정이 없으면 사용자에게 선택하게 하기
+          // 카카오 데이터를 저장해두기 (회원가입/로그인 후 연동용)
+          setPendingKakaoData({
+            accessToken: accessToken,
+            userInfo: checkResult.data.user_info
+          });
+          setErrors({ 
+            submit: '카카오 로그인을 위해서는 먼저 로또리아AI와 계정연동이 필요합니다.' 
+          });
         }
       } else {
         setErrors({ submit: '카카오 사용자 확인에 실패했습니다.' });
@@ -222,7 +247,7 @@ const Login: React.FC = () => {
 
   const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
     try {
-      // 카카오 사용자 정보로 자동 회원가입 (기존 로직 유지)
+      // 카카오 사용자 정보로 자동 회원가입
       const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
         method: 'POST',
         headers: {
@@ -230,7 +255,7 @@ const Login: React.FC = () => {
         },
         body: JSON.stringify({
           email: kakaoUser.email || `${kakaoUser.id}@kakao.temp`,
-          password: `kakao_${kakaoUser.id}_${Date.now()}`, // 임시 비밀번호
+          password: `kakao_${kakaoUser.id}_${Date.now()}`,
           nickname: kakaoUser.nickname || '카카오 사용자'
         })
       });
@@ -287,11 +312,26 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleKakaoLink = async (accessToken: string, user: any) => {
+  const handleKakaoLink = async (accessToken: string) => {
     try {
-      const success = await socialLogin('kakao', accessToken);
-      if (success) {
-        navigate('/');
+      // 현재 로그인된 사용자와 카카오 연동
+      const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        body: JSON.stringify({
+          provider: 'kakao',
+          access_token: accessToken
+        })
+      });
+
+      const linkResult = await linkResponse.json();
+      
+      if (linkResult.success) {
+        // 연동 성공 - 메인 페이지로 이동
+        window.location.href = '/';
       } else {
         setErrors({ submit: '카카오 연동에 실패했습니다.' });
       }
@@ -300,6 +340,7 @@ const Login: React.FC = () => {
       setErrors({ submit: '카카오 연동 중 오류가 발생했습니다.' });
     }
   };
+
 
   const handleSkipKakaoLink = () => {
     navigate('/');
@@ -388,20 +429,64 @@ const Login: React.FC = () => {
             {/* 제출 에러 */}
             {errors.submit && (
               <div className="text-center">
-                <p className="text-sm text-red-600">{errors.submit}</p>
+                <p className="text-sm text-red-600 mb-4">{errors.submit}</p>
+                {pendingKakaoData && (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">계정이 있으신가요? 아래에서 로그인해주세요.</p>
+                    <button
+                      onClick={async () => {
+                        // 현재 폼의 이메일/비밀번호로 바로 로그인 처리
+                        if (!formData.email || !formData.password) {
+                          setErrors({ submit: '이메일과 비밀번호를 입력해주세요.' });
+                          return;
+                        }
+
+                        setIsLoading(true);
+                        setErrors({});
+
+                        try {
+                          const success = await login(formData.email, formData.password);
+                          
+                          if (success) {
+                            // 로그인 성공 후 카카오 연동 진행
+                            if (pendingKakaoData) {
+                              await handleKakaoLink(pendingKakaoData.accessToken);
+                              setPendingKakaoData(null);
+                            } else {
+                              window.location.href = '/';
+                            }
+                          } else {
+                            setErrors({ submit: '이메일 또는 비밀번호가 올바르지 않습니다.' });
+                          }
+                        } catch (error) {
+                          console.error('로그인 오류:', error);
+                          setErrors({ submit: '로그인 중 오류가 발생했습니다.' });
+                        } finally {
+                          setIsLoading(false);
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isLoading ? '로그인 중...' : '로그인하기'}
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 제출 버튼 */}
-            <div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? '로그인 중...' : '로그인'}
-              </button>
-            </div>
+            {/* 제출 버튼 - 카카오 연동 안내가 있을 때는 숨김 */}
+            {!pendingKakaoData && (
+              <div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? '로그인 중...' : '로그인'}
+                </button>
+              </div>
+            )}
 
             {/* 소셜 로그인 */}
             <div className="mt-6">

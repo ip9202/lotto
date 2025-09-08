@@ -167,6 +167,8 @@ async def check_kakao_user(
             )
         
         user_info = result["data"]
+        logger.info(f"카카오 사용자 정보: {user_info}")
+        logger.info(f"카카오 이메일: {user_info.get('email')}")
         
         # 이메일로 기존 계정 찾기
         existing_user = None
@@ -182,7 +184,7 @@ async def check_kakao_user(
         if not existing_user:
             existing_user = db.query(User).filter(
                 and_(
-                    User.social_provider == "kakao",
+                    User.social_provider == "KAKAO",
                     User.social_id == user_info.get("id"),
                     User.is_active == True
                 )
@@ -237,14 +239,14 @@ async def link_kakao_account(
         user_info = result["data"]
         
         # 현재 사용자에게 카카오 계정 연결
-        current_user.social_provider = "kakao"
+        current_user.social_provider = "KAKAO"
         current_user.social_id = user_info.get("id")
         
         if not current_user.linked_social_providers:
             current_user.linked_social_providers = []
         
-        if "kakao" not in current_user.linked_social_providers:
-            current_user.linked_social_providers.append("kakao")
+        if "KAKAO" not in current_user.linked_social_providers:
+            current_user.linked_social_providers.append("KAKAO")
         
         db.commit()
         

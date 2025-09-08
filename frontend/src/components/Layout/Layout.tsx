@@ -89,17 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               {/* 사용자 인증 영역 */}
               <div className="hidden md:flex items-center space-x-2">
                 {isAuthenticated ? (
-                  <>
-                    <UserProfile />
-                    {user && !user.linked_social_providers?.includes('kakao') && (
-                      <button
-                        onClick={() => navigate('/kakao-link')}
-                        className="bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-4 rounded-lg transition-colors duration-200 text-sm"
-                      >
-                        카카오 연동
-                      </button>
-                    )}
-                  </>
+                  <UserProfile />
                 ) : (
                   <button
                     onClick={() => navigate('/login')}
@@ -147,19 +137,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 ))}
                 
                 {/* 모바일 로그인 버튼 */}
-                {isAuthenticated && user && !user.linked_social_providers?.includes('kakao') && (
-                  <div className="px-3 py-2 border-t border-gray-200 mt-2 pt-4">
-                    <button
-                      onClick={() => {
-                        navigate('/kakao-link');
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full bg-yellow-400 hover:bg-yellow-500 text-black font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                    >
-                      카카오 연동
-                    </button>
-                  </div>
-                )}
                 {!isAuthenticated && (
                   <div className="px-3 py-2 border-t border-gray-200 mt-2 pt-4">
                     <button
