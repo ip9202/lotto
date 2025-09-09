@@ -240,20 +240,20 @@ const Home: React.FC = () => {
             
             {/* 당첨 번호들 - 가운데 정렬, 간격 개선 */}
             <div className="flex justify-center">
-              <div className="flex flex-wrap gap-5 sm:gap-6 lg:gap-8 justify-center max-w-fit">
+              <div className="flex flex-wrap gap-2 sm:gap-4 lg:gap-6 justify-center max-w-fit">
                 {latestDraw.numbers.map((number) => (
                   <LottoBall
                     key={number}
                     number={number}
-                    size="lg"
+                    size="responsive"
                     variant="default"
                   />
                 ))}
                 <div className="flex items-center">
-                  <span className="text-2xl text-gray-400 mx-3 sm:mx-4">+</span>
+                  <span className="text-lg sm:text-xl text-gray-400 mx-2 sm:mx-3">+</span>
                   <LottoBall
                     number={latestDraw.bonus_number}
-                    size="lg"
+                    size="responsive"
                     variant="default"
                   />
                 </div>

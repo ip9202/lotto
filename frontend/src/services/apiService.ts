@@ -1,6 +1,12 @@
 // 통합 API 서비스
 import { User } from '../types/user';
 
+// 사용자 설정 타입
+export interface UserPreferences {
+  include_numbers: number[];
+  exclude_numbers: number[];
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // 공통 API 호출 함수
@@ -30,6 +36,11 @@ async function apiCall<T>(
       };
     }
 
+    // 백엔드 응답이 이미 { success, data, message } 형태인 경우 그대로 반환
+    if (data && typeof data === 'object' && 'success' in data) {
+      return data;
+    }
+    
     // 백엔드 응답이 직접 데이터인 경우 success: true로 래핑
     return {
       success: true,
@@ -224,9 +235,34 @@ export const recommendationsAPI = {
   }
 };
 
+// 사용자 설정 관련 API
+export const userPreferencesAPI = {
+  // 사용자 설정 조회
+  async getPreferences(token: string): Promise<{ success: boolean; data?: UserPreferences; error?: any }> {
+    return apiCall('/api/v1/user/preferences', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+  },
+
+  // 사용자 설정 저장
+  async savePreferences(token: string, preferences: UserPreferences): Promise<{ success: boolean; data?: UserPreferences; error?: any }> {
+    return apiCall('/api/v1/user/preferences', {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(preferences)
+    });
+  }
+};
+
 export default {
   auth: authAPI,
   savedRecommendations: savedRecommendationsAPI,
   lotto: lottoAPI,
-  recommendations: recommendationsAPI
+  recommendations: recommendationsAPI,
+  userPreferences: userPreferencesAPI
 };

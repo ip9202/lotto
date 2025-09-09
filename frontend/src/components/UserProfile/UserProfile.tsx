@@ -104,15 +104,21 @@ const UserProfile: React.FC = () => {
                 </span>
               </div>
               <div className="text-xs text-gray-500 text-right">
-                회원은 1주일에 10개가 한도
+                무료회원은 1주일에 10개가 한도
               </div>
             </div>
           </div>
 
           {/* 메뉴 항목들 */}
           <div className="py-1">
-            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
-              내 추천번호
+            <button 
+              onClick={() => {
+                navigate('/saved-numbers');
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
+              내 저장번호
             </button>
             <button 
               onClick={() => {

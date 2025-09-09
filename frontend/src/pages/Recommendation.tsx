@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import SimpleCombination from '../components/SimpleCombination';
 import AnalysisModal from '../components/AnalysisModal';
 import UnifiedNumberManager from '../components/UnifiedNumberManager';
+import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
+import { userPreferencesAPI } from '../services/apiService';
 // AdSense 관련 import 제거 (심사 완료 후 추가 예정)
 
 interface Recommendation {
@@ -15,6 +17,7 @@ interface Recommendation {
 
 const Recommendation: React.FC = () => {
   // const location = useLocation(); // 현재 사용하지 않음
+  const { isAuthenticated } = useUnifiedAuth();
   const [selectedNumbers, setSelectedNumbers] = useState<number[][]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -54,13 +57,37 @@ const Recommendation: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // 사용자 설정 불러오기 (회원만)
+  useEffect(() => {
+    const loadUserPreferences = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        const result = await userPreferencesAPI.getPreferences(token);
+        if (result.success && result.data) {
+          setPreferences({
+            include_numbers: result.data.include_numbers || [],
+            exclude_numbers: result.data.exclude_numbers || []
+          });
+        }
+      } catch (error) {
+        console.error('사용자 설정 불러오기 오류:', error);
+      }
+    };
+
+    loadUserPreferences();
+  }, [isAuthenticated]);
+
   // 기본 추천 처리 함수
   const handleBasicRecommendations = async () => {
     setLoading(true);
     try {
       const requestData = {
         session_id: `default_session`,
-        total_count: basicSettings.total_count,
+        total_count: isAuthenticated ? basicSettings.total_count : 5,
         manual_combinations: [],
         preferences: {
           include_numbers: [],
@@ -223,32 +250,42 @@ const Recommendation: React.FC = () => {
 
       {/* 탭 네비게이션 */}
       <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
-          <button
-            onClick={() => setActiveTab('basic')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === 'basic'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            🚀 기본 추천
-          </button>
-          <button
-            onClick={() => setActiveTab('advanced')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === 'advanced'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            ⚙️ 고급 추천
-          </button>
-        </div>
+        {isAuthenticated ? (
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
+            <button
+              onClick={() => setActiveTab('basic')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'basic'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              🚀 기본 추천
+            </button>
+            <button
+              onClick={() => setActiveTab('advanced')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'advanced'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              ⚙️ 고급 추천
+            </button>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                💡 <strong>회원가입</strong>하시면 고급 추천 기능을 이용하실 수 있습니다!
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* 탭 콘텐츠 */}
-        {activeTab === 'basic' ? (
-          /* 기본 추천 탭 */
+        {!isAuthenticated || activeTab === 'basic' ? (
+          /* 기본 추천 탭 (비회원은 항상 기본 추천만) */
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -269,18 +306,32 @@ const Recommendation: React.FC = () => {
                   <input
                     type="number"
                     min="1"
-                    max="20"
-                    className="flex-1 px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={basicSettings.total_count}
-                    onChange={(e) => setBasicSettings(prev => ({
-                      ...prev,
-                      total_count: parseInt(e.target.value) || 1
-                    }))}
+                    max={isAuthenticated ? "10" : "5"}
+                    disabled={!isAuthenticated}
+                    className={`flex-1 px-4 py-3 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      !isAuthenticated 
+                        ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'border-gray-300'
+                    }`}
+                    value={isAuthenticated ? basicSettings.total_count : 5}
+                    onChange={(e) => {
+                      if (isAuthenticated) {
+                        const value = parseInt(e.target.value) || 1;
+                        const clampedValue = Math.min(Math.max(value, 1), 10);
+                        setBasicSettings(prev => ({
+                          ...prev,
+                          total_count: clampedValue
+                        }));
+                      }
+                    }}
                   />
                   <span className="text-gray-500 text-sm">개</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  1-20개 사이의 숫자를 입력하세요
+                  {isAuthenticated 
+                    ? '1-10개 사이의 숫자를 입력하세요' 
+                    : '비회원은 5개로 제한됩니다'
+                  }
                 </p>
               </div>
             </div>
@@ -300,14 +351,14 @@ const Recommendation: React.FC = () => {
                 ) : (
                   <div className="flex items-center justify-center space-x-3">
                     <span>🤖</span>
-                    <span>{basicSettings.total_count}개 조합 생성하기</span>
+                    <span>{isAuthenticated ? basicSettings.total_count : 5}개 조합 생성하기</span>
                   </div>
                 )}
               </button>
             </div>
           </div>
         ) : (
-          /* 고급 추천 탭 */
+          /* 고급 추천 탭 (회원만) */
           <div className="space-y-6">
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -335,11 +386,11 @@ const Recommendation: React.FC = () => {
             <input
               type="number"
               min="1"
-              max="20"
+              max="10"
                   className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               value={combinationSettings.total_count}
               onChange={(e) => {
-                const total = parseInt(e.target.value) || 1;
+                const total = Math.min(Math.max(parseInt(e.target.value) || 1, 1), 10);
                 const manual = Math.min(combinationSettings.manual_count, total);
                 const auto = total - manual;
                 setCombinationSettings({
@@ -363,7 +414,7 @@ const Recommendation: React.FC = () => {
                   className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               value={combinationSettings.manual_count}
               onChange={(e) => {
-                const manual = parseInt(e.target.value) || 0;
+                const manual = Math.min(Math.max(parseInt(e.target.value) || 0, 0), combinationSettings.total_count);
                 const total = combinationSettings.total_count;
                 const auto = Math.max(0, total - manual);
                 setCombinationSettings({
@@ -387,7 +438,7 @@ const Recommendation: React.FC = () => {
                   className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
               value={combinationSettings.auto_count}
               onChange={(e) => {
-                const auto = parseInt(e.target.value) || 0;
+                const auto = Math.min(Math.max(parseInt(e.target.value) || 0, 0), combinationSettings.total_count);
                 const total = combinationSettings.total_count;
                 const manual = Math.max(0, total - auto);
                 setCombinationSettings({

@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 import json
 from .database import engine, Base
 from .config import settings
-from .api import lotto, recommendations, admin, sessions, auth, saved_recommendations, public_recommendations, winning_comparison
+from .api import lotto, recommendations, admin, sessions, auth, saved_recommendations, public_recommendations, winning_comparison, user_preferences
 from .api.v1.endpoints import unified_auth
 from .services.auto_updater import auto_updater
 
@@ -97,6 +97,7 @@ app.include_router(auth.router, prefix="")  # 인증 API
 app.include_router(saved_recommendations.router, prefix="")  # 저장된 추천번호 API
 app.include_router(public_recommendations.router, prefix="")  # 공공 추천 데이터 API
 app.include_router(winning_comparison.router, prefix="")  # 당첨 비교 API
+app.include_router(user_preferences.router, prefix="/api/v1/user")  # 사용자 설정 API
 app.include_router(unified_auth.router, prefix="/api/v1/auth")  # 통합 인증 API
 
 # 전역 예외 처리

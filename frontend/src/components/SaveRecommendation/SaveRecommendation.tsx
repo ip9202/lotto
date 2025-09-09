@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 import { useLoading, useNotification } from '../../hooks/common';
 
@@ -19,6 +20,7 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
   onSaved,
   className = ''
 }) => {
+  const navigate = useNavigate();
   const { user, isAuthenticated, refreshUser } = useUnifiedAuth();
   const { isLoading, withLoading } = useLoading();
   const { showSuccess, showError } = useNotification();
@@ -78,7 +80,10 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
         <p className="text-blue-700 text-sm mb-2">
           추천번호를 저장하려면 로그인이 필요합니다
         </p>
-        <button className="text-blue-600 text-sm underline hover:no-underline">
+        <button 
+          onClick={() => navigate('/login')}
+          className="text-blue-600 text-sm underline hover:no-underline hover:text-blue-800 transition-colors"
+        >
           로그인하기
         </button>
       </div>
