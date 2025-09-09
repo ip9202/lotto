@@ -33,8 +33,6 @@ class UserResponse(BaseModel):
     subscription_plan: str
     subscription_status: str
     is_premium: bool
-    total_wins: int
-    total_winnings: int
     daily_recommendation_count: int
     total_saved_numbers: int
     can_generate_recommendation: bool

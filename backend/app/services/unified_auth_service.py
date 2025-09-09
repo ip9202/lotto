@@ -3,7 +3,7 @@
 소셜 로그인과 직접 회원가입을 통합 관리
 """
 from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, func
 from ..models.user import User, SocialProvider, LoginMethod, UserRole
 from ..utils.auth import SocialAuthService
 from passlib.context import CryptContext
@@ -249,6 +249,74 @@ class UnifiedAuthService:
             return db.query(User).filter(User.id == user_id).first()
         except Exception as e:
             logger.error(f"사용자 조회 오류: {e}")
+            return None
+    
+    @staticmethod
+    async def get_user_with_stats(db: Session, user_id: int) -> Optional[Dict[str, Any]]:
+        """사용자 정보와 통계 조회"""
+        try:
+            user = db.query(User).filter(User.id == user_id).first()
+            if not user:
+                return None
+            
+            # 사용자 기본 정보
+            user_data = user.to_dict()
+            
+            # 실제 통계 데이터 계산
+            from ..models.saved_recommendation import SavedRecommendation
+            from ..models.session import UserSession
+            from ..models.user_history import UserHistory
+            
+            # 총 추천 생성 횟수 (세션 기반)
+            # UserSession -> UserHistory -> Recommendation을 통해 계산
+            total_recommendations = db.query(UserHistory).join(
+                UserSession, UserHistory.session_id == UserSession.session_id
+            ).filter(
+                UserSession.created_by == str(user_id)
+            ).with_entities(
+                func.sum(UserHistory.total_count)
+            ).scalar() or 0
+            
+            # 이번주 저장된 번호 개수 (현재 회차 기준)
+            from datetime import datetime, timedelta
+            from ..models.lotto import LottoDraw
+            
+            # 현재 회차 조회
+            current_draw = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
+            if current_draw:
+                current_draw_number = current_draw.draw_number + 1
+            else:
+                current_draw_number = 1189  # 기본값
+            
+            # 이번 주 계산
+            today = datetime.now()
+            days_since_monday = today.weekday()
+            week_start = today - timedelta(days=days_since_monday)
+            week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+            
+            # 이번주 + 현재 회차로 저장된 개수
+            total_saved = db.query(SavedRecommendation).filter(
+                and_(
+                    SavedRecommendation.user_id == user_id,
+                    SavedRecommendation.created_at >= week_start,
+                    SavedRecommendation.target_draw_number == current_draw_number
+                )
+            ).count()
+            
+            # 통계 정보 추가
+            user_data.update({
+                "total_recommendations": total_recommendations,
+                "total_saved_numbers": total_saved,
+                "daily_recommendation_count": user.daily_recommendation_count,
+                "total_wins": user.total_wins,
+                "total_winnings": user.total_winnings
+            })
+            
+            logger.info(f"사용자 {user_id} 통계: 추천={total_recommendations}, 저장={total_saved}")
+            return user_data
+            
+        except Exception as e:
+            logger.error(f"사용자 정보 조회 오류: {e}")
             return None
     
     @staticmethod

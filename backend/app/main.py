@@ -1,8 +1,9 @@
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+import json
 from .database import engine, Base
 from .config import settings
 from .api import lotto, recommendations, admin, sessions, auth, saved_recommendations, public_recommendations, winning_comparison
@@ -52,6 +53,24 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan
 )
+
+# 요청 로깅 미들웨어
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    if request.url.path == "/api/v1/saved-recommendations" and request.method == "POST":
+        body = await request.body()
+        print(f"🔍 저장 요청 로그:")
+        print(f"   URL: {request.url}")
+        print(f"   Headers: {dict(request.headers)}")
+        print(f"   Body: {body.decode('utf-8') if body else 'Empty'}")
+        
+        # body를 다시 읽을 수 있도록 설정
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
+    
+    response = await call_next(request)
+    return response
 
 # CORS 미들웨어 설정 - lottoria.ai.kr 도메인 포함
 app.add_middleware(

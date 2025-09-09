@@ -98,28 +98,13 @@ const UserProfile: React.FC = () => {
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">1189회 추천생성</span>
+                <span className="text-sm text-gray-600">내가 저장한 번호 세트</span>
                 <span className="text-sm font-medium">
-                  {user.daily_recommendation_count}개
+                  {user.total_saved_numbers || 0} / 10
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">1189회 저장된 번호</span>
-                <span className="text-sm font-medium">
-                  {user.total_saved_numbers} / {user.is_premium ? '∞' : '10'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">총 당첨횟수</span>
-                <span className="text-sm font-medium text-green-600">
-                  {user.total_wins}번
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">총 당첨금액</span>
-                <span className="text-sm font-medium text-green-600">
-                  {user.total_winnings.toLocaleString()}원
-                </span>
+              <div className="text-xs text-gray-500 text-right">
+                회원은 1주일에 10개가 한도
               </div>
             </div>
           </div>

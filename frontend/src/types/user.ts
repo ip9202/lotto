@@ -11,6 +11,7 @@ export interface User {
   total_winnings: number;
   daily_recommendation_count: number;
   total_saved_numbers: number;
+  total_recommendations?: number; // 총 추천 생성 횟수
   can_generate_recommendation: boolean;
   can_save_number: boolean;
   created_at: string;

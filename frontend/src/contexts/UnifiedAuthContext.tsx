@@ -21,6 +21,7 @@ interface User {
   can_save_number: boolean;
   daily_recommendation_count: number;
   total_saved_numbers: number;
+  total_recommendations?: number; // 총 추천 생성 횟수
   total_wins: number;
   total_winnings: number;
 }

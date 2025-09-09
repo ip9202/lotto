@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_, desc, asc
 from typing import List, Optional, Dict, Any
 import logging
+from datetime import datetime, timedelta
 
 from ..database import get_db
 from ..api.auth import get_current_user
@@ -34,29 +35,38 @@ async def save_recommendation(
 ):
     """AI 추천번호를 개인 저장소에 저장"""
     
-    # 저장 가능 여부 확인 (주간 10개 제한)
-    from datetime import datetime, timedelta
-    today = datetime.now()
-    days_since_monday = today.weekday()
-    week_start = today - timedelta(days=days_since_monday)
-    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # 이번 주 저장된 개수 확인
-    weekly_saved_count = db.query(SavedRecommendation).filter(
-        SavedRecommendation.user_id == current_user.id,
-        SavedRecommendation.created_at >= week_start
-    ).count()
-    
-    if weekly_saved_count >= 10:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"주간 저장 한도에 도달했습니다. 이번 주 저장: {weekly_saved_count}/10개"
-        )
-    
     try:
-        # 현재 회차 자동 설정
-        current_draw = get_current_draw_number(db)
+        logger.info(f"저장 요청 받음 - 사용자: {current_user.id}")
+        logger.info(f"요청 데이터 타입: {type(recommendation_data)}")
+        logger.info(f"요청 데이터 내용: {recommendation_data}")
+        logger.info(f"numbers: {recommendation_data.numbers}")
+        logger.info(f"generation_method: {recommendation_data.generation_method}")
+        logger.info(f"confidence_score: {recommendation_data.confidence_score}")
         
+        # 현재 회차 조회
+        current_draw = get_current_draw_number(db)
+        logger.info(f"현재 회차: {current_draw}")
+        
+        # 저장 가능 여부 확인 (주간 10개 제한 - 현재 회차 기준)
+        today = datetime.now()
+        days_since_monday = today.weekday()
+        week_start = today - timedelta(days=days_since_monday)
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # 이번 주 + 현재 회차로 저장된 개수 확인
+        weekly_saved_count = db.query(SavedRecommendation).filter(
+            SavedRecommendation.user_id == current_user.id,
+            SavedRecommendation.created_at >= week_start,
+            SavedRecommendation.target_draw_number == current_draw
+        ).count()
+        
+        logger.info(f"주간 저장 개수: {weekly_saved_count}/10")
+        
+        if weekly_saved_count >= 10:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"주간 저장 한도에 도달했습니다. 이번 주 저장: {weekly_saved_count}/10개"
+            )
         # 새 추천 생성
         saved_rec = SavedRecommendation(
             user_id=current_user.id,
@@ -78,10 +88,14 @@ async def save_recommendation(
         db.commit()
         db.refresh(saved_rec)
         
+        logger.info(f"추천번호 저장 완료 - ID: {saved_rec.id}, 사용자: {current_user.id}")
+        
         return SavedRecommendationResponse.model_validate(saved_rec.to_dict())
         
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Save recommendation error: {e}")
+        logger.error(f"Save recommendation error: {e}", exc_info=True)
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

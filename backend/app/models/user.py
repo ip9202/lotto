@@ -130,12 +130,13 @@ class User(Base):
     
     @property
     def can_save_number(self):
-        """번호 저장 가능 여부"""
+        """번호 저장 가능 여부 (주간 제한)"""
         if self.is_premium:
             return True
         
-        # 무료 사용자는 10개 제한
-        return self.total_saved_numbers < 10
+        # 무료 사용자는 주간 10개 제한 (실제 제한은 API에서 체크)
+        # 여기서는 기본적으로 True 반환하고, 실제 제한은 saved_recommendations.py에서 처리
+        return True
     
     @property
     def subscription_status(self):
@@ -218,8 +219,6 @@ class User(Base):
             "is_verified": self.is_verified,
             "preferences": self.preferences,
             "notification_settings": self.notification_settings,
-            "total_wins": self.total_wins,
-            "total_winnings": self.total_winnings,
             "daily_recommendation_count": self.daily_recommendation_count,
             "total_saved_numbers": self.total_saved_numbers,
             "can_generate_recommendation": self.can_generate_recommendation,

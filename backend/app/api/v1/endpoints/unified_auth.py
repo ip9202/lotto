@@ -132,13 +132,23 @@ async def social_login(
 
 @router.get("/me", response_model=AuthResponse, summary="현재 사용자 정보")
 async def get_current_user_info(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    """현재 로그인한 사용자 정보 조회"""
+    """현재 로그인한 사용자 정보 조회 (당첨 통계 포함)"""
     try:
+        # 사용자 정보와 당첨 통계를 함께 조회
+        user_with_stats = await UnifiedAuthService.get_user_with_stats(db, current_user.id)
+        
+        if not user_with_stats:
+            return AuthResponse(
+                success=False,
+                error={"message": "사용자 정보를 찾을 수 없습니다."}
+            )
+        
         return AuthResponse(
             success=True,
-            data={"user": current_user.to_dict()}
+            data={"user": user_with_stats}
         )
     except Exception as e:
         logger.error(f"사용자 정보 조회 오류: {e}")

@@ -10,11 +10,11 @@ async function apiCall<T>(
 ): Promise<{ success: boolean; data?: T; error?: any; message?: string }> {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
       },
-      ...options,
     });
 
     const data = await response.json();
@@ -30,7 +30,11 @@ async function apiCall<T>(
       };
     }
 
-    return data;
+    // 백엔드 응답이 직접 데이터인 경우 success: true로 래핑
+    return {
+      success: true,
+      data: data
+    };
   } catch (error) {
     return {
       success: false,
@@ -45,7 +49,7 @@ async function apiCall<T>(
 
 // 인증 관련 API
 export const authAPI = {
-  // 현재 사용자 정보 조회
+  // 현재 사용자 정보 조회 (통계 포함)
   async getCurrentUser(token: string): Promise<{ success: boolean; data?: User; error?: any }> {
     return apiCall<User>('/api/v1/auth/me', {
       headers: {

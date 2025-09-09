@@ -568,7 +568,7 @@ const Recommendation: React.FC = () => {
                   index={index}
                   isManual={rec.is_manual}
                   confidenceScore={rec.confidence_score || 0}
-                onRegenerate={() => handleRegenerateCombination(index)}
+                  onRegenerate={() => handleRegenerateCombination(index)}
                   onShowAnalysis={() => handleShowAnalysis(
                     rec.numbers,
                     rec.is_manual ? '수동' : 'AI',
