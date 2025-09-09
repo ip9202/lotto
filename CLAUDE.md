@@ -239,6 +239,9 @@ The recommendation engine uses a multi-factor analysis approach:
   - **Chart Library**: Recharts integration for clean, modern chart designs
   - **Real-time Data**: API integration with live statistics from backend
   - **Responsive Design**: Mobile and desktop optimized dashboard
+  - **⚠️ 중요**: 모든 통계 데이터는 **현재의 전회차(이전 회차) 데이터만** 기준으로 계산됨
+- **✅ 수정 완료**: 하드코딩된 1188회차를 동적으로 현재의 전회차로 수정
+- **✅ 데이터 일관성**: 총 추천수, 당첨수, 당첨률 모두 전회차 기준으로 통일
 
 - **Winning Results Check API**: Complete implementation of lottery winning verification
   - Endpoint: `POST /api/v1/saved-recommendations/check-winning`
@@ -765,6 +768,12 @@ class UserResponse(BaseModel):
 
 ## 🚀 Recent Updates (2025-09-09)
 
+### 통계 대시보드 수정 완료 ✅
+- **하드코딩된 1188회차 제거**: 동적으로 현재의 전회차를 조회하도록 수정
+- **데이터 일관성 확보**: 총 추천수, 당첨수, 당첨률 모두 전회차 기준으로 통일
+- **실시간 업데이트**: 새로운 회차가 나올 때마다 자동으로 전회차 데이터 표시
+- **API 연동 개선**: `get_current_draw_number` API를 활용한 동적 회차 조회
+
 ### Admin Dashboard Improvements ✅
 - **통합 스케줄러 관리**: 스케줄러 상태와 설정을 하나의 카드로 통합
 - **업데이트 버튼 이동**: "지금 데이터 업데이트" 버튼을 업데이트 진행상황 카드로 이동
@@ -782,9 +791,9 @@ class UserResponse(BaseModel):
 
 ### Current Development Status
 - **1단계 완료**: 소셜 로그인 (카카오, 네이버) ✅
-- **2단계 진행**: 번호 저장 및 관리 기능 테스트 필요
-- **3단계 예정**: 당첨 비교 시스템 개발
-- **관리자 기능**: 완전히 작동하는 상태
+- **2단계 완료**: 번호 저장 및 관리 기능 ✅
+- **3단계 완료**: 당첨 비교 시스템 ✅
+- **관리자 기능**: 완전히 작동하는 상태 ✅
 
 ### 📊 기술적 개선사항
 
@@ -798,22 +807,39 @@ class UserResponse(BaseModel):
 - 업데이트 진행상황 카드에 버튼 통합
 - 세션 관리 탭 비활성화 UI 구현
 
+### ✅ 당첨 비교 시스템 완료 (2025-09-09)
+
+#### **완성된 기능들**
+- **매주 당첨번호 자동 비교**: 스케줄러를 통한 자동 당첨번호 비교
+- **당첨 순위 및 예상 당첨금액 알림**: 1등~5등 자동 계산 및 상금 표시
+- **당첨 통계 및 분석 제공**: 개인별 당첨률, 총 당첨금, 최고 등수 통계
+- **실시간 당첨 확인**: `/winning-history` 페이지에서 실시간 당첨 결과 확인
+- **동행복권 스타일 UI**: 8컬럼 테이블로 깔끔한 당첨 결과 표시
+- **모바일 최적화**: 반응형 디자인으로 모든 디바이스에서 완벽한 사용자 경험
+
+#### **기술적 구현**
+- **API 엔드포인트**: `POST /api/v1/saved-recommendations/check-winning`
+- **자동 등수 계산**: 6개 일치(1등), 5개+보너스(2등), 5개(3등), 4개(4등), 3개(5등)
+- **상금 계산**: 등수별 예상 당첨금액 자동 계산
+- **데이터베이스 업데이트**: `is_checked`, `matched_count`, `winning_rank`, `winning_amount` 자동 업데이트
+- **사용자 통계**: `total_wins`, `total_winnings` 자동 업데이트
+
 ### 🚀 다음 개발 계획
 
-#### **우선순위 1: 2단계 기능 테스트**
-- 저장된 추천 번호 관리 기능 테스트
-- 사용자별 저장 제한 확인
-- 프론트엔드 UI 테스트
-
-#### **우선순위 2: 당첨 비교 시스템**
-- 매주 당첨번호 자동 비교
-- 당첨 순위 및 예상 당첨금액 알림
-- 당첨 통계 및 분석 제공
-
-#### **우선순위 3: 유료 서비스**
+#### **우선순위 1: 유료 서비스**
 - 무료/유료 구분 시스템
 - 결제 연동
 - 사용량 제한 시스템
+
+#### **우선순위 2: 모바일 최적화**
+- PWA 기능 추가
+- 터치 인터페이스 최적화
+- 오프라인 지원
+
+#### **우선순위 3: 고급 분석 기능**
+- 패턴 분석 고도화
+- 머신러닝 모델 개선
+- 예측 정확도 향상
 
 ### ⚠️ 주의사항
 1. **스케줄러 설정**: 현재 매일 00:01에 실행되도록 설정됨

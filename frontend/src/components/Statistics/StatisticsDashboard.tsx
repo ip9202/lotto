@@ -53,9 +53,20 @@ const StatisticsDashboard: React.FC = () => {
 
       const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
+      // 현재 회차 조회
+      const currentDrawResponse = await fetch(`${baseURL}/api/v1/lotto/current-draw`);
+      if (!currentDrawResponse.ok) {
+        throw new Error('현재 회차를 불러올 수 없습니다');
+      }
+      const currentDrawData = await currentDrawResponse.json();
+      const currentDrawNumber = currentDrawData.data.draw_number;
+      
+      // 전회차 계산 (현재 회차 - 1)
+      const previousDrawNumber = currentDrawNumber - 1;
+      
       // 공공 통계 데이터 조회 (로그인 불필요)
       const statsResponse = await fetch(`${baseURL}/admin/statistics`);
-      const winningResponse = await fetch(`${baseURL}/api/v1/winning-comparison/public/1188`);
+      const winningResponse = await fetch(`${baseURL}/api/v1/winning-comparison/public/${previousDrawNumber}`);
 
       if (!statsResponse.ok || !winningResponse.ok) {
         throw new Error('통계 데이터를 불러올 수 없습니다');
@@ -67,13 +78,13 @@ const StatisticsDashboard: React.FC = () => {
       // 공공 데이터로 통계 생성
       const statisticsData: StatisticsData = {
         publicStats: {
-          totalRecommendations: statsData.data.total_recommendations || 0,
+          totalRecommendations: winningData.data?.total_recommendations || 0, // 전회차 기준 총 추천수
           aiRecommendations: statsData.data.public_recommendations?.ai || 0,
           manualRecommendations: statsData.data.public_recommendations?.manual || 0,
           memberRecommendations: statsData.data.public_recommendations?.member || 0,
           guestRecommendations: statsData.data.public_recommendations?.guest || 0,
           recent7Days: statsData.data.public_recommendations?.recent_7days || 0,
-          latestDraw: statsData.data.latest_draw || 0,
+          latestDraw: previousDrawNumber, // 전회차로 표시
           totalWinners: winningData.data?.total_winners || 0,
           winRate: Math.round((winningData.data?.win_rate || 0) * 100),
           gradeStats: {
@@ -84,7 +95,7 @@ const StatisticsDashboard: React.FC = () => {
             grade5: winningData.data?.grade_stats?.grade_5 || 0
           }
         },
-        performanceData: generatePerformanceData(statsData.data),
+        performanceData: generatePerformanceData(winningData.data, previousDrawNumber), // 전회차 데이터 사용
         winRateData: generateWinRateData(statsData.data)
       };
 
@@ -97,23 +108,23 @@ const StatisticsDashboard: React.FC = () => {
     }
   };
 
-  const generatePerformanceData = (statsData: any) => {
-    // 1188회차 구매 기간 데이터 생성 (8월 31일~9월 6일)
+  const generatePerformanceData = (winningData: any, drawNumber: number) => {
+    // 전회차 구매 기간 데이터 생성
     const data = [];
     
-    // 1188회차 구매 기간: 8월 31일(일) ~ 9월 6일(토)
+    // 전회차 구매 기간: 일요일 ~ 토요일 (추첨일)
     const purchasePeriod = [
-      { date: '2025-08-31', label: '8월 31일', weight: 0.08 }, // 일요일 - 적음
-      { date: '2025-09-01', label: '9월 1일', weight: 0.12 },  // 월요일 - 보통
-      { date: '2025-09-02', label: '9월 2일', weight: 0.15 },  // 화요일 - 보통
-      { date: '2025-09-03', label: '9월 3일', weight: 0.18 },  // 수요일 - 많음
-      { date: '2025-09-04', label: '9월 4일', weight: 0.20 },  // 목요일 - 많음
-      { date: '2025-09-05', label: '9월 5일', weight: 0.15 },  // 금요일 - 보통
-      { date: '2025-09-06', label: '9월 6일', weight: 0.12 }   // 토요일 - 적음 (추첨일)
+      { label: '일요일', weight: 0.08 }, // 일요일 - 적음
+      { label: '월요일', weight: 0.12 },  // 월요일 - 보통
+      { label: '화요일', weight: 0.15 },  // 화요일 - 보통
+      { label: '수요일', weight: 0.18 },  // 수요일 - 많음
+      { label: '목요일', weight: 0.20 },  // 목요일 - 많음
+      { label: '금요일', weight: 0.15 },  // 금요일 - 보통
+      { label: '토요일', weight: 0.12 }   // 토요일 - 적음 (추첨일)
     ];
     
-    const totalRecommendations = statsData.public_recommendations?.recent_7days || 0;
-    const totalWinners = statsData.totalWinners || 0;
+    const totalRecommendations = winningData?.total_recommendations || 0;
+    const totalWinners = winningData?.total_winners || 0;
     
     // 각 날짜별로 다른 추천 개수와 당첨률 생성
     for (const day of purchasePeriod) {

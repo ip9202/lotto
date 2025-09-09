@@ -33,6 +33,7 @@ const WinningHistory: React.FC = () => {
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentDrawNumber, setCurrentDrawNumber] = useState<number>(0);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -47,15 +48,27 @@ const WinningHistory: React.FC = () => {
 
       const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      // 1188회차 당첨 번호 조회
-      const winningResponse = await fetch(`${baseURL}/api/v1/lotto/draw/1188`);
+      // 현재 회차 조회
+      const currentDrawResponse = await fetch(`${baseURL}/api/v1/lotto/current-draw`);
+      if (!currentDrawResponse.ok) {
+        throw new Error('현재 회차를 불러올 수 없습니다');
+      }
+      const currentDrawData = await currentDrawResponse.json();
+      const currentDrawNumber = currentDrawData.data.draw_number;
+      setCurrentDrawNumber(currentDrawNumber);
+      
+      // 전회차 계산 (현재 회차 - 1)
+      const previousDrawNumber = currentDrawNumber - 1;
+      
+      // 전회차 당첨 번호 조회
+      const winningResponse = await fetch(`${baseURL}/api/v1/lotto/draw/${previousDrawNumber}`);
       if (!winningResponse.ok) {
         throw new Error('당첨 번호를 불러올 수 없습니다');
       }
       const winningData = await winningResponse.json();
 
-      // 개인 저장된 추천 번호 조회 (1188회차)
-      const savedResponse = await fetch(`${baseURL}/api/v1/saved-recommendations?target_draw=1188`, {
+      // 개인 저장된 추천 번호 조회 (전회차)
+      const savedResponse = await fetch(`${baseURL}/api/v1/saved-recommendations?target_draw=${previousDrawNumber}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('access_token')}`
         }
@@ -208,7 +221,7 @@ const WinningHistory: React.FC = () => {
           
           {/* 설명 문구 */}
           <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            1188회차 당첨 결과와 내 번호 비교
+            {currentDrawNumber > 0 ? `${currentDrawNumber - 1}회차` : '전회차'} 당첨 결과와 내 번호 비교
           </p>
         </div>
 
@@ -271,7 +284,7 @@ const WinningHistory: React.FC = () => {
             {comparisonResults.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📝</div>
-                <p className="text-gray-500 text-lg">1188회차에 저장된 번호가 없습니다.</p>
+                <p className="text-gray-500 text-lg">{currentDrawNumber > 0 ? `${currentDrawNumber - 1}회차` : '전회차'}에 저장된 번호가 없습니다.</p>
                 <p className="text-gray-400 text-sm mt-2">번호를 저장하고 다음 회차에 도전해보세요!</p>
               </div>
             ) : (

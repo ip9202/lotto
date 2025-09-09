@@ -313,15 +313,42 @@ const Recommendation: React.FC = () => {
                         ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
                         : 'border-gray-300'
                     }`}
-                    value={isAuthenticated ? basicSettings.total_count : 5}
+                    value={isAuthenticated ? (basicSettings.total_count || '') : 5}
                     onChange={(e) => {
                       if (isAuthenticated) {
-                        const value = parseInt(e.target.value) || 1;
-                        const clampedValue = Math.min(Math.max(value, 1), 10);
+                        const inputValue = e.target.value;
+                        // 빈 문자열이면 그대로 유지 (사용자가 삭제할 수 있도록)
+                        if (inputValue === '') {
+                          setBasicSettings(prev => ({
+                            ...prev,
+                            total_count: 0 // 임시로 0으로 설정
+                          }));
+                          return;
+                        }
+                        
+                        // 숫자가 아닌 경우는 무시 (사용자가 입력 중일 때)
+                        const parsedValue = parseInt(inputValue);
+                        if (isNaN(parsedValue)) {
+                          return;
+                        }
+                        
+                        const clampedValue = Math.min(Math.max(parsedValue, 1), 10);
                         setBasicSettings(prev => ({
                           ...prev,
                           total_count: clampedValue
                         }));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (isAuthenticated) {
+                        // 포커스가 벗어날 때 빈 값이거나 1보다 작으면 1로 설정
+                        const value = parseInt(e.target.value);
+                        if (e.target.value === '' || isNaN(value) || value < 1) {
+                          setBasicSettings(prev => ({
+                            ...prev,
+                            total_count: 1
+                          }));
+                        }
                       }
                     }}
                   />
@@ -388,9 +415,26 @@ const Recommendation: React.FC = () => {
               min="1"
               max="10"
                   className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.total_count}
+              value={combinationSettings.total_count || ''}
               onChange={(e) => {
-                const total = Math.min(Math.max(parseInt(e.target.value) || 1, 1), 10);
+                const inputValue = e.target.value;
+                // 빈 문자열이면 그대로 유지 (사용자가 삭제할 수 있도록)
+                if (inputValue === '') {
+                  setCombinationSettings(prev => ({
+                    ...prev,
+                    total_count: 0, // 임시로 0으로 설정
+                    auto_count: 0
+                  }));
+                  return;
+                }
+                
+                // 숫자가 아닌 경우는 무시 (사용자가 입력 중일 때)
+                const parsedValue = parseInt(inputValue);
+                if (isNaN(parsedValue)) {
+                  return;
+                }
+                
+                const total = Math.min(Math.max(parsedValue, 1), 10);
                 const manual = Math.min(combinationSettings.manual_count, total);
                 const auto = total - manual;
                 setCombinationSettings({
@@ -398,6 +442,20 @@ const Recommendation: React.FC = () => {
                   manual_count: manual,
                   auto_count: auto
                 });
+              }}
+              onBlur={(e) => {
+                // 포커스가 벗어날 때 빈 값이거나 1보다 작으면 1로 설정
+                const value = parseInt(e.target.value);
+                if (e.target.value === '' || isNaN(value) || value < 1) {
+                  const total = 1;
+                  const manual = Math.min(combinationSettings.manual_count, total);
+                  const auto = total - manual;
+                  setCombinationSettings({
+                    total_count: total,
+                    manual_count: manual,
+                    auto_count: auto
+                  });
+                }
               }}
             />
           </div>
@@ -412,9 +470,26 @@ const Recommendation: React.FC = () => {
               min="0"
               max={combinationSettings.total_count}
                   className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.manual_count}
+              value={combinationSettings.manual_count || ''}
               onChange={(e) => {
-                const manual = Math.min(Math.max(parseInt(e.target.value) || 0, 0), combinationSettings.total_count);
+                const inputValue = e.target.value;
+                // 빈 문자열이면 그대로 유지 (사용자가 삭제할 수 있도록)
+                if (inputValue === '') {
+                  setCombinationSettings(prev => ({
+                    ...prev,
+                    manual_count: 0,
+                    auto_count: prev.total_count
+                  }));
+                  return;
+                }
+                
+                // 숫자가 아닌 경우는 무시 (사용자가 입력 중일 때)
+                const parsedValue = parseInt(inputValue);
+                if (isNaN(parsedValue)) {
+                  return;
+                }
+                
+                const manual = Math.min(Math.max(parsedValue, 0), combinationSettings.total_count);
                 const total = combinationSettings.total_count;
                 const auto = Math.max(0, total - manual);
                 setCombinationSettings({
@@ -422,6 +497,19 @@ const Recommendation: React.FC = () => {
                   manual_count: manual,
                   auto_count: auto
                 });
+              }}
+              onBlur={(e) => {
+                // 포커스가 벗어날 때 빈 값이면 0으로 설정
+                if (e.target.value === '' || parseInt(e.target.value) < 0) {
+                  const manual = 0;
+                  const total = combinationSettings.total_count;
+                  const auto = Math.max(0, total - manual);
+                  setCombinationSettings({
+                    total_count: total,
+                    manual_count: manual,
+                    auto_count: auto
+                  });
+                }
               }}
             />
           </div>
@@ -436,9 +524,26 @@ const Recommendation: React.FC = () => {
               min="0"
               max={combinationSettings.total_count}
                   className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.auto_count}
+              value={combinationSettings.auto_count || ''}
               onChange={(e) => {
-                const auto = Math.min(Math.max(parseInt(e.target.value) || 0, 0), combinationSettings.total_count);
+                const inputValue = e.target.value;
+                // 빈 문자열이면 그대로 유지 (사용자가 삭제할 수 있도록)
+                if (inputValue === '') {
+                  setCombinationSettings(prev => ({
+                    ...prev,
+                    auto_count: 0,
+                    manual_count: prev.total_count
+                  }));
+                  return;
+                }
+                
+                // 숫자가 아닌 경우는 무시 (사용자가 입력 중일 때)
+                const parsedValue = parseInt(inputValue);
+                if (isNaN(parsedValue)) {
+                  return;
+                }
+                
+                const auto = Math.min(Math.max(parsedValue, 0), combinationSettings.total_count);
                 const total = combinationSettings.total_count;
                 const manual = Math.max(0, total - auto);
                 setCombinationSettings({
@@ -446,6 +551,19 @@ const Recommendation: React.FC = () => {
                   manual_count: manual,
                   auto_count: auto
                 });
+              }}
+              onBlur={(e) => {
+                // 포커스가 벗어날 때 빈 값이면 0으로 설정
+                if (e.target.value === '' || parseInt(e.target.value) < 0) {
+                  const auto = 0;
+                  const total = combinationSettings.total_count;
+                  const manual = Math.max(0, total - auto);
+                  setCombinationSettings({
+                    total_count: total,
+                    manual_count: manual,
+                    auto_count: auto
+                  });
+                }
               }}
             />
           </div>
