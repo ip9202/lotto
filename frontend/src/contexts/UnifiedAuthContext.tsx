@@ -12,10 +12,17 @@ interface User {
   social_provider?: 'kakao' | 'naver';
   linked_social_providers: string[];
   subscription_plan: string;
+  subscription_status: string;
   is_premium: boolean;
   is_verified: boolean;
   created_at: string;
   last_login_at?: string;
+  // 추가 프로퍼티들 (SaveRecommendation 및 UserProfile에서 사용)
+  can_save_number: boolean;
+  daily_recommendation_count: number;
+  total_saved_numbers: number;
+  total_wins: number;
+  total_winnings: number;
 }
 
 // 인증 컨텍스트 타입

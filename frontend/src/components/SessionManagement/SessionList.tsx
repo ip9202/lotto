@@ -6,9 +6,7 @@ import {
   PlayIcon, 
   StopIcon,
   ClockIcon,
-  PlusIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon
+  MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
 import { UserSession } from '../../types/session';
 import { 
@@ -16,7 +14,6 @@ import {
   deleteSession, 
   activateSession, 
   deactivateSession,
-  searchSessions,
   cleanupExpiredSessions
 } from '../../services/sessionService';
 

@@ -33,7 +33,7 @@ const NumberFrequencyChart: React.FC<NumberFrequencyChartProps> = ({
     });
   }
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

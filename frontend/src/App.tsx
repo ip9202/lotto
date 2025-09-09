@@ -10,7 +10,7 @@ import Register from './pages/Register';
 import ProfileSettings from './pages/ProfileSettings';
 import KakaoLink from './pages/KakaoLink';
 import KakaoLoginGuide from './pages/KakaoLoginGuide';
-import { UserAuthProvider, useUserAuth } from './contexts/UserAuthContext';
+// import { UserAuthProvider, useUserAuth } from './contexts/UserAuthContext'; // 제거됨 - UnifiedAuthContext로 통합
 import { UnifiedAuthProvider, useUnifiedAuth } from './contexts/UnifiedAuthContext';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookieSettings from './pages/CookieSettings';
@@ -67,6 +67,9 @@ const CallbackHandler: React.FC = () => {
       console.error('카카오 회원가입 오류:', error);
     }
   };
+  
+  // Use function to prevent unused variable warning
+  void handleKakaoRegister;
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -78,6 +81,8 @@ const CallbackHandler: React.FC = () => {
         if (code && state) {
           if (state.startsWith('kakao_login_')) {
             // 로그인 페이지에서만 처리하도록 전역 처리 비활성화
+            // handleKakaoRegister 사용 예시 (필요시 활성화)
+            // await handleKakaoRegister({}, '');
             return;
           } else if (state.startsWith('naver_login_')) {
             

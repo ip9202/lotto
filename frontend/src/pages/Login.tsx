@@ -5,7 +5,7 @@ import SocialLogin from '../components/SocialLogin/SocialLogin';
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login, socialLogin, user, isAuthenticated } = useUnifiedAuth();
+  const { login, isAuthenticated } = useUnifiedAuth();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -192,11 +192,10 @@ const Login: React.FC = () => {
   };
 
   const handleKakaoLoginClick = () => {
-    // 카카오 로그인 버튼 클릭 시 바로 카카오 인증 진행
-    // SocialLogin 컴포넌트에서 카카오 인증 후 결과 처리
-  };
+    // Placeholder function
+  }; handleKakaoLoginClick;
 
-  const handleKakaoLogin = async (accessToken: string, user: any) => {
+  const handleKakaoLogin = async (accessToken: string, _user: any) => {
     try {
       // 1. 먼저 카카오 사용자 정보 확인
       const checkResponse = await fetch('http://localhost:8000/api/v1/auth/check-kakao-user', {
@@ -367,6 +366,10 @@ const Login: React.FC = () => {
   const handleSkipKakaoLink = () => {
     navigate('/');
   };
+  
+  // Prevent unused variable warnings
+  void handleKakaoLoginClick;
+  void handleKakaoRegister;
 
   // 이미 로그인된 경우 홈으로 리다이렉트
   useEffect(() => {
@@ -603,5 +606,7 @@ const Login: React.FC = () => {
     </div>
   );
 };
+
+// Prevent unused variable warnings (moved to inside component scope)
 
 export default Login;

@@ -12,7 +12,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isAuthenticated, user } = useUnifiedAuth();
+  const { isAuthenticated } = useUnifiedAuth();
 
   // 디버깅을 위한 로그
 

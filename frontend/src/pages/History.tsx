@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import RecommendationCard from '../components/RecommendationCard';
+// import RecommendationCard from '../components/RecommendationCard';
 import LottoBall from '../components/LottoBall';
 import PastDraws from '../components/PastDraws';
 
@@ -217,7 +217,7 @@ const History: React.FC = () => {
         <PastDraws 
           limit={20} 
           showPagination={true}
-          onDrawSelect={(draw) => {
+          onDrawSelect={(_draw) => {
             // 필요시 상세 보기 모달 등을 추가할 수 있음
           }}
         />

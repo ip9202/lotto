@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import LottoBall from '../components/LottoBall';
-import AdSenseBanner from '../components/AdSense/AdSenseBanner';
+// import AdSenseBanner from '../components/AdSense/AdSenseBanner'; // 심사 완료 후 추가 예정
 import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 
 interface LottoDraw {
@@ -14,7 +14,7 @@ interface LottoDraw {
 }
 
 const Home: React.FC = () => {
-  const navigate = useNavigate();
+  useNavigate();
   const { socialLogin } = useUnifiedAuth();
   const [latestDraw, setLatestDraw] = useState<LottoDraw | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,7 +58,7 @@ const Home: React.FC = () => {
               }
             });
             
-            const userData = await userResponse.json();
+            await userResponse.json(); // userData
             
             // 카카오 사용자 정보 확인
             const checkResponse = await fetch('http://localhost:8000/api/v1/auth/check-kakao-user', {
@@ -209,8 +209,8 @@ const Home: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
-      {/* 상단 광고 배너 */}
-      <AdSenseBanner className="my-8" />
+      {/* 상단 광고 배너 - 심사 완료 후 추가 예정 */}
+      {/* <AdSenseBanner className="my-8" /> */}
 
       {/* 최신 당첨 번호 */}
       <div className="bg-white rounded-xl shadow-lg p-6">

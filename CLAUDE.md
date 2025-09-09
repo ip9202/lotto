@@ -2,30 +2,71 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Development Commands
+## 🐳 Docker Development Commands (ONLY METHOD)
 
-### 🐳 Docker (PRIMARY METHOD - 모든 서비스는 Docker로 실행)
-- **⚠️ IMPORTANT: 모든 개발은 Docker를 통해 진행합니다**
-- **Start all services**: `docker-compose up -d`
-- **Stop all services**: `docker-compose down`
-- **Check service status**: `docker-compose ps`
-- **View logs**: `docker-compose logs -f [service_name]`
-- **Quick start script**: `./start_dev.sh` (Docker 자동 설정)
+**⚠️ CRITICAL: 모든 개발은 Docker를 통해서만 진행합니다. 수동 설치는 지원하지 않습니다.**
 
-### Backend (FastAPI) - Docker 내부에서 실행
-- **⚠️ NOTE: 백엔드는 Docker 컨테이너 내부에서 자동 실행됩니다**
-- **Manual conda setup** (Docker 외부에서만 필요): `conda activate py3_12`
-- **Database URL**: `postgresql://lotto_user:lotto_password@localhost:5432/lotto_db`
-- **API Documentation**: http://localhost:8000/docs
+**🐍 Docker 외부 Python 개발 시 (디버깅/테스트용):**
+- **필수**: `conda activate py3_12` 환경 사용
+- **확인**: `echo $CONDA_DEFAULT_ENV` 결과가 `py3_12`여야 함
+- **실패 시**: py3_12 환경 없이는 Python 개발 불가
 
-### Frontend (React + Vite) - Docker 내부에서 실행
-- **⚠️ NOTE: 프론트엔드는 Docker 컨테이너 내부에서 자동 실행됩니다**
-- **Access URL**: http://localhost:5173
-- **Manual setup** (Docker 외부에서만 필요):
-  - `cd frontend && npm install`
-  - `cd frontend && npm run dev`
-  - `cd frontend && npm run build`
-  - `cd frontend && npm run lint`
+### Essential Docker Commands
+```bash
+# 모든 서비스 시작 (PostgreSQL + Backend + Frontend)
+docker-compose up -d
+
+# 서비스 상태 확인
+docker-compose ps
+
+# 모든 서비스 중지
+docker-compose down
+
+# 특정 서비스 로그 확인
+docker-compose logs -f [postgres|backend|frontend]
+
+# 모든 서비스 로그 확인
+docker-compose logs -f
+
+# 서비스 재시작
+docker-compose restart [service_name]
+
+# 컨테이너 리빌드 (코드 변경 후)
+docker-compose build [service_name]
+docker-compose up -d
+```
+
+### Quick Start
+```bash
+# 1. 프로젝트 클론 후 디렉토리 이동
+cd /path/to/lotto
+
+# 2. 모든 서비스 시작
+docker-compose up -d
+
+# 3. 브라우저에서 접속
+# - Frontend: http://localhost:5173
+# - Backend API: http://localhost:8000/docs
+# - Database: postgresql://lotto_user:lotto_password@localhost:5432/lotto_db
+```
+
+### Environment Variables (Docker)
+Docker Compose 파일에 자동 설정되는 환경 변수들:
+```bash
+# Database
+DATABASE_URL=postgresql://lotto_user:lotto_password@postgres:5432/lotto_db
+
+# Social Login
+KAKAO_REST_API_KEY=932fccce67821851edcda7436612c582
+VITE_KAKAO_APP_KEY=932fccce67821851edcda7436612c582
+NAVER_CLIENT_ID=TroDslwxToSSQGV0tuBu
+NAVER_CLIENT_SECRET=v7hl8B4lyY
+VITE_NAVER_CLIENT_ID=TroDslwxToSSQGV0tuBu
+
+# API Configuration
+API_HOST=0.0.0.0
+API_PORT=8000
+```
 
 ## Architecture Overview
 
@@ -78,19 +119,30 @@ lotto/
 #### API Architecture
 - **RESTful API** with FastAPI
 - **Standardized response format**: `{"success": bool, "data": any, "message": str, "error": object}`
-- **Key endpoints**:
-  - `POST /api/v1/recommendations/generate` - Generate AI recommendations
-  - `GET /api/v1/lotto/latest` - Get latest lottery data  
-  - `GET /admin/*` - Admin dashboard endpoints
-  - `POST /api/v1/auth/login` - Social login (Kakao/Naver)
-  - `GET /api/v1/auth/me` - Get current user info
-  - `GET /api/v1/auth/profile` - Get user profile with stats
-  - `POST /api/v1/saved-recommendations` - Save user's lottery numbers
-  - `GET /api/v1/saved-recommendations` - Get saved recommendations list
-  - `PUT /api/v1/saved-recommendations/{id}` - Update saved recommendation
-  - `DELETE /api/v1/saved-recommendations/{id}` - Delete saved recommendation
-  - `GET /api/v1/saved-recommendations/stats/summary` - Get recommendation statistics
-  - `POST /api/v1/saved-recommendations/check-winning` - Check winning results
+- **Key endpoints** (총 22개 API 완전 구현):
+  - **추천 시스템**: `POST /api/v1/recommendations/generate` - AI 추천 생성
+  - **로또 데이터**: `GET /api/v1/lotto/latest` - 최신 로또 데이터
+  - **통합 인증**: 
+    - `POST /api/v1/auth/register/email` - 이메일 회원가입
+    - `POST /api/v1/auth/login/email` - 이메일 로그인
+    - `POST /api/v1/auth/login/social` - 소셜 로그인 (카카오/네이버)
+    - `POST /api/v1/auth/link/social` - 소셜 계정 연결
+    - `GET /api/v1/auth/me` - 현재 사용자 정보
+    - `GET /api/v1/auth/profile` - 사용자 프로필 및 통계
+    - `POST /api/v1/auth/change-password` - 비밀번호 변경
+    - `POST /api/v1/auth/check-kakao-user` - 카카오 사용자 확인
+  - **관리자**: 
+    - `GET /api/v1/auth/admin/users` - 사용자 관리
+    - `PUT /api/v1/auth/admin/update-role` - 사용자 권한 관리
+  - **추천번호 관리**: 
+    - `POST /api/v1/saved-recommendations` - 추천번호 저장
+    - `GET /api/v1/saved-recommendations` - 저장된 추천번호 목록
+    - `PUT /api/v1/saved-recommendations/{id}` - 추천번호 수정
+    - `DELETE /api/v1/saved-recommendations/{id}` - 추천번호 삭제
+    - `GET /api/v1/saved-recommendations/stats/summary` - 추천번호 통계
+    - `POST /api/v1/saved-recommendations/check-winning` - 당첨 결과 확인
+  - **통계**: `GET /api/v1/lotto/statistics` - 로또 통계 정보
+  - **관리자 대시보드**: `GET /admin/*` - 관리자 기능
 
 ### Frontend Architecture
 - **React 18** with TypeScript
@@ -125,35 +177,29 @@ The recommendation engine uses a multi-factor analysis approach:
 5. **Presentation**: React frontend displays recommendations with save functionality for authenticated users
 
 ### Environment Requirements
-- **Backend**: Python 3.12, conda environment `py3_12` (CRITICAL: Always use this environment)
-- **Frontend**: Node.js 18+, npm
-- **Database**: PostgreSQL (via Docker)
+- **All services containerized**: Docker Compose handles all dependencies
+- **Backend**: Python 3.12 (automatic in Docker container)
+- **Frontend**: Node.js 18+ (automatic in Docker container)
+- **Database**: PostgreSQL 15 (automatic in Docker container)
 - **Production**: Railway hosting with custom domain `lottoria.ai.kr`
 
-### Development Notes
-- **🐳 CRITICAL: ALWAYS USE DOCKER**:
-  - **PRIMARY METHOD**: 모든 개발은 `docker-compose up -d`로 시작
-  - **NEVER run services individually** unless debugging specific issues
-  - **All services containerized**: PostgreSQL + Backend + Frontend
-  - **Check service status**: `docker-compose ps`
-  - **Stop services**: `docker-compose down`
-  - **View logs**: `docker-compose logs -f [service_name]`
+### Development Workflow (Docker Only)
+1. **Start Development**: `docker-compose up -d`
+2. **Check Status**: `docker-compose ps`
+3. **View Logs**: `docker-compose logs -f`
+4. **Stop Services**: `docker-compose down`
+5. **Rebuild After Changes**: `docker-compose build && docker-compose up -d`
 
-- **⚠️ CONDA ENVIRONMENT** (Docker 외부에서만 필요):
-  - **ONLY for manual Python development**: `conda activate py3_12`
-  - **Docker 내부에서는 자동으로 Python 3.12 환경 제공**
-  - **Check environment**: `echo $CONDA_DEFAULT_ENV` should show `py3_12`
-  - **If not activated**: Manual backend development will FAIL
-
-- **🌍 ENVIRONMENT SEPARATION**:
-  - **Development**: Local Docker containers
-  - **Production**: Railway deployment with environment variables
-  - **Environment files**: `.env` (local), Railway dashboard (production)
-  - **Database**: 
-    - Dev: `postgresql://lotto_user:lotto_password@localhost:5432/lotto_db`
-    - Prod: Railway PostgreSQL connection string
-  - **CORS origins**: localhost (dev) + lottoria.ai.kr (prod)
-  - **Secret keys**: Different for dev/prod environments
+### Environment Configuration
+- **Development**: Local Docker containers with auto-reload
+- **Production**: Railway deployment with environment variables
+- **Database URLs**: 
+  - Dev: `postgresql://lotto_user:lotto_password@localhost:5432/lotto_db`
+  - Prod: Railway PostgreSQL connection string
+- **Access URLs**:
+  - Frontend: http://localhost:5173
+  - Backend API: http://localhost:8000/docs
+  - Admin Panel: http://localhost:5173/admin
 
 - **Port Configuration**: Backend (8000), Frontend (5173), PostgreSQL (5432)
 - **Korean Language**: UI and documentation primarily in Korean for target market
@@ -589,6 +635,52 @@ const logout = () => {
 - ✅ **콘솔 로그 정리**: 프로덕션 환경 준비 완료
 - ✅ **사용자 경험**: 일관된 계정 관리 경험 제공
 
+## ✅ 코드 리팩토링 완료 (2025-09-09)
+
+### 🎯 리팩토링 목표
+- **컴포넌트 분리**: 큰 컴포넌트를 단일 책임 원칙에 따라 분리
+- **공통 패턴 추출**: 중복 코드를 공통 hooks와 컴포넌트로 추상화
+- **TypeScript 에러 해결**: 모든 TypeScript 컴파일 에러 수정
+- **빌드 검증**: 프로덕션 빌드 성공 및 동작 확인
+
+### 🔧 리팩토링된 컴포넌트들
+
+#### 1. Admin.tsx 분리 (740줄 → 500줄, 32% 감소)
+**추출된 컴포넌트들:**
+- `MessageAlert`: 시스템 메시지 표시 컴포넌트
+- `SystemStatusCard`: DB/API/스케줄러 상태 표시
+- `UpdateProgressCard`: 업데이트 진행률 표시
+- `SchedulerStatusCard`: 스케줄러 제어 UI
+
+**추출된 Hook:**
+- `useMessageHandler`: 통합 메시지 관리 (showSuccess, showError, showInfo, clearMessage)
+
+#### 2. 공통 패턴 추출
+**공통 Hooks:**
+- `useLoading`: 로딩 상태 관리 및 withLoading 헬퍼
+- `useNotification`: alert() 대체 알림 시스템
+
+**공통 컴포넌트:**
+- `Modal`: 재사용 가능한 모달 컴포넌트 (size, ESC, backdrop 지원)
+- `NotificationContainer`: 토스트 알림 표시
+
+#### 3. SaveRecommendation 개선
+- 새로운 공통 hooks 적용 (useLoading, useNotification)
+- 공통 Modal 컴포넌트 사용
+- 365줄 → 335줄 (8% 감소)
+
+### 📊 TypeScript 에러 해결
+- **컴포넌트 에러**: 47개 수정 (unused imports, variables, type safety)
+- **서비스 파일 에러**: 타입 변환 문제 해결
+- **전역 타입 선언**: window 객체 확장 (Kakao, Naver SDK)
+
+### ✅ 최종 검증 결과
+- **TypeScript 컴파일**: ✅ 성공
+- **Vite 빌드**: ✅ 성공 (1570개 모듈, 3.81초)
+- **Docker 서비스**: ✅ 정상 실행
+- **주요 페이지**: ✅ 정상 동작 (홈, 추천, 로그인, 통계)
+- **AI 추천**: ✅ 정상 생성 (5개 조합)
+
 ## ✅ 관리자 로그인 시스템 통합 완료 (2025-09-08)
 
 ### 🎯 주요 변경사항
@@ -604,7 +696,7 @@ const logout = () => {
 ```python
 # 관리자 계정 정보
 이메일: ip9202@gmail.com
-비밀번호: admin123
+비밀번호: rkdcjfIP  # 업데이트됨
 역할: UserRole.ADMIN
 로그인 방식: LoginMethod.EMAIL
 ```

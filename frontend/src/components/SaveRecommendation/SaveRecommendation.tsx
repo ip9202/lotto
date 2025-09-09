@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { useUserAuth } from '../../contexts/UserAuthContext';
+import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
+import { useLoading, useNotification } from '../../hooks/common';
+import { Modal } from '../../components/common';
 
 interface SaveRecommendationProps {
   numbers: number[];
@@ -25,10 +27,10 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
   onSaved,
   className = ''
 }) => {
-  const { user, token, isAuthenticated } = useUserAuth();
+  const { user, isAuthenticated } = useUnifiedAuth();
+  const { isLoading, withLoading } = useLoading();
+  const { showSuccess, showError } = useNotification();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<SaveFormData>({
     title: '',
@@ -44,73 +46,68 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
   const handleQuickSave = async () => {
     if (!canSave) return;
 
-    setIsLoading(true);
-    setError(null);
+    await withLoading(async () => {
+      try {
+        const { savedRecommendationsAPI } = await import('../../services/apiService');
+        const token = localStorage.getItem('access_token');
+        const result = await savedRecommendationsAPI.saveRecommendation(token!, {
+          numbers,
+          confidence_score: confidenceScore,
+          generation_method: generationMethod,
+          analysis_data: analysisData,
+          title: `${generationMethod === 'ai' ? 'AI' : '수동'} 추천 ${new Date().toLocaleDateString()}`,
+          memo: undefined,
+          tags: undefined
+        });
 
-    try {
-      const { savedRecommendationsAPI } = await import('../../services/apiService');
-      const result = await savedRecommendationsAPI.saveRecommendation(token!, {
-        numbers,
-        confidence_score: confidenceScore,
-        generation_method: generationMethod,
-        analysis_data: analysisData,
-        title: `${generationMethod === 'ai' ? 'AI' : '수동'} 추천 ${new Date().toLocaleDateString()}`,
-        memo: null,
-        tags: null
-      });
-
-      if (result.success && result.data) {
-        if (onSaved) {
-          onSaved(result.data.id);
+        if (result.success && result.data) {
+          if (onSaved) {
+            onSaved(result.data.id);
+          }
+          showSuccess('추천번호가 저장되었습니다!');
+        } else {
+          showError(result.error?.message || '저장에 실패했습니다.');
         }
-        // 성공 알림 (간단한 알림)
-        alert('추천번호가 저장되었습니다!');
-      } else {
-        setError(result.error?.message || '저장에 실패했습니다.');
+      } catch (err) {
+        console.error('저장 오류:', err);
+        showError('저장 중 오류가 발생했습니다.');
       }
-    } catch (err) {
-      console.error('저장 오류:', err);
-      setError('저장 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const handleDetailedSave = async () => {
     if (!canSave) return;
 
-    setIsLoading(true);
-    setError(null);
+    await withLoading(async () => {
+      try {
+        const { savedRecommendationsAPI } = await import('../../services/apiService');
+        const token = localStorage.getItem('access_token');
+        const result = await savedRecommendationsAPI.saveRecommendation(token!, {
+          numbers,
+          confidence_score: confidenceScore,
+          generation_method: generationMethod,
+          analysis_data: analysisData,
+          title: formData.title || `${generationMethod === 'ai' ? 'AI' : '수동'} 추천`,
+          memo: formData.memo || undefined,
+          tags: formData.tags.length > 0 ? formData.tags : undefined,
+          target_draw_number: formData.targetDrawNumber
+        });
 
-    try {
-      const { savedRecommendationsAPI } = await import('../../services/apiService');
-      const result = await savedRecommendationsAPI.saveRecommendation(token!, {
-        numbers,
-        confidence_score: confidenceScore,
-        generation_method: generationMethod,
-        analysis_data: analysisData,
-        title: formData.title || `${generationMethod === 'ai' ? 'AI' : '수동'} 추천`,
-        memo: formData.memo || null,
-        tags: formData.tags.length > 0 ? formData.tags : null,
-        target_draw_number: formData.targetDrawNumber
-      });
-
-      if (result.success && result.data) {
-        if (onSaved) {
-          onSaved(result.data.id);
+        if (result.success && result.data) {
+          if (onSaved) {
+            onSaved(result.data.id);
+          }
+          setIsModalOpen(false);
+          setFormData({ title: '', memo: '', tags: [] });
+          showSuccess('추천번호가 저장되었습니다!');
+        } else {
+          showError(result.error?.message || '저장에 실패했습니다.');
         }
-        setIsModalOpen(false);
-        setFormData({ title: '', memo: '', tags: [] });
-        alert('추천번호가 저장되었습니다!');
-      } else {
-        setError(result.error?.message || '저장에 실패했습니다.');
+      } catch (err) {
+        console.error('저장 오류:', err);
+        showError('저장 중 오류가 발생했습니다.');
       }
-    } catch (err) {
-      console.error('저장 오류:', err);
-      setError('저장 중 오류가 발생했습니다.');
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
   const handleAddTag = () => {
@@ -189,28 +186,13 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
         </button>
       </div>
 
-      {error && (
-        <div className="mt-2 text-red-600 text-sm">
-          {error}
-        </div>
-      )}
-
       {/* 상세 저장 모달 */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">추천번호 저장</h3>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="추천번호 저장"
+        size="md"
+      >
 
               {/* 번호 표시 */}
               <div className="mb-4 p-3 bg-gray-50 rounded-lg">
@@ -322,40 +304,31 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
                 </div>
               </div>
 
-              {error && (
-                <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
-                  {error}
-                </div>
+          {/* 버튼들 */}
+          <div className="flex gap-3 mt-6">
+            <button
+              onClick={() => setIsModalOpen(false)}
+              disabled={isLoading}
+              className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              취소
+            </button>
+            <button
+              onClick={handleDetailedSave}
+              disabled={isLoading}
+              className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               )}
-
-              {/* 버튼들 */}
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={isLoading}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={handleDetailedSave}
-                  disabled={isLoading}
-                  className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  ) : (
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                  저장하기
-                </button>
-              </div>
-            </div>
+              저장하기
+            </button>
           </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 };

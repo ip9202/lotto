@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
+// Global type declarations
+declare global {
+  interface Window {
+    Kakao: any;
+    naver: any;
+    kakaoSDKLoaded: boolean;
+    naverSDKLoaded: boolean;
+  }
+}
+
 interface SocialLoginProps {
   onLogin?: (token: string, user: any) => void;
   onClick?: () => void;
@@ -8,8 +18,8 @@ interface SocialLoginProps {
   className?: string;
 }
 
-const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClick, onClose, className = '' }) => {
-  const { socialLogin } = useUnifiedAuth();
+const SocialLogin: React.FC<SocialLoginProps> = ({ onClick, className = '' }) => {
+  useUnifiedAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,43 +80,13 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClick, onClose, cl
     }
   };
 
-  const handleNaverLogin = async () => {
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      // 네이버 SDK 로딩 대기 및 확인
-      let retryCount = 0;
-      const maxRetries = 50; // 5초 대기
-      
-      while ((typeof window.naver === 'undefined' || !window.naverSDKLoaded) && retryCount < maxRetries) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        retryCount++;
-      }
-      
-      if (typeof window.naver === 'undefined' || !window.naverSDKLoaded) {
-        setError('네이버 SDK가 로드되지 않았습니다. 페이지를 새로고침해주세요.');
-        setIsLoading(false);
-        return;
-      }
-      
-      
-      // 네이버 로그인 URL 생성 및 리다이렉트
-      const naverClientId = import.meta.env.VITE_NAVER_CLIENT_ID;
-      const redirectUri = encodeURIComponent(window.location.origin);
-      const state = 'naver_login_' + Date.now();
-      
-      const naverAuthUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}&redirect_uri=${redirectUri}&state=${state}`;
-      
-      
-      // 네이버 로그인 페이지로 리다이렉트
-      window.location.href = naverAuthUrl;
-    } catch (err) {
-      console.error('네이버 로그인 오류:', err);
-      setError('로그인 중 오류가 발생했습니다.');
-      setIsLoading(false);
-    }
-  };
+  // const handleNaverLogin = async () => {
+  //   // 네이버 로그인 기능은 검수 완료 후 활성화 예정
+  //   setIsLoading(true);
+  //   setError(null);
+  //   // ... 네이버 로그인 로직
+  //   setIsLoading(false);
+  // };
 
   return (
     <div className={`space-y-4 ${className}`}>
@@ -170,5 +150,7 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onLogin, onClick, onClose, cl
     </div>
   );
 };
+
+// handleNaverLogin 함수는 검수 완료 후 활성화 예정
 
 export default SocialLogin;

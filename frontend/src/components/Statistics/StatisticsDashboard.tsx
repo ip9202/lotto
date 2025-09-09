@@ -3,9 +3,7 @@ import {
   ChartBarIcon, 
   TrophyIcon, 
   StarIcon, 
-  CurrencyDollarIcon,
-  UserGroupIcon,
-  ClockIcon
+  CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 import StatCard from './StatCard';
 import NumberFrequencyChart from './NumberFrequencyChart';

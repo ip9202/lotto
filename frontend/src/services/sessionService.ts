@@ -62,7 +62,7 @@ export async function getSessions(): Promise<ApiResponse<UserSession[]>> {
       data: response.data.sessions
     };
   }
-  return response as ApiResponse<UserSession[]>;
+  return response as unknown as ApiResponse<UserSession[]>;
 }
 
 // 세션 상세 조회
@@ -74,7 +74,7 @@ export async function getSession(sessionId: string): Promise<ApiResponse<UserSes
       data: response.data.session
     };
   }
-  return response as ApiResponse<UserSession>;
+  return response as unknown as ApiResponse<UserSession>;
 }
 
 // 세션 생성
@@ -90,7 +90,7 @@ export async function createSession(sessionData: SessionCreate): Promise<ApiResp
       data: response.data.session
     };
   }
-  return response as ApiResponse<UserSession>;
+  return response as unknown as ApiResponse<UserSession>;
 }
 
 // 세션 수정
@@ -109,7 +109,7 @@ export async function updateSession(
       data: response.data.session
     };
   }
-  return response as ApiResponse<UserSession>;
+  return response as unknown as ApiResponse<UserSession>;
 }
 
 // 세션 삭제
@@ -136,7 +136,7 @@ export async function activateSession(sessionId: string): Promise<ApiResponse<Us
       data: response.data.session
     };
   }
-  return response as ApiResponse<UserSession>;
+  return response as unknown as ApiResponse<UserSession>;
 }
 
 // 세션 비활성화
@@ -151,7 +151,7 @@ export async function deactivateSession(sessionId: string): Promise<ApiResponse<
       data: response.data.session
     };
   }
-  return response as ApiResponse<UserSession>;
+  return response as unknown as ApiResponse<UserSession>;
 }
 
 // 세션 만료 시간 연장
@@ -170,7 +170,7 @@ export async function extendSessionExpiry(
       data: response.data.session
     };
   }
-  return response as ApiResponse<UserSession>;
+  return response as unknown as ApiResponse<UserSession>;
 }
 
 // 세션 통계 조회
@@ -192,7 +192,7 @@ export async function bulkCreateSessions(bulkData: SessionBulkCreate): Promise<A
       data: response.data.sessions
     };
   }
-  return response as ApiResponse<UserSession[]>;
+  return response as unknown as ApiResponse<UserSession[]>;
 }
 
 // 만료된 세션 정리
@@ -212,5 +212,5 @@ export async function searchSessions(query: string): Promise<ApiResponse<UserSes
       data: response.data.sessions
     };
   }
-  return response as ApiResponse<UserSession[]>;
+  return response as unknown as ApiResponse<UserSession[]>;
 }

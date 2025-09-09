@@ -87,30 +87,20 @@
       });
     </script>
     
-    <!-- 🎯 Google AdSense (심사용) -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1813089661807173"
-     crossorigin="anonymous"></script>
-    <script>
-      // AdSense 초기화 (에러 방지)
-      try {
-        (adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (e) {
-        console.log('AdSense initialization skipped:', e.message);
-      }
-    </script>
+    <!-- AdSense는 심사 완료 후 추가 예정 -->
     
     <!-- 🔐 소셜 로그인 SDK -->
     <!-- 카카오 JavaScript SDK (최신 버전) -->
     <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" 
             crossorigin="anonymous"
-            onload="console.log('카카오 SDK 로드 완료'); window.kakaoSDKLoaded = true;"
-            onerror="console.error('카카오 SDK 로드 실패'); window.kakaoSDKLoaded = false;"></script>
+            onload="window.kakaoSDKLoaded = true;"
+            onerror="window.kakaoSDKLoaded = false;"></script>
     
     <!-- 네이버 JavaScript SDK -->
     <script type="text/javascript" 
             src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"
-            onload="console.log('네이버 SDK 로드 완료'); window.naverSDKLoaded = true;"
-            onerror="console.error('네이버 SDK 로드 실패'); window.naverSDKLoaded = false;"></script>
+            onload="window.naverSDKLoaded = true;"
+            onerror="window.naverSDKLoaded = false;"></script>
     
     <style>
       body {
