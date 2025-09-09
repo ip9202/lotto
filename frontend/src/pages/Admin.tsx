@@ -13,7 +13,7 @@ import { useMessageHandler } from '../hooks/admin/useMessageHandler';
 import MessageAlert from '../components/admin/layout/MessageAlert';
 import SystemStatusCard from '../components/admin/layout/SystemStatusCard';
 import UpdateProgressCard from '../components/admin/layout/UpdateProgressCard';
-import SchedulerStatusCard from '../components/admin/layout/SchedulerStatusCard';
+import UnifiedSchedulerCard from '../components/admin/layout/UnifiedSchedulerCard';
 
 interface SystemStatus {
   latest_db_draw: number;
@@ -432,7 +432,7 @@ const Admin: React.FC = () => {
 
         {activeTab === 'dashboard' && (
           <>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* 시스템 상태 */}
               <SystemStatusCard 
                 status={convertToSystemStatus(systemStatus)!} 
@@ -443,21 +443,20 @@ const Admin: React.FC = () => {
               <UpdateProgressCard 
                 progress={convertToUpdateProgress(updateProgress)!} 
                 isLoading={!updateProgress}
+                onTriggerUpdate={handleUpdateData}
               />
-
-              {/* 스케줄러 상태 */}
-              <SchedulerStatusCard 
-                status={convertToSchedulerStatus(schedulerStatus)!} 
-                isLoading={!schedulerStatus}
-                onStartScheduler={handleStartScheduler}
-                onStopScheduler={handleStopScheduler}
+            </div>
+            
+            {/* 통합 스케줄러 관리 */}
+            <div className="mt-8">
+              <UnifiedSchedulerCard 
                 onTriggerUpdate={handleUpdateData}
               />
             </div>
           </>
         )}
 
-        {/* 세션 관리 탭 */}
+        {/* 세션 관리 탭 - 차후 개발 예정 */}
         {activeTab === 'sessions' && (
           <div className="space-y-6">
             {/* 세션 관리 헤더 */}
@@ -466,21 +465,54 @@ const Admin: React.FC = () => {
                 <h2 className="text-2xl font-bold text-gray-900">👥 세션 관리</h2>
                 <p className="text-gray-600">사용자 세션 생성, 수정, 관리</p>
               </div>
-              <button
-                onClick={handleCreateSession}
-                className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-              >
-                <PlusIcon className="w-4 h-4 mr-2" />
-                새 세션 생성
-              </button>
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-medium rounded-full">
+                  차후 개발 예정
+                </span>
+                <button
+                  onClick={handleCreateSession}
+                  disabled
+                  className="flex items-center px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed opacity-50"
+                >
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  새 세션 생성
+                </button>
+              </div>
             </div>
 
-            {/* 세션 목록 */}
-            <SessionList
-              onEdit={handleEditSession}
-              onView={handleViewSession}
-              onRefresh={handleSessionRefresh}
-            />
+            {/* 개발 예정 안내 */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-blue-800">세션 관리 기능 개발 예정</h3>
+                  <div className="mt-2 text-sm text-blue-700">
+                    <p>사용자별 개인화된 추천 설정을 관리하는 세션 관리 기능이 개발 예정입니다.</p>
+                    <ul className="mt-2 list-disc list-inside space-y-1">
+                      <li>사용자별 추천 설정 관리</li>
+                      <li>세션별 추천 수 제한</li>
+                      <li>번호 포함/제외 설정</li>
+                      <li>세션 만료 시간 관리</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 세션 목록 - 비활성화 */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+              <div className="text-center text-gray-500">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <h3 className="mt-2 text-sm font-medium text-gray-900">세션 목록</h3>
+                <p className="mt-1 text-sm text-gray-500">세션 관리 기능이 활성화되면 여기에 세션 목록이 표시됩니다.</p>
+              </div>
+            </div>
           </div>
         )}
       </div>
