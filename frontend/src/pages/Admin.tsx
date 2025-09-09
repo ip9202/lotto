@@ -23,6 +23,23 @@ interface SystemStatus {
   scheduler_status: boolean;
 }
 
+interface Statistics {
+  public_recommendations: {
+    total: number;
+    ai: number;
+    manual: number;
+    member: number;
+    guest: number;
+    recent_7days: number;
+  };
+  personal_recommendations: {
+    total: number;
+    recent_7days: number;
+  };
+  latest_draw: number;
+  total_recommendations: number;
+}
+
 interface UpdateProgress {
   current_status: {
     latest_db_draw: number;
@@ -53,6 +70,7 @@ const Admin: React.FC = () => {
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
   const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus | null>(null);
+  const [statistics, setStatistics] = useState<Statistics | null>(null);
   const [, setIsUpdating] = useState(false);
   const [, setIsStartingScheduler] = useState(false);
   const [, setIsStoppingScheduler] = useState(false);
@@ -95,7 +113,7 @@ const Admin: React.FC = () => {
     if (!scheduler) return null;
     return {
       is_running: scheduler.is_running,
-      total_jobs: 3,
+      total_jobs: 1, // 실제로는 1개의 스케줄러 작업만 있음
       active_jobs: scheduler.is_running ? 1 : 0,
       failed_jobs: 0,
       next_job: {
@@ -144,6 +162,19 @@ const Admin: React.FC = () => {
       }
     } catch (error) {
       console.error('스케줄러 상태 조회 실패:', error);
+    }
+  };
+
+  // 통계 데이터 조회
+  const fetchStatistics = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/statistics`);
+      const data = await response.json();
+      if (data.success) {
+        setStatistics(data.data);
+      }
+    } catch (error) {
+      console.error('통계 데이터 조회 실패:', error);
     }
   };
 
@@ -311,6 +342,7 @@ const Admin: React.FC = () => {
     fetchSystemStatus();
     fetchUpdateProgress();
     fetchSchedulerStatus();
+    fetchStatistics();
     
     // 10초마다 진행 상황 새로고침 (더 자주 업데이트)
     const progressInterval = setInterval(() => {

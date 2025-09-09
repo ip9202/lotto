@@ -21,30 +21,31 @@ class AutoUpdater:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
-        # 기본 스케줄러 설정 (매주 일요일 오전 0시 1분)
+        # 기본 스케줄러 설정 (매주 토요일 오후 9시 20분)
         self.schedule_config = {
-            'day_of_week': 'sun',  # 0=월요일, 6=일요일
-            'hour': 0,
-            'minute': 1
+            'day_of_week': 'sat',  # 0=월요일, 6=일요일
+            'hour': 21,
+            'minute': 20
         }
         
     def start_scheduler(self):
         """스케줄러 시작"""
         if not self.is_running:
-            # 매일 실행되도록 설정 (요일 제한 제거)
+            # 매주 토요일 실행되도록 설정
             self.scheduler.add_job(
                 self.check_and_update_latest_data,
                 CronTrigger(
+                    day_of_week=self.schedule_config['day_of_week'],
                     hour=self.schedule_config['hour'],
                     minute=self.schedule_config['minute']
                 ),
-                id='daily_lotto_update',
-                name=f"매일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} 로또 데이터 업데이트"
+                id='weekly_lotto_update',
+                name=f"매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} 로또 데이터 업데이트"
             )
             
             self.scheduler.start()
             self.is_running = True
-            logger.info(f"자동 업데이트 스케줄러가 시작되었습니다. (매일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d})")
+            logger.info(f"자동 업데이트 스케줄러가 시작되었습니다. (매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d})")
             
     def stop_scheduler(self):
         """스케줄러 중지"""
@@ -67,10 +68,10 @@ class AutoUpdater:
         return day_names.get(day_of_week, '알 수 없음')
     
     def update_schedule(self, day_of_week: str, hour: int, minute: int):
-        """스케줄러 설정 업데이트 (요일은 무시하고 매일 실행)"""
+        """스케줄러 설정 업데이트 (매주 토요일 실행)"""
         # 설정 업데이트
         self.schedule_config = {
-            'day_of_week': day_of_week,  # 설정은 유지하지만 실제로는 사용하지 않음
+            'day_of_week': day_of_week,
             'hour': hour,
             'minute': minute
         }
@@ -79,22 +80,23 @@ class AutoUpdater:
         if self.is_running:
             try:
                 # 기존 작업 제거
-                self.scheduler.remove_job('daily_lotto_update')
+                self.scheduler.remove_job('weekly_lotto_update')
                 logger.info("기존 스케줄러 작업을 제거했습니다.")
             except Exception as e:
                 logger.warning(f"기존 작업 제거 중 오류 (무시됨): {e}")
             
-            # 새 설정으로 작업 추가 (매일 실행)
+            # 새 설정으로 작업 추가 (매주 토요일 실행)
             self.scheduler.add_job(
                 self.check_and_update_latest_data,
                 CronTrigger(
-                    hour=self.schedule_config['hour'],
-                    minute=self.schedule_config['minute']
+                    day_of_week=day_of_week,
+                    hour=hour,
+                    minute=minute
                 ),
-                id='daily_lotto_update',
-                name=f"매일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} 로또 데이터 업데이트"
+                id='weekly_lotto_update',
+                name=f"매주 토요일 {hour:02d}:{minute:02d} 로또 데이터 업데이트"
             )
-            logger.info(f"스케줄러 설정이 업데이트되었습니다. (매일 {hour:02d}:{minute:02d})")
+            logger.info(f"스케줄러 설정이 업데이트되었습니다. (매주 토요일 {hour:02d}:{minute:02d})")
     
     def get_schedule_config(self) -> dict:
         """현재 스케줄러 설정 반환"""

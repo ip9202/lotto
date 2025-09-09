@@ -4,6 +4,7 @@ from .recommendation import Recommendation
 from .session import UserSession
 from .user import User, SocialProvider, SubscriptionPlan
 from .saved_recommendation import SavedRecommendation
+from .public_recommendation import PublicRecommendation
 
 __all__ = [
     "LottoDraw", 
@@ -13,7 +14,8 @@ __all__ = [
     "User",
     "SocialProvider",
     "SubscriptionPlan", 
-    "SavedRecommendation"
+    "SavedRecommendation",
+    "PublicRecommendation"
 ]
 
 

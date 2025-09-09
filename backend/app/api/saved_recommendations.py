@@ -8,6 +8,7 @@ from ..database import get_db
 from ..api.auth import get_current_user
 from ..models.user import User
 from ..models.saved_recommendation import SavedRecommendation
+from ..models.lotto import LottoDraw
 from ..schemas.saved_recommendation import (
     SavedRecommendationCreate, SavedRecommendationUpdate, SavedRecommendationResponse,
     SavedRecommendationList, RecommendationFilter, RecommendationSort,
@@ -15,6 +16,13 @@ from ..schemas.saved_recommendation import (
 )
 
 logger = logging.getLogger(__name__)
+
+def get_current_draw_number(db: Session) -> int:
+    """현재 회차 번호 조회 (개인 저장용)"""
+    latest = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
+    if not latest:
+        raise HTTPException(status_code=404, detail="로또 데이터가 없습니다")
+    return latest.draw_number + 1
 
 router = APIRouter(prefix="/api/v1/saved-recommendations", tags=["저장된 추천번호"])
 
@@ -26,14 +34,29 @@ async def save_recommendation(
 ):
     """AI 추천번호를 개인 저장소에 저장"""
     
-    # 저장 가능 여부 확인
-    if not current_user.can_save_number:
+    # 저장 가능 여부 확인 (주간 10개 제한)
+    from datetime import datetime, timedelta
+    today = datetime.now()
+    days_since_monday = today.weekday()
+    week_start = today - timedelta(days=days_since_monday)
+    week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # 이번 주 저장된 개수 확인
+    weekly_saved_count = db.query(SavedRecommendation).filter(
+        SavedRecommendation.user_id == current_user.id,
+        SavedRecommendation.created_at >= week_start
+    ).count()
+    
+    if weekly_saved_count >= 10:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail=f"저장 한도를 초과했습니다. {'프리미엄으로 업그레이드하세요' if not current_user.is_premium else '시스템 오류'}"
+            detail=f"주간 저장 한도에 도달했습니다. 이번 주 저장: {weekly_saved_count}/10개"
         )
     
     try:
+        # 현재 회차 자동 설정
+        current_draw = get_current_draw_number(db)
+        
         # 새 추천 생성
         saved_rec = SavedRecommendation(
             user_id=current_user.id,
@@ -44,7 +67,7 @@ async def save_recommendation(
             title=recommendation_data.title,
             memo=recommendation_data.memo,
             tags=recommendation_data.tags,
-            target_draw_number=recommendation_data.target_draw_number
+            target_draw_number=current_draw  # 자동으로 현재 회차 설정
         )
         
         db.add(saved_rec)

@@ -47,6 +47,30 @@ async def get_latest_draw(db: Session = Depends(get_db)):
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
 
+@router.get("/current-draw", response_model=APIResponse)
+async def get_current_draw_number(db: Session = Depends(get_db)):
+    """현재 회차 번호 조회 (추천 생성용)"""
+    try:
+        # 최신 회차 조회
+        latest = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
+        if not latest:
+            raise HTTPException(status_code=404, detail="로또 데이터가 없습니다")
+        
+        # 다음 회차는 최신 회차 + 1
+        current_draw_number = latest.draw_number + 1
+        
+        return APIResponse(
+            success=True,
+            data={"draw_number": current_draw_number},
+            message=f"현재 회차: {current_draw_number}회"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"ERROR in get_current_draw_number: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"서버 오류: {str(e)}")
+
 @router.get("/draws", response_model=APIResponse)
 async def get_draws(
     limit: int = 10,

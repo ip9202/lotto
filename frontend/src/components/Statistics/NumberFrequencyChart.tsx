@@ -19,7 +19,16 @@ const NumberFrequencyChart: React.FC<NumberFrequencyChartProps> = ({
   title = "번호별 출현 빈도",
   height = 300
 }) => {
-  // 데이터를 6개씩 그룹화하여 표시
+  // 로또 공 색깔 매핑 (1-10: 노랑, 11-20: 파랑, 21-30: 빨강, 31-40: 검정, 41-45: 초록)
+  const getLottoBallColor = (number: number) => {
+    if (number <= 10) return '#fbbf24'; // 노랑
+    if (number <= 20) return '#3b82f6'; // 파랑
+    if (number <= 30) return '#ef4444'; // 빨강
+    if (number <= 40) return '#374151'; // 검정
+    return '#10b981'; // 초록
+  };
+
+  // 데이터를 6개씩 그룹화하여 표시 (모바일 친화적)
   const groupedData = [];
   for (let i = 0; i < data.length; i += 6) {
     const group = data.slice(i, i + 6);
@@ -28,7 +37,8 @@ const NumberFrequencyChart: React.FC<NumberFrequencyChartProps> = ({
       group: `${groupNumber}구간`,
       numbers: group.map(item => ({
         ...item,
-        name: item.number.toString()
+        name: item.number.toString(),
+        color: getLottoBallColor(item.number)
       }))
     });
   }
@@ -72,13 +82,19 @@ const NumberFrequencyChart: React.FC<NumberFrequencyChartProps> = ({
                 <YAxis 
                   tick={{ fontSize: 12 }}
                   tickLine={{ stroke: '#e0e0e0' }}
+                  domain={[0, 'dataMax + 20']}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar 
-                  dataKey="frequency" 
-                  fill="#3b82f6"
-                  radius={[2, 2, 0, 0]}
-                />
+                {group.numbers.map((item, index) => (
+                  <Bar
+                    key={index}
+                    dataKey="frequency"
+                    fill={item.color}
+                    radius={[2, 2, 0, 0]}
+                    stroke={item.isHot ? '#dc2626' : item.isCold ? '#2563eb' : 'none'}
+                    strokeWidth={item.isHot || item.isCold ? 2 : 0}
+                  />
+                ))}
               </BarChart>
             </ResponsiveContainer>
           </div>

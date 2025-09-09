@@ -98,13 +98,13 @@ const UserProfile: React.FC = () => {
           <div className="px-4 py-3 border-b border-gray-100">
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">오늘 추천 생성</span>
+                <span className="text-sm text-gray-600">1189회 추천생성</span>
                 <span className="text-sm font-medium">
-                  {user.daily_recommendation_count} / {user.is_premium ? '∞' : '5'}
+                  {user.daily_recommendation_count}개
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">저장된 번호</span>
+                <span className="text-sm text-gray-600">1189회 저장된 번호</span>
                 <span className="text-sm font-medium">
                   {user.total_saved_numbers} / {user.is_premium ? '∞' : '10'}
                 </span>
@@ -129,7 +129,13 @@ const UserProfile: React.FC = () => {
             <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
               내 추천번호
             </button>
-            <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">
+            <button 
+              onClick={() => {
+                navigate('/winning-history');
+                setIsMenuOpen(false);
+              }}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+            >
               당첨 이력
             </button>
             <button 

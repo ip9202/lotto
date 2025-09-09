@@ -15,6 +15,7 @@ import { UnifiedAuthProvider, useUnifiedAuth } from './contexts/UnifiedAuthConte
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookieSettings from './pages/CookieSettings';
 import Terms from './pages/Terms';
+import WinningHistory from './pages/WinningHistory';
 // import History from './pages/History'; // 이전기록 기능 개발 중 - 일시 비활성화
 
 // 전역 콜백 처리 컴포넌트
@@ -137,6 +138,7 @@ const App: React.FC = () => {
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/cookie-settings" element={<CookieSettings />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/winning-history" element={<WinningHistory />} />
           {/* <Route path="/history" element={<History />} /> 이전기록 기능 개발 중 - 일시 비활성화 */}
         </Routes>
       </Layout>

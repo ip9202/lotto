@@ -16,6 +16,10 @@ from .saved_recommendation import (
     SavedRecommendationCreate, SavedRecommendationUpdate, SavedRecommendationResponse,
     SavedRecommendationList, RecommendationStats
 )
+from .public_recommendation import (
+    PublicRecommendationCreate, PublicRecommendationResponse, 
+    PublicRecommendationList, PublicRecommendationStats
+)
 
 __all__ = [
     "LottoNumber", 
@@ -39,7 +43,11 @@ __all__ = [
     "SavedRecommendationUpdate",
     "SavedRecommendationResponse",
     "SavedRecommendationList",
-    "RecommendationStats"
+    "RecommendationStats",
+    "PublicRecommendationCreate",
+    "PublicRecommendationResponse",
+    "PublicRecommendationList",
+    "PublicRecommendationStats"
 ]
 
 

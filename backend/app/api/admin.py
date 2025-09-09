@@ -9,6 +9,8 @@ from datetime import datetime
 
 from ..database import get_db
 from ..services.auto_updater import auto_updater
+from ..models.public_recommendation import PublicRecommendation
+from ..models.saved_recommendation import SavedRecommendation
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -348,3 +350,67 @@ async def clear_test_data(db: Session = Depends(get_db)) -> Dict[str, Any]:
         db.rollback()
         logger.error(f"테스트 데이터 정리 중 오류: {str(e)}")
         raise HTTPException(status_code=500, detail=f"데이터 정리 실패: {str(e)}")
+
+@router.get("/statistics")
+async def get_statistics(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """실제 통계 데이터 조회"""
+    try:
+        # 공공 추천 데이터 통계
+        total_public_recommendations = db.query(PublicRecommendation).count()
+        ai_recommendations = db.query(PublicRecommendation).filter(
+            PublicRecommendation.generation_method == "ai"
+        ).count()
+        manual_recommendations = db.query(PublicRecommendation).filter(
+            PublicRecommendation.generation_method == "manual"
+        ).count()
+        member_recommendations = db.query(PublicRecommendation).filter(
+            PublicRecommendation.user_type == "member"
+        ).count()
+        guest_recommendations = db.query(PublicRecommendation).filter(
+            PublicRecommendation.user_type == "guest"
+        ).count()
+        
+        # 개인 저장 데이터 통계
+        total_personal_recommendations = db.query(SavedRecommendation).count()
+        
+        # 최근 7일간 통계
+        from datetime import datetime, timedelta
+        week_ago = datetime.now() - timedelta(days=7)
+        
+        recent_public = db.query(PublicRecommendation).filter(
+            PublicRecommendation.created_at >= week_ago
+        ).count()
+        
+        recent_personal = db.query(SavedRecommendation).filter(
+            SavedRecommendation.created_at >= week_ago
+        ).count()
+        
+        # 최신 회차 정보
+        from ..models.lotto import LottoDraw
+        latest_draw = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
+        latest_draw_number = latest_draw.draw_number if latest_draw else 0
+        
+        return {
+            "success": True,
+            "data": {
+                "public_recommendations": {
+                    "total": total_public_recommendations,
+                    "ai": ai_recommendations,
+                    "manual": manual_recommendations,
+                    "member": member_recommendations,
+                    "guest": guest_recommendations,
+                    "recent_7days": recent_public
+                },
+                "personal_recommendations": {
+                    "total": total_personal_recommendations,
+                    "recent_7days": recent_personal
+                },
+                "latest_draw": latest_draw_number,
+                "total_recommendations": total_public_recommendations + total_personal_recommendations
+            },
+            "message": "통계 데이터를 조회했습니다."
+        }
+        
+    except Exception as e:
+        logger.error(f"통계 데이터 조회 중 오류: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"통계 데이터 조회 실패: {str(e)}")
