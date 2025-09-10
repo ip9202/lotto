@@ -76,11 +76,32 @@ const Admin: React.FC = () => {
   const [, setIsStoppingScheduler] = useState(false);
   
   // 세션 관리 상태
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'sessions'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'sessions' | 'dummy-data'>('dashboard');
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [showSessionDetail, setShowSessionDetail] = useState(false);
   const [selectedSession, setSelectedSession] = useState<UserSession | null>(null);
   const [sessionFormMode, setSessionFormMode] = useState<'create' | 'edit'>('create');
+  
+  // 더미 데이터 생성 상태
+  const [drawNumbers, setDrawNumbers] = useState<Array<{
+    draw_number: number;
+    draw_date: string;
+    numbers: number[];
+    bonus_number: number;
+  }>>([]);
+  const [dummyDataForm, setDummyDataForm] = useState({
+    draw_number: 0,
+    total_count: 1000,
+    rank_distribution: {
+      1: 2,
+      2: 15,
+      3: 150,
+      4: 2000,
+      5: 5000
+    }
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationResult, setGenerationResult] = useState<any>(null);
 
   // 데이터 변환 유틸리티 함수들
   const convertToSystemStatus = (status: SystemStatus | null) => {
@@ -337,12 +358,77 @@ const Admin: React.FC = () => {
     // 세션 목록 새로고침 (SessionList 컴포넌트에서 처리)
   };
 
+  // 더미 데이터 생성 관련 함수들
+  const fetchDrawNumbers = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/draw-numbers`);
+      const data = await response.json();
+      if (data.success) {
+        setDrawNumbers(data.data.draws);
+        if (data.data.draws.length > 0 && dummyDataForm.draw_number === 0) {
+          setDummyDataForm(prev => ({
+            ...prev,
+            draw_number: data.data.draws[0].draw_number
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('회차 목록 조회 실패:', error);
+    }
+  };
+
+  const handleGenerateDummyData = async () => {
+    setIsGenerating(true);
+    clearMessage();
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/dummy-recommendations/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dummyDataForm),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setGenerationResult(data.data);
+        showSuccess(data.message);
+      } else {
+        showError(data.detail || '더미 데이터 생성에 실패했습니다.');
+      }
+    } catch (error) {
+      showError('네트워크 오류가 발생했습니다.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleDummyDataFormChange = (field: string, value: any) => {
+    setDummyDataForm(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleRankDistributionChange = (rank: number, value: number) => {
+    setDummyDataForm(prev => ({
+      ...prev,
+      rank_distribution: {
+        ...prev.rank_distribution,
+        [rank]: value
+      }
+    }));
+  };
+
   // 초기 데이터 로드
   useEffect(() => {
     fetchSystemStatus();
     fetchUpdateProgress();
     fetchSchedulerStatus();
     fetchStatistics();
+    fetchDrawNumbers();
     
     // 10초마다 진행 상황 새로고침 (더 자주 업데이트)
     const progressInterval = setInterval(() => {
@@ -446,8 +532,18 @@ const Admin: React.FC = () => {
                 📊 시스템 대시보드
               </button>
               <button
+                onClick={() => setActiveTab('dummy-data')}
+                className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
+                  activeTab === 'dummy-data'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                🎲 더미 데이터 생성
+              </button>
+              <button
                 onClick={() => setActiveTab('sessions')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                className={`py-2 px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                   activeTab === 'sessions'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -486,6 +582,164 @@ const Admin: React.FC = () => {
               />
             </div>
           </>
+        )}
+
+        {/* 더미 데이터 생성 탭 */}
+        {activeTab === 'dummy-data' && (
+          <div className="space-y-6">
+            {/* 더미 데이터 생성 헤더 */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">🎲 더미 데이터 생성</h2>
+                <p className="text-gray-600">통계 데이터 확보를 위한 더미 추천 데이터 생성</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* 더미 데이터 생성 폼 */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">생성 설정</h3>
+                
+                <div className="space-y-4">
+                  {/* 회차 선택 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      회차 선택
+                    </label>
+                    <select
+                      value={dummyDataForm.draw_number}
+                      onChange={(e) => handleDummyDataFormChange('draw_number', parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={0}>회차를 선택하세요</option>
+                      {drawNumbers.map((draw) => (
+                        <option key={draw.draw_number} value={draw.draw_number}>
+                          {draw.draw_number}회차 ({draw.draw_date})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* 총 생성 수 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      총 생성 수
+                    </label>
+                    <input
+                      type="number"
+                      value={dummyDataForm.total_count}
+                      onChange={(e) => handleDummyDataFormChange('total_count', parseInt(e.target.value))}
+                      min="1"
+                      max="10000"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* 등수별 분포 설정 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      등수별 분포 설정
+                    </label>
+                    <div className="space-y-2">
+                      {[1, 2, 3, 4, 5].map((rank) => (
+                        <div key={rank} className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600">
+                            {rank}등 ({rank === 1 ? '6개 일치' : rank === 2 ? '5개+보너스' : rank === 3 ? '5개 일치' : rank === 4 ? '4개 일치' : '3개 일치'})
+                          </span>
+                          <input
+                            type="number"
+                            value={dummyDataForm.rank_distribution[rank] || 0}
+                            onChange={(e) => handleRankDistributionChange(rank, parseInt(e.target.value))}
+                            min="0"
+                            max={dummyDataForm.total_count}
+                            className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      미당첨: {dummyDataForm.total_count - Object.values(dummyDataForm.rank_distribution).reduce((a, b) => a + b, 0)}개
+                    </div>
+                  </div>
+
+                  {/* 생성 버튼 */}
+                  <button
+                    onClick={handleGenerateDummyData}
+                    disabled={isGenerating || dummyDataForm.draw_number === 0}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {isGenerating ? '생성 중...' : '더미 데이터 생성'}
+                  </button>
+                </div>
+              </div>
+
+              {/* 생성 결과 미리보기 */}
+              <div className="bg-white rounded-lg shadow-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">생성 결과</h3>
+                
+                {generationResult ? (
+                  <div className="space-y-4">
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span className="text-green-800 font-medium">생성 완료!</span>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">총 생성 수:</span>
+                        <span className="text-sm font-medium">{generationResult.created_count}개</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">생성 기간:</span>
+                        <span className="text-sm font-medium">
+                          {generationResult.start_date} ~ {generationResult.end_date}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">일별 생성 분포:</h4>
+                      <div className="space-y-1">
+                        {Object.entries(generationResult.daily_stats).map(([date, count]) => (
+                          <div key={date} className="flex justify-between text-xs">
+                            <span className="text-gray-600">{date}</span>
+                            <span className="font-medium">{count}개</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-2">등수별 분포:</h4>
+                      <div className="space-y-1">
+                        {Object.entries(generationResult.rank_distribution).map(([rank, count]) => (
+                          <div key={rank} className="flex justify-between text-xs">
+                            <span className="text-gray-600">{rank}등:</span>
+                            <span className="font-medium">{count}개</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-600">미당첨:</span>
+                          <span className="font-medium">{generationResult.no_win_count}개</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center text-gray-500 py-8">
+                    <svg className="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <p className="text-sm">더미 데이터를 생성하면 결과가 여기에 표시됩니다.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         )}
 
         {/* 세션 관리 탭 - 차후 개발 예정 */}

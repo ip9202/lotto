@@ -112,11 +112,24 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 - 당첨 비교 시스템
 - 통계 대시보드
 - 관리자 기능
+- **더미 데이터 생성 시스템** (2025-09-10 오류 수정 완료)
+
+### 더미 데이터 생성 기능 상세
+- 관리자가 회차별로 더미 추천 데이터 대량 생성 가능
+- 등수별 분포 설정 (1등~5등, 미당첨)
+- 통계 대시보드에서 더미 데이터 별도 통계 확인
+- API: `/admin/dummy-recommendations/generate`, `/admin/dummy-recommendations/stats`
 
 ### 개발 우선순위
 1. **유료 서비스 시스템**
 2. **모바일 최적화 (PWA)**
 3. **고급 분석 기능**
+
+### 최근 수정 사항 (2025-09-10)
+**더미 데이터 생성 기능 오류 3건 해결**:
+- `created_at` 필드 중복 설정 문제
+- `matched_numbers` 타입 불일치 (JSON vs integer[])
+- SQLAlchemy `func` 사용법 오류
 
 ---
 

@@ -94,41 +94,49 @@ const UserProfile: React.FC = () => {
             </div>
           </div>
 
-          {/* 사용량 정보 */}
-          <div className="px-4 py-3 border-b border-gray-100">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">내가 저장한 번호 세트</span>
-                <span className="text-sm font-medium">
-                  {user.total_saved_numbers || 0} / 10
-                </span>
-              </div>
-              <div className="text-xs text-gray-500 text-right">
-                무료회원은 1주일에 10개가 한도
+          {/* 사용량 정보 - 일반 사용자만 표시 */}
+          {user.role !== 'admin' && (
+            <div className="px-4 py-3 border-b border-gray-100">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">내가 저장한 번호 세트</span>
+                  <span className="text-sm font-medium">
+                    {user.total_saved_numbers || 0} / 10
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 text-right">
+                  무료회원은 1주일에 10개가 한도
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* 메뉴 항목들 */}
           <div className="py-1">
-            <button 
-              onClick={() => {
-                navigate('/saved-numbers');
-                setIsMenuOpen(false);
-              }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              내 저장번호
-            </button>
-            <button 
-              onClick={() => {
-                navigate('/winning-history');
-                setIsMenuOpen(false);
-              }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-            >
-              당첨 이력
-            </button>
+            {/* 일반 사용자 메뉴 */}
+            {user.role !== 'admin' && (
+              <>
+                <button 
+                  onClick={() => {
+                    navigate('/saved-numbers');
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  내 저장번호
+                </button>
+                <button 
+                  onClick={() => {
+                    navigate('/winning-history');
+                    setIsMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  당첨 이력
+                </button>
+              </>
+            )}
+            
             <button 
               onClick={() => {
                 navigate('/profile-settings');
@@ -157,7 +165,7 @@ const UserProfile: React.FC = () => {
               </button>
             )}
             
-            {!user.is_premium && (
+            {!user.is_premium && user.role !== 'admin' && (
               <button className="w-full text-left px-4 py-2 text-sm text-orange-600 hover:bg-orange-50">
                 프리미엄 업그레이드
               </button>

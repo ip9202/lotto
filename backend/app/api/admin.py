@@ -1,19 +1,35 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import Dict, Any
+from typing import Dict, Any, List
 import logging
 import requests
 from bs4 import BeautifulSoup
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
+from pydantic import BaseModel
 
 from ..database import get_db
 from ..services.auto_updater import auto_updater
 from ..models.public_recommendation import PublicRecommendation
 from ..models.saved_recommendation import SavedRecommendation
+from ..models.lotto import LottoDraw
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+# 더미 데이터 생성 요청 스키마
+class DummyDataRequest(BaseModel):
+    draw_number: int
+    total_count: int
+    rank_distribution: Dict[int, int]  # {1: 2, 2: 15, 3: 150, 4: 2000, 5: 5000}
+
+# 회차 정보 응답 스키마
+class DrawNumberResponse(BaseModel):
+    draw_number: int
+    draw_date: str
+    numbers: List[int]
+    bonus_number: int
 
 @router.get("/check-latest-data")
 async def check_latest_data(db: Session = Depends(get_db)) -> Dict[str, Any]:
@@ -414,3 +430,274 @@ async def get_statistics(db: Session = Depends(get_db)) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"통계 데이터 조회 중 오류: {str(e)}")
         raise HTTPException(status_code=500, detail=f"통계 데이터 조회 실패: {str(e)}")
+
+@router.get("/draw-numbers")
+async def get_draw_numbers(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """회차 목록 조회 (최근 100회차)"""
+    try:
+        # 최근 100회차 조회
+        draws = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).limit(100).all()
+        
+        draw_list = []
+        for draw in draws:
+            draw_list.append({
+                "draw_number": draw.draw_number,
+                "draw_date": draw.draw_date.strftime("%Y-%m-%d") if draw.draw_date else None,
+                "numbers": [draw.number_1, draw.number_2, draw.number_3, draw.number_4, draw.number_5, draw.number_6],
+                "bonus_number": draw.bonus_number
+            })
+        
+        return {
+            "success": True,
+            "data": {
+                "draws": draw_list,
+                "total_count": len(draw_list)
+            },
+            "message": "회차 목록을 조회했습니다."
+        }
+        
+    except Exception as e:
+        logger.error(f"회차 목록 조회 중 오류: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"회차 목록 조회 실패: {str(e)}")
+
+@router.post("/dummy-recommendations/generate")
+async def generate_dummy_recommendations(
+    request: DummyDataRequest,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """더미 추천 데이터 생성"""
+    try:
+        # 회차 존재 확인
+        draw = db.query(LottoDraw).filter(LottoDraw.draw_number == request.draw_number).first()
+        if not draw:
+            raise HTTPException(status_code=404, detail=f"회차 {request.draw_number}를 찾을 수 없습니다.")
+        
+        # 등수별 분포 검증
+        total_distributed = sum(request.rank_distribution.values())
+        if total_distributed > request.total_count:
+            raise HTTPException(status_code=400, detail="등수별 분포 합계가 총 생성 수를 초과합니다.")
+        
+        # 미당첨 개수 계산
+        no_win_count = request.total_count - total_distributed
+        
+        # 간단한 더미 데이터 생성 (테스트용)
+        created_count = 0
+        
+        # 실제 당첨번호
+        winning_numbers = [draw.number_1, draw.number_2, draw.number_3, draw.number_4, draw.number_5, draw.number_6]
+        bonus_number = draw.bonus_number
+        
+        # 등수별 데이터 생성
+        for rank, count in request.rank_distribution.items():
+            if count > 0:
+                for i in range(count):
+                    # 간단한 번호 조합 생성
+                    if rank == 1:
+                        numbers = winning_numbers.copy()
+                    elif rank == 2:
+                        numbers = winning_numbers[:5] + [bonus_number]
+                    else:
+                        numbers = random.sample(range(1, 46), 6)
+                    
+                    # 더미 데이터 저장
+                    dummy_data = PublicRecommendation(
+                        numbers=numbers,
+                        generation_method="ai",
+                        confidence_score=random.randint(70, 95),
+                        analysis_data={"is_dummy": True, "rank": rank},
+                        draw_number=request.draw_number,
+                        user_type="member",
+                        is_dummy=True,
+                        winning_rank=rank,
+                        matched_count=rank if rank <= 5 else 0,
+                        matched_numbers=numbers[:rank] if rank <= 5 else [],
+                        winning_amount=1000000 if rank == 1 else 0
+                    )
+                    
+                    db.add(dummy_data)
+                    created_count += 1
+        
+        # 미당첨 데이터 생성
+        for i in range(no_win_count):
+            numbers = random.sample(range(1, 46), 6)
+            
+            dummy_data = PublicRecommendation(
+                numbers=numbers,
+                generation_method="ai",
+                confidence_score=random.randint(50, 85),
+                analysis_data={"is_dummy": True, "rank": 0},
+                draw_number=request.draw_number,
+                user_type="member",
+                is_dummy=True,
+                winning_rank=None,
+                matched_count=0,
+                matched_numbers=[],
+                winning_amount=0
+            )
+            
+            db.add(dummy_data)
+            created_count += 1
+        
+        db.commit()
+        
+        return {
+            "success": True,
+            "data": {
+                "created_count": created_count,
+                "draw_number": request.draw_number,
+                "rank_distribution": request.rank_distribution,
+                "no_win_count": no_win_count
+            },
+            "message": f"{created_count}개의 더미 데이터가 생성되었습니다."
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"더미 데이터 생성 중 오류: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"더미 데이터 생성 실패: {str(e)}")
+
+@router.get("/dummy-recommendations/stats")
+async def get_dummy_recommendations_stats(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """더미 데이터 통계 조회"""
+    try:
+        # 더미 데이터 통계
+        total_dummy = db.query(PublicRecommendation).filter(PublicRecommendation.is_dummy == True).count()
+        
+        # 등수별 통계
+        rank_stats = {}
+        for rank in range(1, 6):
+            count = db.query(PublicRecommendation).filter(
+                PublicRecommendation.is_dummy == True,
+                PublicRecommendation.winning_rank == rank
+            ).count()
+            rank_stats[f"rank_{rank}"] = count
+        
+        # 미당첨 통계
+        no_win_count = db.query(PublicRecommendation).filter(
+            PublicRecommendation.is_dummy == True,
+            PublicRecommendation.winning_rank.is_(None)
+        ).count()
+        rank_stats["no_win"] = no_win_count
+        
+        # 회차별 통계
+        from sqlalchemy import func
+        draw_stats = db.query(
+            PublicRecommendation.draw_number,
+            func.count(PublicRecommendation.id).label('count')
+        ).filter(
+            PublicRecommendation.is_dummy == True
+        ).group_by(PublicRecommendation.draw_number).all()
+        
+        return {
+            "success": True,
+            "data": {
+                "total_dummy": total_dummy,
+                "rank_distribution": rank_stats,
+                "draw_stats": [{"draw_number": stat.draw_number, "count": stat.count} for stat in draw_stats]
+            },
+            "message": "더미 데이터 통계를 조회했습니다."
+        }
+        
+    except Exception as e:
+        logger.error(f"더미 데이터 통계 조회 중 오류: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"더미 데이터 통계 조회 실패: {str(e)}")
+
+# 헬퍼 함수들
+def _distribute_daily_counts(total_count: int, start_date: datetime, end_date: datetime) -> List[int]:
+    """일별 랜덤 생성 수 분배"""
+    days = 7
+    daily_counts = []
+    
+    remaining = total_count
+    for i in range(days - 1):
+        max_daily = max(1, remaining // (days - i) * 2)
+        daily_count = random.randint(1, min(max_daily, remaining))
+        daily_counts.append(daily_count)
+        remaining -= daily_count
+    
+    daily_counts.append(remaining)
+    random.shuffle(daily_counts)
+    
+    return daily_counts
+
+def _random_date_in_week(start_date: datetime, end_date: datetime, daily_counts: List[int]) -> datetime:
+    """주간 내 랜덤 날짜 생성"""
+    # 일별로 분배된 개수에 따라 날짜 선택
+    day_index = random.choices(range(7), weights=daily_counts, k=1)[0]
+    target_date = start_date + timedelta(days=day_index)
+    
+    # 해당 날짜 내 랜덤 시간 (9시 ~ 20시)
+    hour = random.randint(9, 20)
+    minute = random.randint(0, 59)
+    second = random.randint(0, 59)
+    
+    return datetime(target_date.year, target_date.month, target_date.day, hour, minute, second)
+
+def _generate_winning_combination(winning_numbers: List[int], bonus_number: int, rank: int) -> List[int]:
+    """등수별 번호 조합 생성"""
+    if rank == 1:  # 1등: 당첨번호와 동일
+        return winning_numbers.copy()
+    
+    elif rank == 2:  # 2등: 5개 일치 + 보너스번호 포함
+        return winning_numbers[:5] + [bonus_number]
+    
+    elif rank == 3:  # 3등: 5개 일치 (보너스번호 제외)
+        other_number = random.choice([n for n in range(1, 46) if n not in winning_numbers])
+        return winning_numbers[:5] + [other_number]
+    
+    elif rank == 4:  # 4등: 4개 일치
+        other_numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 2)
+        return winning_numbers[:4] + other_numbers
+    
+    elif rank == 5:  # 5등: 3개 일치
+        other_numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 3)
+        return winning_numbers[:3] + other_numbers
+    
+    else:  # 미당첨: 0-2개 일치
+        match_count = random.randint(0, 2)
+        if match_count == 0:
+            return random.sample(range(1, 46), 6)
+        else:
+            matched = random.sample(winning_numbers, match_count)
+            other_numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6 - match_count)
+            return matched + other_numbers
+
+def _get_matched_count(rank: int) -> int:
+    """등수별 일치 개수"""
+    if rank == 1:
+        return 6
+    elif rank == 2:
+        return 5
+    elif rank == 3:
+        return 5
+    elif rank == 4:
+        return 4
+    elif rank == 5:
+        return 3
+    else:
+        return 0
+
+def _get_matched_numbers(numbers: List[int], winning_numbers: List[int], rank: int) -> List[int]:
+    """일치한 번호들"""
+    if rank == 0:  # 미당첨
+        return []
+    
+    matched = []
+    for num in numbers:
+        if num in winning_numbers:
+            matched.append(num)
+    
+    return matched
+
+def _get_winning_amount(rank: int) -> int:
+    """등수별 당첨 금액 (예시)"""
+    amounts = {
+        1: 2000000000,  # 20억
+        2: 50000000,    # 5천만
+        3: 1500000,     # 150만
+        4: 50000,       # 5만
+        5: 5000         # 5천
+    }
+    return amounts.get(rank, 0)

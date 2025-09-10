@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON, Index
+from sqlalchemy import Column, Integer, String, DateTime, JSON, Index, Boolean, BigInteger, ARRAY
 from sqlalchemy.sql import func
 from ..database import Base
 
@@ -15,12 +15,21 @@ class PublicRecommendation(Base):
     user_type = Column(String(10), nullable=False)  # 'member' or 'guest'
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
+    # 더미 데이터 관련 컬럼들
+    is_dummy = Column(Boolean, default=False, nullable=False)  # 더미 데이터 여부
+    winning_rank = Column(Integer, nullable=True)  # 당첨 등수 (1-5, null=미당첨)
+    matched_count = Column(Integer, default=0)  # 일치한 번호 개수
+    matched_numbers = Column(ARRAY(Integer), nullable=True)  # 일치한 번호들
+    winning_amount = Column(BigInteger, default=0)  # 당첨 금액
+    
     # 인덱스 생성
     __table_args__ = (
         Index('idx_public_draw_number', 'draw_number'),
         Index('idx_public_user_type', 'user_type'),
         Index('idx_public_created_at', 'created_at'),
         Index('idx_public_method', 'generation_method'),
+        Index('idx_public_is_dummy', 'is_dummy'),
+        Index('idx_public_winning_rank', 'winning_rank'),
     )
     
     def __repr__(self):
