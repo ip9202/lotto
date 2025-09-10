@@ -123,3 +123,38 @@ return (
 ✅ 더미 데이터 생성 API 정상 작동  
 ✅ 더미 데이터 통계 조회 API 정상 작동  
 ✅ 관리자 페이지 연동 완료
+
+---
+
+### 4. 당첨번호 조합 생성 로직 정확성 수정 (추가)
+- **오류**: 3등, 4등, 5등에서 `winning_numbers[:n]` 순서대로 사용하여 부정확한 조합 생성
+- **원인**: 실제로는 당첨번호 중에서 랜덤하게 선택해야 함
+- **수정**: `random.sample(winning_numbers, n)`으로 정확한 랜덤 선택 적용
+
+#### 수정 내용
+```python
+# 수정 전 (부정확)
+if rank == 3:
+    numbers = winning_numbers[:5] + [other_number]
+
+# 수정 후 (정확)
+if rank == 3:
+    base_numbers = random.sample(winning_numbers, 5)
+    numbers = base_numbers + random.sample(other_numbers, 1)
+```
+
+#### 추가 수정사항
+- `Query`, `Optional` import 누락 해결
+- 미당첨 데이터도 정확한 일치 개수(0-2개) 생성
+- 모든 등수별 당첨번호 조합 정확성 보장
+
+### 최종 테스트 결과
+```bash
+# 1187회차 100개 더미 데이터 생성 성공
+POST /admin/dummy-recommendations/generate
+{"success": true, "created_count": 100}
+
+# 통계 확인: 정확한 등수별 분포
+GET /admin/dummy-recommendations/stats
+{"rank_1": 4, "rank_2": 8, "rank_3": 18, "rank_4": 34, "rank_5": 50}
+```

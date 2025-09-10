@@ -126,10 +126,16 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 3. **고급 분석 기능**
 
 ### 최근 수정 사항 (2025-09-10)
-**더미 데이터 생성 기능 오류 3건 해결**:
-- `created_at` 필드 중복 설정 문제
-- `matched_numbers` 타입 불일치 (JSON vs integer[])
-- SQLAlchemy `func` 사용법 오류
+**더미 데이터 생성 기능 오류 4건 해결**:
+- `created_at` 필드 중복 설정 문제 ✅
+- `matched_numbers` 타입 불일치 (JSON vs integer[]) ✅
+- SQLAlchemy `func` 사용법 오류 ✅
+- **당첨번호 조합 생성 로직 부정확 문제 ✅** (추가 수정)
+
+**당첨번호 조합 정확성 수정**:
+- 3등, 4등, 5등에서 `winning_numbers[:n]` 순서 사용 → `random.sample()` 랜덤 선택
+- 미당첨 데이터도 정확한 일치 개수(0-2개)로 생성
+- `Query`, `Optional` import 누락 문제 해결
 
 ---
 
