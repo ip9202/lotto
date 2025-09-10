@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import logging
 import requests
 from bs4 import BeautifulSoup
@@ -368,43 +368,63 @@ async def clear_test_data(db: Session = Depends(get_db)) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"데이터 정리 실패: {str(e)}")
 
 @router.get("/statistics")
-async def get_statistics(db: Session = Depends(get_db)) -> Dict[str, Any]:
+async def get_statistics(
+    draw_number: Optional[int] = Query(None, description="회차 번호 (지정하지 않으면 전체)"),
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
     """실제 통계 데이터 조회"""
     try:
-        # 공공 추천 데이터 통계
-        total_public_recommendations = db.query(PublicRecommendation).count()
-        ai_recommendations = db.query(PublicRecommendation).filter(
+        # 공공 추천 데이터 통계 (회차 필터 적용)
+        public_query = db.query(PublicRecommendation)
+        if draw_number:
+            public_query = public_query.filter(PublicRecommendation.draw_number == draw_number)
+        
+        total_public_recommendations = public_query.count()
+        ai_recommendations = public_query.filter(
             PublicRecommendation.generation_method == "ai"
         ).count()
-        manual_recommendations = db.query(PublicRecommendation).filter(
+        manual_recommendations = public_query.filter(
             PublicRecommendation.generation_method == "manual"
         ).count()
-        member_recommendations = db.query(PublicRecommendation).filter(
+        member_recommendations = public_query.filter(
             PublicRecommendation.user_type == "member"
         ).count()
-        guest_recommendations = db.query(PublicRecommendation).filter(
+        guest_recommendations = public_query.filter(
             PublicRecommendation.user_type == "guest"
         ).count()
         
-        # 개인 저장 데이터 통계
-        total_personal_recommendations = db.query(SavedRecommendation).count()
+        # 개인 저장 데이터 통계 (회차 필터 적용)
+        personal_query = db.query(SavedRecommendation)
+        if draw_number:
+            personal_query = personal_query.filter(SavedRecommendation.target_draw_number == draw_number)
         
-        # 최근 7일간 통계
+        total_personal_recommendations = personal_query.count()
+        
+        # 최근 7일간 통계 (회차 필터 적용)
         from datetime import datetime, timedelta
         week_ago = datetime.now() - timedelta(days=7)
         
-        recent_public = db.query(PublicRecommendation).filter(
+        recent_public_query = db.query(PublicRecommendation).filter(
             PublicRecommendation.created_at >= week_ago
-        ).count()
+        )
+        if draw_number:
+            recent_public_query = recent_public_query.filter(PublicRecommendation.draw_number == draw_number)
+        recent_public = recent_public_query.count()
         
-        recent_personal = db.query(SavedRecommendation).filter(
+        recent_personal_query = db.query(SavedRecommendation).filter(
             SavedRecommendation.created_at >= week_ago
-        ).count()
+        )
+        if draw_number:
+            recent_personal_query = recent_personal_query.filter(SavedRecommendation.target_draw_number == draw_number)
+        recent_personal = recent_personal_query.count()
         
         # 최신 회차 정보
         from ..models.lotto import LottoDraw
-        latest_draw = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
-        latest_draw_number = latest_draw.draw_number if latest_draw else 0
+        if draw_number:
+            latest_draw_number = draw_number
+        else:
+            latest_draw = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
+            latest_draw_number = latest_draw.draw_number if latest_draw else 0
         
         return {
             "success": True,
@@ -491,15 +511,53 @@ async def generate_dummy_recommendations(
         for rank, count in request.rank_distribution.items():
             if count > 0:
                 for i in range(count):
-                    # 간단한 번호 조합 생성
+                    # 등수별 번호 조합 생성 (정확한 당첨번호 매칭)
                     if rank == 1:
+                        # 1등: 6개 모두 일치
                         numbers = winning_numbers.copy()
+                        matched_numbers = winning_numbers.copy()
+                        matched_count = 6
                     elif rank == 2:
-                        numbers = winning_numbers[:5] + [bonus_number]
+                        # 2등: 5개 일치 + 보너스 번호
+                        base_numbers = random.sample(winning_numbers, 5)
+                        numbers = base_numbers + [bonus_number]
+                        matched_numbers = base_numbers
+                        matched_count = 5
+                    elif rank == 3:
+                        # 3등: 5개 일치 (보너스 번호 제외)
+                        base_numbers = random.sample(winning_numbers, 5)
+                        other_numbers = [n for n in range(1, 46) if n not in winning_numbers and n != bonus_number]
+                        numbers = base_numbers + random.sample(other_numbers, 1)
+                        matched_numbers = base_numbers
+                        matched_count = 5
+                    elif rank == 4:
+                        # 4등: 4개 일치
+                        base_numbers = random.sample(winning_numbers, 4)
+                        other_numbers = [n for n in range(1, 46) if n not in winning_numbers]
+                        numbers = base_numbers + random.sample(other_numbers, 2)
+                        matched_numbers = base_numbers
+                        matched_count = 4
+                    elif rank == 5:
+                        # 5등: 3개 일치
+                        base_numbers = random.sample(winning_numbers, 3)
+                        other_numbers = [n for n in range(1, 46) if n not in winning_numbers]
+                        numbers = base_numbers + random.sample(other_numbers, 3)
+                        matched_numbers = base_numbers
+                        matched_count = 3
                     else:
-                        numbers = random.sample(range(1, 46), 6)
+                        # 미당첨: 0-2개 일치
+                        match_count = random.randint(0, 2)
+                        if match_count == 0:
+                            numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6)
+                            matched_numbers = []
+                        else:
+                            base_numbers = random.sample(winning_numbers, match_count)
+                            other_numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6 - match_count)
+                            numbers = base_numbers + other_numbers
+                            matched_numbers = base_numbers
+                        matched_count = match_count
                     
-                    # 더미 데이터 저장
+                    # 더미 데이터 저장 (정확한 당첨 정보 포함)
                     dummy_data = PublicRecommendation(
                         numbers=numbers,
                         generation_method="ai",
@@ -509,8 +567,8 @@ async def generate_dummy_recommendations(
                         user_type="member",
                         is_dummy=True,
                         winning_rank=rank,
-                        matched_count=rank if rank <= 5 else 0,
-                        matched_numbers=numbers[:rank] if rank <= 5 else [],
+                        matched_count=matched_count,
+                        matched_numbers=matched_numbers,
                         winning_amount=1000000 if rank == 1 else 0
                     )
                     
@@ -519,7 +577,16 @@ async def generate_dummy_recommendations(
         
         # 미당첨 데이터 생성
         for i in range(no_win_count):
-            numbers = random.sample(range(1, 46), 6)
+            # 미당첨: 0-2개 일치
+            match_count = random.randint(0, 2)
+            if match_count == 0:
+                numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6)
+                matched_numbers = []
+            else:
+                base_numbers = random.sample(winning_numbers, match_count)
+                other_numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6 - match_count)
+                numbers = base_numbers + other_numbers
+                matched_numbers = base_numbers
             
             dummy_data = PublicRecommendation(
                 numbers=numbers,
@@ -530,8 +597,8 @@ async def generate_dummy_recommendations(
                 user_type="member",
                 is_dummy=True,
                 winning_rank=None,
-                matched_count=0,
-                matched_numbers=[],
+                matched_count=match_count,
+                matched_numbers=matched_numbers,
                 winning_amount=0
             )
             

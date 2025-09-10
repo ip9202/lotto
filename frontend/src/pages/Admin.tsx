@@ -91,13 +91,13 @@ const Admin: React.FC = () => {
   }>>([]);
   const [dummyDataForm, setDummyDataForm] = useState({
     draw_number: 0,
-    total_count: 1000,
+    total_count: 0,
     rank_distribution: {
-      1: 2,
-      2: 15,
-      3: 150,
-      4: 2000,
-      5: 5000
+      1: 0,
+      2: 0,
+      3: 0,
+      4: 0,
+      5: 0
     }
   });
   const [isGenerating, setIsGenerating] = useState(false);
@@ -413,13 +413,25 @@ const Admin: React.FC = () => {
   };
 
   const handleRankDistributionChange = (rank: number, value: number) => {
-    setDummyDataForm(prev => ({
-      ...prev,
-      rank_distribution: {
+    setDummyDataForm(prev => {
+      const newRankDistribution = {
         ...prev.rank_distribution,
         [rank]: value
+      };
+      
+      // 등수별 분포의 합계가 총 생성 수를 초과하지 않도록 제한
+      const totalDistributed = Object.values(newRankDistribution).reduce((a, b) => (a || 0) + (b || 0), 0);
+      if (totalDistributed > prev.total_count) {
+        // 총 생성 수를 초과하는 경우, 해당 등수의 값을 조정
+        const maxValue = prev.total_count - (totalDistributed - value);
+        newRankDistribution[rank] = Math.max(0, maxValue);
       }
-    }));
+      
+      return {
+        ...prev,
+        rank_distribution: newRankDistribution
+      };
+    });
   };
 
   // 초기 데이터 로드
@@ -627,10 +639,11 @@ const Admin: React.FC = () => {
                     </label>
                     <input
                       type="number"
-                      value={dummyDataForm.total_count}
-                      onChange={(e) => handleDummyDataFormChange('total_count', parseInt(e.target.value))}
-                      min="1"
+                      value={dummyDataForm.total_count === 0 ? '' : dummyDataForm.total_count}
+                      onChange={(e) => handleDummyDataFormChange('total_count', e.target.value === '' ? 0 : parseInt(e.target.value) || 0)}
+                      min="0"
                       max="10000"
+                      placeholder="0"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
@@ -648,24 +661,25 @@ const Admin: React.FC = () => {
                           </span>
                           <input
                             type="number"
-                            value={dummyDataForm.rank_distribution[rank] || 0}
-                            onChange={(e) => handleRankDistributionChange(rank, parseInt(e.target.value))}
+                            value={dummyDataForm.rank_distribution[rank] === 0 ? '' : dummyDataForm.rank_distribution[rank]}
+                            onChange={(e) => handleRankDistributionChange(rank, e.target.value === '' ? 0 : parseInt(e.target.value) || 0)}
                             min="0"
-                            max={dummyDataForm.total_count}
+                            max={dummyDataForm.total_count || 0}
+                            placeholder="0"
                             className="w-20 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                       ))}
                     </div>
                     <div className="mt-2 text-xs text-gray-500">
-                      미당첨: {dummyDataForm.total_count - Object.values(dummyDataForm.rank_distribution).reduce((a, b) => a + b, 0)}개
+                      미당첨: {Math.max(0, (dummyDataForm.total_count || 0) - Object.values(dummyDataForm.rank_distribution || {}).reduce((a, b) => (a || 0) + (b || 0), 0))}개
                     </div>
                   </div>
 
                   {/* 생성 버튼 */}
                   <button
                     onClick={handleGenerateDummyData}
-                    disabled={isGenerating || dummyDataForm.draw_number === 0}
+                    disabled={isGenerating || dummyDataForm.draw_number === 0 || dummyDataForm.total_count === 0}
                     className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                   >
                     {isGenerating ? '생성 중...' : '더미 데이터 생성'}
@@ -704,10 +718,10 @@ const Admin: React.FC = () => {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2">일별 생성 분포:</h4>
                       <div className="space-y-1">
-                        {Object.entries(generationResult.daily_stats).map(([date, count]) => (
+                        {generationResult.daily_stats && Object.entries(generationResult.daily_stats).map(([date, count]) => (
                           <div key={date} className="flex justify-between text-xs">
                             <span className="text-gray-600">{date}</span>
-                            <span className="font-medium">{count}개</span>
+                            <span className="font-medium">{count || 0}개</span>
                           </div>
                         ))}
                       </div>
@@ -716,15 +730,15 @@ const Admin: React.FC = () => {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2">등수별 분포:</h4>
                       <div className="space-y-1">
-                        {Object.entries(generationResult.rank_distribution).map(([rank, count]) => (
+                        {generationResult.rank_distribution && Object.entries(generationResult.rank_distribution).map(([rank, count]) => (
                           <div key={rank} className="flex justify-between text-xs">
                             <span className="text-gray-600">{rank}등:</span>
-                            <span className="font-medium">{count}개</span>
+                            <span className="font-medium">{count || 0}개</span>
                           </div>
                         ))}
                         <div className="flex justify-between text-xs">
                           <span className="text-gray-600">미당첨:</span>
-                          <span className="font-medium">{generationResult.no_win_count}개</span>
+                          <span className="font-medium">{generationResult.no_win_count || 0}개</span>
                         </div>
                       </div>
                     </div>

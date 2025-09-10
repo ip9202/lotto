@@ -69,11 +69,21 @@ async def compare_public_recommendations(
         # 각 추천에 대해 당첨 비교
         results = []
         for rec in public_recommendations:
-            comparison = compare_numbers(
-                rec.numbers, 
-                winning_draw.numbers, 
-                winning_draw.bonus_number
-            )
+            # 더미 데이터는 저장된 당첨 정보 사용 (당첨번호 매칭 로직 완전 건너뛰기)
+            if rec.is_dummy and rec.winning_rank is not None:
+                comparison = {
+                    "matches": rec.matched_count,
+                    "bonus_match": rec.bonus_number == winning_draw.bonus_number if rec.bonus_number else False,
+                    "grade": rec.winning_rank,
+                    "is_winner": rec.winning_rank > 0
+                }
+            else:
+                # 일반 데이터는 당첨번호 매칭 로직 사용
+                comparison = compare_numbers(
+                    rec.numbers, 
+                    winning_draw.numbers, 
+                    winning_draw.bonus_number
+                )
             
             results.append({
                 "id": rec.id,

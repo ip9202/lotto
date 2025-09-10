@@ -41,32 +41,51 @@ const StatisticsDashboard: React.FC = () => {
   const [data, setData] = useState<StatisticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedDrawNumber, setSelectedDrawNumber] = useState<number | null>(null);
+  const [drawNumbers, setDrawNumbers] = useState<Array<{
+    draw_number: number;
+    draw_date: string;
+    numbers: number[];
+    bonus_number: number;
+  }>>([]);
 
   useEffect(() => {
     fetchStatistics();
+    fetchDrawNumbers();
   }, []);
 
-  const fetchStatistics = async () => {
+  useEffect(() => {
+    if (selectedDrawNumber) {
+      fetchStatistics(selectedDrawNumber);
+    }
+  }, [selectedDrawNumber]);
+
+  const fetchStatistics = async (drawNumber?: number) => {
     try {
       setLoading(true);
       setError(null);
 
       const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       
-      // 현재 회차 조회
-      const currentDrawResponse = await fetch(`${baseURL}/api/v1/lotto/current-draw`);
-      if (!currentDrawResponse.ok) {
-        throw new Error('현재 회차를 불러올 수 없습니다');
+      let targetDrawNumber;
+      if (drawNumber) {
+        targetDrawNumber = drawNumber;
+      } else {
+        // 현재 회차 조회
+        const currentDrawResponse = await fetch(`${baseURL}/api/v1/lotto/current-draw`);
+        if (!currentDrawResponse.ok) {
+          throw new Error('현재 회차를 불러올 수 없습니다');
+        }
+        const currentDrawData = await currentDrawResponse.json();
+        const currentDrawNumber = currentDrawData.data.draw_number;
+        
+        // 전회차 계산 (현재 회차 - 1)
+        targetDrawNumber = currentDrawNumber - 1;
       }
-      const currentDrawData = await currentDrawResponse.json();
-      const currentDrawNumber = currentDrawData.data.draw_number;
-      
-      // 전회차 계산 (현재 회차 - 1)
-      const previousDrawNumber = currentDrawNumber - 1;
       
       // 공공 통계 데이터 조회 (로그인 불필요)
       const statsResponse = await fetch(`${baseURL}/admin/statistics`);
-      const winningResponse = await fetch(`${baseURL}/api/v1/winning-comparison/public/${previousDrawNumber}`);
+      const winningResponse = await fetch(`${baseURL}/api/v1/winning-comparison/public/${targetDrawNumber}`);
 
       if (!statsResponse.ok || !winningResponse.ok) {
         throw new Error('통계 데이터를 불러올 수 없습니다');
@@ -84,7 +103,7 @@ const StatisticsDashboard: React.FC = () => {
           memberRecommendations: statsData.data.public_recommendations?.member || 0,
           guestRecommendations: statsData.data.public_recommendations?.guest || 0,
           recent7Days: statsData.data.public_recommendations?.recent_7days || 0,
-          latestDraw: previousDrawNumber, // 전회차로 표시
+          latestDraw: targetDrawNumber, // 선택된 회차 또는 전회차로 표시
           totalWinners: winningData.data?.total_winners || 0,
           winRate: Math.round((winningData.data?.win_rate || 0) * 100),
           gradeStats: {
@@ -95,7 +114,7 @@ const StatisticsDashboard: React.FC = () => {
             grade5: winningData.data?.grade_stats?.grade_5 || 0
           }
         },
-        performanceData: generatePerformanceData(winningData.data, previousDrawNumber), // 전회차 데이터 사용
+        performanceData: generatePerformanceData(winningData.data, targetDrawNumber), // 선택된 회차 또는 전회차 데이터 사용
         winRateData: generateWinRateData(statsData.data)
       };
 
@@ -105,6 +124,18 @@ const StatisticsDashboard: React.FC = () => {
       setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDrawNumbers = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/draw-numbers`);
+      const data = await response.json();
+      if (data.success) {
+        setDrawNumbers(data.data.draws);
+      }
+    } catch (error) {
+      console.error('회차 목록 조회 실패:', error);
     }
   };
 
@@ -170,7 +201,7 @@ const StatisticsDashboard: React.FC = () => {
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <p className="text-red-600">{error}</p>
         <button 
-          onClick={fetchStatistics}
+          onClick={() => fetchStatistics(selectedDrawNumber || undefined)}
           className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
         >
           다시 시도
@@ -189,6 +220,26 @@ const StatisticsDashboard: React.FC = () => {
           <h3 className="text-lg sm:text-xl font-semibold text-gray-800">🎯 회차 정보</h3>
           <StarIcon className="w-6 h-6 text-purple-600" />
         </div>
+        
+        {/* 회차 선택 드롭다운 */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            회차 선택
+          </label>
+          <select
+            value={selectedDrawNumber || ''}
+            onChange={(e) => setSelectedDrawNumber(e.target.value ? parseInt(e.target.value) : null)}
+            className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">전체 통계 (최신)</option>
+            {drawNumbers.map((draw) => (
+              <option key={draw.draw_number} value={draw.draw_number}>
+                {draw.draw_number}회차 ({draw.draw_date})
+              </option>
+            ))}
+          </select>
+        </div>
+        
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-2xl sm:text-3xl font-bold text-purple-600">{data.publicStats.latestDraw}회</div>
