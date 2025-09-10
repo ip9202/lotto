@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 
 interface PerformanceData {
@@ -21,6 +21,7 @@ const RecommendationPerformanceChart: React.FC<RecommendationPerformanceChartPro
   height = 300,
   type = 'line'
 }) => {
+  const [chartType, setChartType] = useState<'line' | 'bar'>(type);
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -39,7 +40,7 @@ const RecommendationPerformanceChart: React.FC<RecommendationPerformanceChartPro
   };
 
   const renderChart = () => {
-    if (type === 'bar') {
+    if (chartType === 'bar') {
       return (
         <BarChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -47,6 +48,9 @@ const RecommendationPerformanceChart: React.FC<RecommendationPerformanceChartPro
             dataKey="period" 
             tick={{ fontSize: 12 }}
             tickLine={{ stroke: '#e0e0e0' }}
+            angle={-45}
+            textAnchor="end"
+            height={60}
           />
           <YAxis 
             tick={{ fontSize: 12 }}
@@ -66,6 +70,9 @@ const RecommendationPerformanceChart: React.FC<RecommendationPerformanceChartPro
           dataKey="period" 
           tick={{ fontSize: 12 }}
           tickLine={{ stroke: '#e0e0e0' }}
+          angle={-45}
+          textAnchor="end"
+          height={60}
         />
         <YAxis 
           tick={{ fontSize: 12 }}
@@ -107,27 +114,27 @@ const RecommendationPerformanceChart: React.FC<RecommendationPerformanceChartPro
         <div className="flex gap-2">
           <button 
             className={`px-3 py-1 rounded-md text-sm font-medium ${
-              type === 'line' 
+              chartType === 'line' 
                 ? 'bg-blue-100 text-blue-700' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
-            onClick={() => {/* setType('line') */}}
+            onClick={() => setChartType('line')}
           >
             선형
           </button>
           <button 
             className={`px-3 py-1 rounded-md text-sm font-medium ${
-              type === 'bar' 
+              chartType === 'bar' 
                 ? 'bg-blue-100 text-blue-700' 
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
-            onClick={() => {/* setType('bar') */}}
+            onClick={() => setChartType('bar')}
           >
             막대
           </button>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height={height}>
+      <ResponsiveContainer width="100%" height={height + 40}>
         {renderChart()}
       </ResponsiveContainer>
     </div>

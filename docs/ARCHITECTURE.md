@@ -45,6 +45,10 @@ lotto/
   - Metadata: `title`, `memo`, `tags` (JSONB)
   - Status: `is_active`, `is_favorite`, `is_purchased`
   - Winning: `winning_rank`, `winning_amount`, `matched_count`
+- **PublicRecommendation**: Public recommendation data for statistics
+  - Fields: `draw_number`, `numbers` (INTEGER[]), `winning_rank`, `matched_count`, `bonus_number`
+  - Status: `is_dummy` (boolean), `created_at` (timestamp)
+  - Purpose: Statistics dashboard and dummy data generation
 
 ### Frontend Architecture
 - **React 18** with TypeScript

@@ -38,6 +38,12 @@
 
 ### 관리자 대시보드
 - `GET /admin/*` - 관리자 기능
+- `POST /admin/dummy-recommendations/generate` - 더미 데이터 생성
+- `GET /admin/dummy-recommendations/stats` - 더미 데이터 통계
+
+### 공공 추천 데이터
+- `GET /api/v1/winning-comparison/public/{draw_number}` - 공공 추천 데이터 비교
+- `GET /api/v1/winning-comparison/public/{draw_number}/stats` - 공공 추천 통계
 
 ## 당첨 비교 API
 - **Endpoint**: `POST /api/v1/saved-recommendations/check-winning`

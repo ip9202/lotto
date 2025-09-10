@@ -21,6 +21,7 @@ class PublicRecommendation(Base):
     matched_count = Column(Integer, default=0)  # 일치한 번호 개수
     matched_numbers = Column(ARRAY(Integer), nullable=True)  # 일치한 번호들
     winning_amount = Column(BigInteger, default=0)  # 당첨 금액
+    bonus_number = Column(Integer, nullable=True)  # 보너스 번호 (더미 데이터용)
     
     # 인덱스 생성
     __table_args__ = (

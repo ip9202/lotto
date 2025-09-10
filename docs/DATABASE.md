@@ -1,7 +1,7 @@
 # 데이터베이스 문서
 
 ## Database Schema Notes
-- **Primary Keys**: `users.id` (INTEGER), `saved_recommendations.id` (INTEGER)
+- **Primary Keys**: `users.id` (INTEGER), `saved_recommendations.id` (INTEGER), `public_recommendations.id` (INTEGER)
 - **Foreign Keys**: `saved_recommendations.user_id` → `users.id`
 - **Data Types**: 
   - `numbers`: INTEGER[] (PostgreSQL array)
@@ -9,7 +9,8 @@
   - `preferences`: JSONB
   - `analysis_data`: JSONB
 - **Enum Values**: Use uppercase (KAKAO, NAVER, FREE, PREMIUM, PRO)
-- **Indexes**: Created on `user_id`, `is_active`, `created_at` for performance
+- **Indexes**: Created on `user_id`, `is_active`, `created_at`, `draw_number` for performance
+- **Public Recommendations**: Statistics and dummy data storage
 
 ## Database Setup
 If SQLAlchemy create_all fails, manually create tables:

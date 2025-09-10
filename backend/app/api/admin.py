@@ -507,6 +507,27 @@ async def generate_dummy_recommendations(
         winning_numbers = [draw.number_1, draw.number_2, draw.number_3, draw.number_4, draw.number_5, draw.number_6]
         bonus_number = draw.bonus_number
         
+        # 구매 기간 날짜 생성 (추첨일 기준 일주일 전부터)
+        def get_purchase_dates(draw_date):
+            from datetime import datetime, timedelta
+            import random
+            
+            # 추첨일을 datetime으로 변환
+            if isinstance(draw_date, str):
+                draw_dt = datetime.strptime(draw_date, '%Y-%m-%d')
+            else:
+                draw_dt = draw_date
+            
+            # 일주일 전부터 추첨일까지의 날짜들
+            purchase_dates = []
+            for i in range(7):
+                date = draw_dt - timedelta(days=6-i)
+                purchase_dates.append(date)
+            
+            return purchase_dates
+        
+        purchase_dates = get_purchase_dates(draw.draw_date)
+        
         # 등수별 데이터 생성
         for rank, count in request.rank_distribution.items():
             if count > 0:
@@ -557,6 +578,9 @@ async def generate_dummy_recommendations(
                             matched_numbers = base_numbers
                         matched_count = match_count
                     
+                    # 랜덤 구매 날짜 선택
+                    random_purchase_date = random.choice(purchase_dates)
+                    
                     # 더미 데이터 저장 (정확한 당첨 정보 포함)
                     dummy_data = PublicRecommendation(
                         numbers=numbers,
@@ -569,7 +593,8 @@ async def generate_dummy_recommendations(
                         winning_rank=rank,
                         matched_count=matched_count,
                         matched_numbers=matched_numbers,
-                        winning_amount=1000000 if rank == 1 else 0
+                        winning_amount=1000000 if rank == 1 else 0,
+                        created_at=random_purchase_date
                     )
                     
                     db.add(dummy_data)
@@ -588,6 +613,9 @@ async def generate_dummy_recommendations(
                 numbers = base_numbers + other_numbers
                 matched_numbers = base_numbers
             
+            # 랜덤 구매 날짜 선택
+            random_purchase_date = random.choice(purchase_dates)
+            
             dummy_data = PublicRecommendation(
                 numbers=numbers,
                 generation_method="ai",
@@ -599,7 +627,8 @@ async def generate_dummy_recommendations(
                 winning_rank=None,
                 matched_count=match_count,
                 matched_numbers=matched_numbers,
-                winning_amount=0
+                winning_amount=0,
+                created_at=random_purchase_date
             )
             
             db.add(dummy_data)

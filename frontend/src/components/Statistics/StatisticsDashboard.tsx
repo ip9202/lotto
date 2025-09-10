@@ -140,32 +140,80 @@ const StatisticsDashboard: React.FC = () => {
   };
 
   const generatePerformanceData = (winningData: any, drawNumber: number) => {
-    // 전회차 구매 기간 데이터 생성
+    // 실제 API 데이터를 사용하여 차트 데이터 생성
     const data = [];
     
-    // 전회차 구매 기간: 일요일 ~ 토요일 (추첨일)
-    const purchasePeriod = [
-      { label: '일요일', weight: 0.08 }, // 일요일 - 적음
-      { label: '월요일', weight: 0.12 },  // 월요일 - 보통
-      { label: '화요일', weight: 0.15 },  // 화요일 - 보통
-      { label: '수요일', weight: 0.18 },  // 수요일 - 많음
-      { label: '목요일', weight: 0.20 },  // 목요일 - 많음
-      { label: '금요일', weight: 0.15 },  // 금요일 - 보통
-      { label: '토요일', weight: 0.12 }   // 토요일 - 적음 (추첨일)
-    ];
-    
-    const totalRecommendations = winningData?.total_recommendations || 0;
-    const totalWinners = winningData?.total_winners || 0;
-    
-    // 각 날짜별로 다른 추천 개수와 당첨률 생성
-    for (const day of purchasePeriod) {
-      // 날짜별 가중치에 따른 추천 개수 계산
-      const dailyTotal = Math.floor(totalRecommendations * day.weight);
+    // 회차별 구매 기간 날짜 매핑
+    const getPurchasePeriod = (drawNum: number) => {
+      // 1186회차는 2025-08-23 (토) 추첨
+      if (drawNum === 1186) {
+        return [
+          { label: '8/17 (일)', date: '2025-08-17' },
+          { label: '8/18 (월)', date: '2025-08-18' },
+          { label: '8/19 (화)', date: '2025-08-19' },
+          { label: '8/20 (수)', date: '2025-08-20' },
+          { label: '8/21 (목)', date: '2025-08-21' },
+          { label: '8/22 (금)', date: '2025-08-22' },
+          { label: '8/23 (토)', date: '2025-08-23' }
+        ];
+      }
       
-      // 당첨률도 날짜별로 약간씩 다르게 (10-16% 범위)
-      const baseWinRate = 0.13;
-      const dailyWinRate = baseWinRate + (Math.random() - 0.5) * 0.06; // ±3% 변동
-      const dailyWinners = Math.floor(dailyTotal * dailyWinRate);
+      // 1187회차는 2025-08-30 (토) 추첨
+      if (drawNum === 1187) {
+        return [
+          { label: '8/24 (일)', date: '2025-08-24' },
+          { label: '8/25 (월)', date: '2025-08-25' },
+          { label: '8/26 (화)', date: '2025-08-26' },
+          { label: '8/27 (수)', date: '2025-08-27' },
+          { label: '8/28 (목)', date: '2025-08-28' },
+          { label: '8/29 (금)', date: '2025-08-29' },
+          { label: '8/30 (토)', date: '2025-08-30' }
+        ];
+      }
+      
+      // 1188회차는 2025-09-06 (토) 추첨
+      if (drawNum === 1188) {
+        return [
+          { label: '8/31 (일)', date: '2025-08-31' },
+          { label: '9/1 (월)', date: '2025-09-01' },
+          { label: '9/2 (화)', date: '2025-09-02' },
+          { label: '9/3 (수)', date: '2025-09-03' },
+          { label: '9/4 (목)', date: '2025-09-04' },
+          { label: '9/5 (금)', date: '2025-09-05' },
+          { label: '9/6 (토)', date: '2025-09-06' }
+        ];
+      }
+      
+      // 기본 패턴 (일요일 ~ 토요일)
+      return [
+        { label: '일요일', date: '2025-08-17' },
+        { label: '월요일', date: '2025-08-18' },
+        { label: '화요일', date: '2025-08-19' },
+        { label: '수요일', date: '2025-08-20' },
+        { label: '목요일', date: '2025-08-21' },
+        { label: '금요일', date: '2025-08-22' },
+        { label: '토요일', date: '2025-08-23' }
+      ];
+    };
+    
+    const purchasePeriod = getPurchasePeriod(drawNumber);
+    
+    // 실제 API 데이터에서 results 배열 사용
+    const results = winningData?.results || [];
+    
+    // 각 날짜별로 실제 데이터 집계
+    for (const day of purchasePeriod) {
+      // 해당 날짜의 데이터 필터링
+      const dayData = results.filter((item: any) => {
+        const itemDate = new Date(item.created_at).toISOString().split('T')[0];
+        return itemDate === day.date;
+      });
+      
+      // 해당 날짜의 총 추천 수
+      const dailyTotal = dayData.length;
+      
+      // 해당 날짜의 당첨자 수 (is_winner가 true인 것들)
+      const dailyWinners = dayData.filter((item: any) => item.is_winner).length;
       
       data.push({
         period: day.label,
@@ -174,6 +222,7 @@ const StatisticsDashboard: React.FC = () => {
         winRate: dailyTotal > 0 ? Math.round((dailyWinners / dailyTotal) * 100) : 0
       });
     }
+    
     return data;
   };
 
@@ -246,11 +295,19 @@ const StatisticsDashboard: React.FC = () => {
             <div className="text-xs sm:text-sm text-gray-600">회차</div>
           </div>
           <div className="text-center">
-            <div className="text-lg sm:text-xl font-bold text-gray-800">9월 6일 (토)</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-800">
+              {data.publicStats.latestDraw === 1186 ? '8월 23일 (토)' : 
+               data.publicStats.latestDraw === 1187 ? '8월 30일 (토)' : 
+               data.publicStats.latestDraw === 1188 ? '9월 6일 (토)' : '추첨일'}
+            </div>
             <div className="text-xs sm:text-sm text-gray-600">추첨일</div>
           </div>
           <div className="text-center">
-            <div className="text-sm sm:text-base font-bold text-gray-600">8/31~9/6</div>
+            <div className="text-sm sm:text-base font-bold text-gray-600">
+              {data.publicStats.latestDraw === 1186 ? '8/17~8/23' : 
+               data.publicStats.latestDraw === 1187 ? '8/24~8/30' : 
+               data.publicStats.latestDraw === 1188 ? '8/31~9/6' : '구매 기간'}
+            </div>
             <div className="text-xs sm:text-sm text-gray-600">구매 기간</div>
           </div>
         </div>

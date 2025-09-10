@@ -126,6 +126,7 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 3. **고급 분석 기능**
 
 ### 최근 수정 사항 (2025-09-10)
+
 **더미 데이터 생성 기능 오류 4건 해결**:
 - `created_at` 필드 중복 설정 문제 ✅
 - `matched_numbers` 타입 불일치 (JSON vs integer[]) ✅
@@ -136,6 +137,19 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 - 3등, 4등, 5등에서 `winning_numbers[:n]` 순서 사용 → `random.sample()` 랜덤 선택
 - 미당첨 데이터도 정확한 일치 개수(0-2개)로 생성
 - `Query`, `Optional` import 누락 문제 해결
+
+**통계 대시보드 그래프 오류 수정 (2025-09-10)**:
+- **가짜 데이터 생성 문제 해결**: `generatePerformanceData` 함수가 실제 API 데이터 대신 가짜 데이터를 생성하던 문제 수정
+- **실제 데이터 기반 차트**: `winningData.results` 배열에서 실제 `created_at` 날짜별로 데이터 집계
+- **정확한 당첨자 수**: `is_winner` 필드를 사용하여 실제 당첨자 수 계산
+- **회차별 구매 기간 매핑**: 1186회차(8/17~8/23), 1187회차(8/24~8/30), 1188회차(8/31~9/6) 정확한 날짜 설정
+- **데이터베이스 날짜 수정**: 1186회차, 1187회차, 1188회차 추첨일 및 구매 기간 데이터 정확성 확보
+
+**주요 수정 파일**:
+- `frontend/src/components/Statistics/StatisticsDashboard.tsx`: 실제 데이터 기반 차트 생성 로직
+- `backend/app/api/admin.py`: 더미 데이터 생성 시 정확한 날짜 분산
+- `backend/app/models/public_recommendation.py`: `bonus_number` 컬럼 추가
+- `backend/app/api/winning_comparison.py`: 더미 데이터 처리 로직 개선
 
 ---
 

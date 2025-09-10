@@ -73,7 +73,7 @@ async def compare_public_recommendations(
             if rec.is_dummy and rec.winning_rank is not None:
                 comparison = {
                     "matches": rec.matched_count,
-                    "bonus_match": rec.bonus_number == winning_draw.bonus_number if rec.bonus_number else False,
+                    "bonus_match": False,  # 더미 데이터는 보너스 매칭 정보 없음
                     "grade": rec.winning_rank,
                     "is_winner": rec.winning_rank > 0
                 }
