@@ -138,7 +138,35 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 2. **모바일 최적화 (PWA)**
 3. **고급 분석 기능**
 
-### 최근 수정 사항 (2025-01-11)
+### 최근 수정 사항 (2025-09-12)
+
+**추천번호 저장 상태 관리 및 프로덕션 API 연동 완료** ✅:
+- **저장 상태 생명주기 관리**: 새로운 추천 시 모든 저장 버튼 초기화, 개별 저장 후 "저장완료" 표시
+- **localStorage 지속성**: 추천 번호와 저장 상태를 함께 저장하여 페이지 리로드 후에도 상태 유지
+- **중앙집중식 상태 관리**: SaveRecommendation 컴포넌트의 내부 state를 제거하고 부모에서 props로 관리
+- **프로덕션 API 연동 수정**: 하드코딩된 localhost URL을 환경변수 기반으로 변경하여 Railway 환경에서 401 에러 해결
+- **데이터 무결성 확인**: Railway DB에 저장된 1189회 추천번호 10개 정상 확인
+
+**주요 수정 파일**:
+- `frontend/src/pages/Recommendation.tsx`: 저장 상태 중앙 관리 및 localStorage 지속성
+- `frontend/src/components/SimpleCombination/SimpleCombination.tsx`: 저장 상태 props 전달
+- `frontend/src/components/SaveRecommendation/SaveRecommendation.tsx`: 외부 상태 관리로 변경
+- `frontend/src/pages/SavedNumbers.tsx`: 환경변수 기반 API URL 적용
+- `frontend/src/services/sessionService.ts`: API_BASE_URL 환경변수 적용
+
+**해결된 이슈**:
+- 새로운 추천 받을 때 이전 저장 상태가 남아있던 문제 ✅
+- 페이지 리로드 후 저장 상태가 초기화되던 문제 ✅  
+- Railway 프로덕션에서 401 Unauthorized 에러 ✅
+- 저장된 추천번호가 "내 저장번호"에 표시되지 않던 문제 ✅
+
+**기술적 개선**:
+- React 컴포넌트 상태 관리 패턴 개선
+- 프로덕션 환경 API 연동 안정화
+- 사용자 경험(UX) 일관성 확보
+- 데이터 지속성 및 무결성 보장
+
+### 이전 수정 사항 (2025-01-11)
 
 **추천 번호 지속성 및 중복 저장 방지 기능 완료** ✅:
 - **localStorage 저장/복원**: 추천받은 번호를 브라우저에 자동 저장하여 페이지 리로드 후에도 유지
