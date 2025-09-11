@@ -1,6 +1,7 @@
 import os
-from typing import List
+from typing import List, Union
 from pydantic_settings import BaseSettings
+from pydantic import Field
 
 class Settings(BaseSettings):
     # 환경 구분
@@ -14,12 +15,14 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     
-    # CORS 설정 (환경별)
-    cors_origins: List[str] = [
-        "http://localhost:5173",  # 개발환경 프론트엔드
-        "https://lottoria.ai.kr",  # 프로덕션 도메인
-        "https://www.lottoria.ai.kr"  # www 도메인
-    ]
+    # CORS 설정 (환경별) - Railway 환경변수 호환
+    cors_origins: Union[str, List[str]] = Field(
+        default=[
+            "http://localhost:5173",  # 개발환경 프론트엔드
+            "https://lottoria.ai.kr",  # 프로덕션 도메인
+            "https://www.lottoria.ai.kr"  # www 도메인
+        ]
+    )
     
     # 데이터 소스
     lotto_data_url: str = "https://dhlottery.co.kr/gameResult.do?method=byWin"
@@ -57,6 +60,14 @@ class Settings(BaseSettings):
         else:
             # 개발환경: Docker 컴포즈의 postgres 컨테이너 사용
             return self.database_url
+    
+    @property 
+    def cors_origins_list(self) -> List[str]:
+        """CORS origins를 항상 리스트로 반환"""
+        if isinstance(self.cors_origins, str):
+            # Railway 환경변수에서 쉼표로 구분된 문자열인 경우
+            return [origin.strip() for origin in self.cors_origins.split(",")]
+        return self.cors_origins
     
     class Config:
         env_file = ".env"

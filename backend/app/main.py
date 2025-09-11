@@ -72,21 +72,15 @@ async def log_requests(request: Request, call_next):
     response = await call_next(request)
     return response
 
-# CORS 미들웨어 설정 - lottoria.ai.kr 도메인 포함
+# CORS 미들웨어 설정 - config에서 동적으로 로드
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # 로컬 개발
-        "https://lottoria.ai.kr",  # 메인 도메인
-        "https://www.lottoria.ai.kr",  # www 도메인
-        "https://lotto-frontend-production-c563.up.railway.app",  # 기존 Railway 도메인
-        "*"  # 임시로 모든 도메인 허용 (나중에 제거 가능)
-    ],
+    allow_origins=settings.cors_origins_list,  # 수정된 부분
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-print("✅ CORS 미들웨어 설정 완료 - lottoria.ai.kr 도메인 포함")
+print(f"✅ CORS 미들웨어 설정 완료 - Origins: {settings.cors_origins_list}")
 
 # API 라우터 등록
 app.include_router(lotto.router, prefix="")
