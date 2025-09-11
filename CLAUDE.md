@@ -106,6 +106,19 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 
 ## 🚀 현재 상태
 
+### Railway 배포 완료 (2025-09-11) ✅
+
+**🌐 프로덕션 서비스**:
+- **Frontend**: https://lottoria.ai.kr
+- **Backend API**: https://lotto-backend-production-e7f6.up.railway.app/docs
+- **자동 배포**: GitHub push → Railway 자동 빌드/배포
+
+**주요 해결 사항**:
+- ✅ CORS 설정: Railway 환경변수로 직접 설정
+- ✅ 소셜 로그인: 카카오/네이버 앱 키 Railway 대시보드 설정  
+- ✅ DB 스키마: 완전한 saved_recommendations 테이블 재생성
+- ✅ 환경변수: .env 파일 → Railway 대시보드 환경변수로 전환
+
 ### 완료된 기능 ✅
 - 소셜 로그인 (카카오/네이버)
 - 번호 저장 및 관리
