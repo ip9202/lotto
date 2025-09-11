@@ -127,6 +127,17 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 
 ### 최근 수정 사항 (2025-01-11)
 
+**추천 번호 지속성 및 중복 저장 방지 기능 완료** ✅:
+- **localStorage 저장/복원**: 추천받은 번호를 브라우저에 자동 저장하여 페이지 리로드 후에도 유지
+- **중복 저장 방지**: 같은 번호 조합이 이미 저장되어 있으면 "이미 저장된 번호입니다!" 알림 표시
+- **정확한 중복 체크**: 번호를 정렬한 후 배열 비교로 정확한 중복 감지
+- **새로운 추천 시 초기화**: 새로운 추천을 받기 전에 이전 추천 번호 자동 삭제
+- **기본/고급 추천 모두 지원**: 두 가지 추천 방식 모두에서 지속성 기능 적용
+
+**주요 수정 파일**:
+- `frontend/src/pages/Recommendation.tsx`: localStorage 저장/복원 로직 추가, 기본 추천에도 적용
+- `frontend/src/components/SaveRecommendation/SaveRecommendation.tsx`: 중복 체크 로직 완전 구현
+
 **Google AdSense 정책 위반 방지 조치 완료** ✅:
 - **Consent Mode v2 적용**: 동의 전 광고 스크립트 미로딩으로 정책 준수
 - **연령 보호 강화**: 19세 이상 이용 가능 명시 및 미성년자 접근 차단 안내

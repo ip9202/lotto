@@ -84,10 +84,14 @@ const Recommendation: React.FC = () => {
 
   // 페이지 로드 시 저장된 추천 번호 복원
   useEffect(() => {
+    console.log('🔄 페이지 로드 - 추천 번호 복원 시도');
     const storedRecommendations = loadRecommendationsFromStorage();
+    console.log('📂 복원된 추천 번호:', storedRecommendations);
     if (storedRecommendations.length > 0) {
       setRecommendations(storedRecommendations);
-      console.log('🔄 페이지 로드 시 추천 번호 복원 완료');
+      console.log('✅ 페이지 로드 시 추천 번호 복원 완료:', storedRecommendations.length, '개');
+    } else {
+      console.log('ℹ️ 저장된 추천 번호 없음');
     }
   }, []);
 
@@ -117,6 +121,8 @@ const Recommendation: React.FC = () => {
 
   // 기본 추천 처리 함수
   const handleBasicRecommendations = async () => {
+    console.log('🚀 기본 추천 버튼 클릭됨!');
+    
     setLoading(true);
     try {
       const requestData = {
@@ -149,7 +155,14 @@ const Recommendation: React.FC = () => {
       
       if (data.success) {
         const recommendations = data.data.combinations || [];
+        console.log('🎯 기본 추천 생성 성공:', recommendations);
+        
         setRecommendations(recommendations);
+        console.log('📝 state에 추천 번호 설정 완료');
+        
+        // localStorage에 추천 번호 저장
+        console.log('💾 localStorage 저장 시도...');
+        saveRecommendationsToStorage(recommendations);
       } else {
         alert('기본 추천 조합 생성에 실패했습니다.');
       }
@@ -162,6 +175,8 @@ const Recommendation: React.FC = () => {
   };
 
   const handleGenerateRecommendations = async () => {
+    console.log('🎯 추천 받기 버튼 클릭됨!');
+    
     // 새로운 추천을 받기 전에 이전 추천 번호 초기화
     setRecommendations([]);
     localStorage.removeItem('lottoria_recommendations');
@@ -213,11 +228,14 @@ const Recommendation: React.FC = () => {
       
       if (result.success && result.data) {
         const recommendations = result.data.combinations || [];
+        console.log('🎯 추천 생성 성공:', recommendations);
         
         // 추천기록 기능 일시 비활성화로 history_id 처리 불필요
         setRecommendations(recommendations);
+        console.log('📝 state에 추천 번호 설정 완료');
         
         // localStorage에 추천 번호 저장
+        console.log('💾 localStorage 저장 시도...');
         saveRecommendationsToStorage(recommendations);
         
       } else {
