@@ -296,19 +296,44 @@ const ProfileSettings: React.FC = () => {
             </div>
           )}
 
-          {/* 소셜 계정 연동 안내 */}
-          {user.linked_social_providers && user.linked_social_providers.length > 0 && (
-            <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-md">
-              <h3 className="text-lg font-medium text-blue-900 mb-2">연동된 소셜 계정</h3>
-              <p className="text-blue-800">
-                {user.linked_social_providers.map(provider => 
-                  provider === 'kakao' ? '카카오' : 
-                  provider === 'naver' ? '네이버' : provider
-                ).join(', ')} 계정이 연동되어 있습니다. 
-                소셜 계정으로도 로그인할 수 있으며, 비밀번호는 언제든지 변경 가능합니다.
-              </p>
-            </div>
-          )}
+          {/* 소셜 계정 연동 */}
+          <div className="mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">소셜 계정 연동</h2>
+            
+            {user.linked_social_providers && user.linked_social_providers.length > 0 ? (
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <h3 className="text-lg font-medium text-blue-900 mb-2">연동된 소셜 계정</h3>
+                <p className="text-blue-800">
+                  {user.linked_social_providers.map(provider => 
+                    provider === 'kakao' ? '카카오' : 
+                    provider === 'naver' ? '네이버' : provider
+                  ).join(', ')} 계정이 연동되어 있습니다. 
+                  소셜 계정으로도 로그인할 수 있으며, 비밀번호는 언제든지 변경 가능합니다.
+                </p>
+              </div>
+            ) : (
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-md">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">소셜 계정 연동</h3>
+                <p className="text-gray-600 mb-4">
+                  소셜 계정을 연동하면 더 편리하게 로그인할 수 있습니다.
+                </p>
+                
+                {/* 카카오 연동 버튼 */}
+                <button
+                  onClick={() => {
+                    // 로그인 페이지로 이동해서 카카오 연동 진행
+                    window.location.href = '/login?action=kakao_link';
+                  }}
+                  className="w-full flex items-center justify-center gap-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 5.84 2 10.8c0 3.12 1.68 5.88 4.32 7.56l-.96 3.48c-.12.36.24.72.6.48l4.56-2.76c.48.06.96.06 1.44.06 5.52 0 10-3.84 10-8.82C22 5.84 17.52 2 12 2z"/>
+                  </svg>
+                  카카오 계정 연동하기
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
