@@ -191,7 +191,7 @@ const Home: React.FC = () => {
           
           {/* 설명 문구 */}
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
-            AI 머신러닝 기술의 로또 분석으로 과거 데이터 기반 통계 분석과 패턴 인식을 통해 더 스마트한 로또 번호 선택을 경험해보세요!
+            AI 머신러닝 기술의 로또 분석으로 과거 데이터 기반 통계 분석과 패턴 인식을 통해 참고용 번호 선택을 도와드립니다. 19세 이상 이용 가능한 오락 서비스입니다.
           </p>
           
           {/* CTA 버튼 */}
@@ -278,7 +278,7 @@ const Home: React.FC = () => {
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">AI 머신러닝 기술의 로또 분석</h3>
           <p className="text-gray-600">
-            머신러닝 알고리즘으로 과거 당첨 패턴을 분석하여 최적의 번호를 추천합니다.
+            머신러닝 알고리즘으로 과거 패턴을 분석하여 참고용 번호를 제안합니다.
           </p>
         </div>
         
@@ -312,7 +312,7 @@ const Home: React.FC = () => {
           지금 바로 시작하세요!
         </h2>
         <p className="text-xl mb-6 opacity-90">
-          AI가 분석한 로또 번호로 당첨 확률을 높여보세요.
+          AI가 분석한 로또 번호로 참고용 선택을 도와드립니다.
         </p>
         <Link
           to="/recommendation"

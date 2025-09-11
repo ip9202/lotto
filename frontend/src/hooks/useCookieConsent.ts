@@ -9,6 +9,13 @@ interface ConsentState {
   security_storage?: 'granted' | 'denied';
 }
 
+// 전역 window 객체에 updateConsent 함수 타입 추가
+declare global {
+  interface Window {
+    updateConsent?: (consent: ConsentState) => void;
+  }
+}
+
 // window.addEventListener를 통해 받는 메시지 이벤트 타입
 interface ConsentMessageEvent extends MessageEvent {
   data: {
@@ -29,7 +36,10 @@ export const useCookieConsent = () => {
         if (consent) {
           setConsentStatus(consent);
 
-          // AdSense 관련 로직 제거 (심사 완료 후 추가 예정)
+          // Consent Mode v2 업데이트
+          if (window.updateConsent) {
+            window.updateConsent(consent);
+          }
         }
       }
     };

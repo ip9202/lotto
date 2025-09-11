@@ -6,7 +6,7 @@
     
     <!-- 🎯 기본 SEO 메타 태그 -->
     <title>로또리아 AI - 인공지능 로또 번호 예측 서비스</title>
-    <meta name="description" content="AI 머신러닝으로 로또 당첨번호를 분석하고 예측하는 로또리아. 과거 데이터 기반 통계 분석과 패턴 인식으로 더 스마트한 로또 번호 선택을 도와드립니다." />
+    <meta name="description" content="AI 머신러닝으로 로또 번호를 분석하는 로또리아. 과거 데이터 기반 통계 분석과 패턴 인식으로 참고용 번호 선택을 도와드립니다. 19세 이상 이용 가능." />
     <meta name="keywords" content="로또번호예측, AI로또, 머신러닝로또, 로또분석, 당첨번호예측, 로또통계, 인공지능로또" />
     <meta name="author" content="Lottoria" />
     <meta name="robots" content="index, follow" />
@@ -14,7 +14,7 @@
     
     <!-- 🌐 오픈그래프 태그 -->
     <meta property="og:title" content="로또리아 AI - 인공지능 로또 번호 예측" />
-    <meta property="og:description" content="AI 머신러닝 기술로 로또 당첨 확률을 높여보세요" />
+    <meta property="og:description" content="AI 머신러닝 기술로 로또 번호 분석을 도와드립니다. 참고용 서비스입니다." />
     <meta property="og:image" content="https://lottoria.ai.kr/images/og-image.jpg" />
     <meta property="og:url" content="https://lottoria.ai.kr" />
     <meta property="og:type" content="website" />
@@ -24,7 +24,7 @@
     <!-- 🐦 트위터 카드 -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="로또리아 AI - 인공지능 로또 번호 예측" />
-    <meta name="twitter:description" content="AI 머신러닝 기술로 로또 당첨 확률을 높여보세요" />
+    <meta name="twitter:description" content="AI 머신러닝 기술로 로또 번호 분석을 도와드립니다. 참고용 서비스입니다." />
     <meta name="twitter:image" content="https://lottoria.ai.kr/images/twitter-card.jpg" />
     
     <!-- 🔍 검색엔진 인증 메타 태그 -->
@@ -87,7 +87,28 @@
       });
     </script>
     
-    <!-- AdSense는 심사 완료 후 추가 예정 -->
+    <!-- Google AdSense with Consent Mode v2 -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1813089661807173" crossorigin="anonymous"></script>
+    
+    <!-- Google Consent Mode v2 -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      
+      // 기본 동의 상태 설정 (거부)
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'analytics_storage': 'denied',
+        'functionality_storage': 'denied',
+        'personalization_storage': 'denied',
+        'security_storage': 'granted'
+      });
+      
+      // 동의 상태 업데이트 함수
+      window.updateConsent = function(consent) {
+        gtag('consent', 'update', consent);
+      };
+    </script>
     
     <!-- 🔐 소셜 로그인 SDK -->
     <!-- 카카오 JavaScript SDK (최신 버전) -->

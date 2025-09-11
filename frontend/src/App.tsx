@@ -17,6 +17,7 @@ import CookieSettings from './pages/CookieSettings';
 import Terms from './pages/Terms';
 import WinningHistory from './pages/WinningHistory';
 import SavedNumbers from './pages/SavedNumbers';
+import AdSensePolicy from './pages/AdSensePolicy';
 import { NotificationContainer } from './components/common';
 import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 // import History from './pages/History'; // 이전기록 기능 개발 중 - 일시 비활성화
@@ -147,6 +148,7 @@ const AppWithNotifications: React.FC = () => {
             <Route path="/terms" element={<Terms />} />
             <Route path="/winning-history" element={<WinningHistory />} />
             <Route path="/saved-numbers" element={<SavedNumbers />} />
+            <Route path="/adsense-policy" element={<AdSensePolicy />} />
             {/* <Route path="/history" element={<History />} /> 이전기록 기능 개발 중 - 일시 비활성화 */}
           </Routes>
         </Layout>
