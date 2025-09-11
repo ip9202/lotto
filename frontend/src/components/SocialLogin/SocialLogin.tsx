@@ -53,8 +53,18 @@ const SocialLogin: React.FC<SocialLoginProps> = ({ onClick, className = '' }) =>
       
       
       // 카카오 SDK 초기화
+      const kakaoAppKey = import.meta.env.VITE_KAKAO_APP_KEY;
+      console.log('🔑 카카오 앱 키 확인:', kakaoAppKey);
+      console.log('🌍 현재 환경:', import.meta.env.VITE_ENVIRONMENT);
+      
+      if (!kakaoAppKey) {
+        console.error('❌ 카카오 앱 키가 없습니다!');
+        setIsLoading(false);
+        return;
+      }
+      
       if (!window.Kakao.isInitialized()) {
-        window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+        window.Kakao.init(kakaoAppKey);
       }
       
       // 초기화 후 Auth 객체 확인
