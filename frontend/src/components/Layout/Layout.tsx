@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { clsx } from 'clsx';
+import { UserProfile } from '../UserProfile';
+import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,25 +12,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useUnifiedAuth();
 
   // 디버깅을 위한 로그
-  console.log('Layout rendered, current location:', location.pathname);
-  console.log('Location object:', location);
 
   useEffect(() => {
-    console.log('Location changed to:', location.pathname);
   }, [location]);
 
   const navItems = [
     { path: '/', label: '홈' },
     { path: '/recommendation', label: '번호 추천' },
-    { path: '/admin', label: '관리자' },
+    { path: '/statistics', label: '통계' },
     // { path: '/history', label: '기록 보기' }, // 이전기록 기능 개발 중 - 일시 비활성화
   ];
 
   const handleNavClick = (path: string) => {
-    console.log('Navigation clicked:', path);
-    console.log('Current location before navigation:', location.pathname);
     
     // 모바일 메뉴 닫기
     setIsMobileMenuOpen(false);
@@ -36,14 +34,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     // 프로그래밍 방식으로도 네비게이션 시도
     try {
       navigate(path);
-      console.log('Navigation successful to:', path);
     } catch (error) {
       console.error('Navigation error:', error);
     }
   };
 
   const toggleMobileMenu = () => {
-    console.log('Mobile menu clicked');
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
@@ -63,26 +59,43 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
 
             {/* 데스크톱 네비게이션 */}
-            <nav className="hidden md:flex space-x-8">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => handleNavClick(item.path)}
-                  className={clsx(
-                    'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer',
-                    location.pathname === item.path
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                  )}
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <div className="flex items-center space-x-8">
+              <nav className="hidden md:flex space-x-8">
+                {navItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => handleNavClick(item.path)}
+                    className={clsx(
+                      'px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 cursor-pointer',
+                      location.pathname === item.path
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                    )}
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+
+              {/* 사용자 인증 영역 */}
+              <div className="hidden md:flex items-center space-x-2">
+                {isAuthenticated ? (
+                  <UserProfile />
+                ) : (
+                  <button
+                    onClick={() => navigate('/login')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                  >
+                    로그인
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* 모바일 메뉴 버튼 */}
-            <div className="md:hidden">
+            <div className="md:hidden flex items-center space-x-2">
+              {isAuthenticated && <UserProfile />}
               <button 
                 className="text-gray-600 hover:text-gray-900 p-2 rounded-md hover:bg-gray-100 transition-colors"
                 onClick={toggleMobileMenu}
@@ -114,6 +127,21 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     {item.label}
                   </Link>
                 ))}
+                
+                {/* 모바일 로그인 버튼 */}
+                {!isAuthenticated && (
+                  <div className="px-3 py-2 border-t border-gray-200 mt-2 pt-4">
+                    <button
+                      onClick={() => {
+                        navigate('/login');
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                    >
+                      로그인
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -172,6 +200,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </div>
       </footer>
+
     </div>
   );
 };

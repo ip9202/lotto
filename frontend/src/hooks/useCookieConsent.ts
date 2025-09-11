@@ -9,6 +9,13 @@ interface ConsentState {
   security_storage?: 'granted' | 'denied';
 }
 
+// 전역 window 객체에 updateConsent 함수 타입 추가
+declare global {
+  interface Window {
+    updateConsent?: (consent: ConsentState) => void;
+  }
+}
+
 // window.addEventListener를 통해 받는 메시지 이벤트 타입
 interface ConsentMessageEvent extends MessageEvent {
   data: {
@@ -27,16 +34,11 @@ export const useCookieConsent = () => {
       if (consentEvent.data && consentEvent.data.type === 'consent_response') {
         const consent = consentEvent.data.consent;
         if (consent) {
-          console.log('Received consent state from CMP:', consent);
           setConsentStatus(consent);
 
-          // 동의 상태에 따른 추가적인 로직 (예: GTM으로 이벤트 전송)
-          if (consent.ad_storage === 'granted') {
-            console.log('Personalized ads can be loaded.');
-            // loadPersonalizedAds(); // 실제 광고 로드 함수 호출
-          } else {
-            console.log('Non-personalized ads should be loaded.');
-            // loadNonPersonalizedAds(); // 비개인화 광고 로드 함수 호출
+          // Consent Mode v2 업데이트
+          if (window.updateConsent) {
+            window.updateConsent(consent);
           }
         }
       }

@@ -1,0 +1,48 @@
+<svg width="140" height="140" viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+  <!-- 배경 그라데이션 -->
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="ballGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b6b;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ee5a24;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f8f9fa;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 배경 원 -->
+  <circle cx="70" cy="70" r="70" fill="#667eea"/>
+  
+  <!-- AI 텍스트 (상단 중앙) -->
+  <text x="70" y="30" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="18" font-weight="bold">AI</text>
+  
+  <!-- 로또 볼들 (6개) - 중앙에 균등하게 배치 -->
+  <!-- 빨간색 볼 (1-10) - 왼쪽 상단 -->
+  <circle cx="50" cy="55" r="10" fill="#ff6b6b" stroke="#fff" stroke-width="2"/>
+  <text x="50" y="60" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">7</text>
+  
+  <!-- 파란색 볼 (11-20) - 오른쪽 상단 -->
+  <circle cx="90" cy="55" r="10" fill="#4ecdc4" stroke="#fff" stroke-width="2"/>
+  <text x="90" y="60" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">15</text>
+  
+  <!-- 초록색 볼 (21-30) - 왼쪽 하단 -->
+  <circle cx="50" cy="85" r="10" fill="#45b7d1" stroke="#fff" stroke-width="2"/>
+  <text x="50" y="90" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">23</text>
+  
+  <!-- 노란색 볼 (31-40) - 오른쪽 하단 -->
+  <circle cx="90" cy="85" r="10" fill="#f9ca24" stroke="#fff" stroke-width="2"/>
+  <text x="90" y="90" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">35</text>
+  
+  <!-- 보라색 볼 (41-45) - 중앙 하단 -->
+  <circle cx="70" cy="100" r="10" fill="#6c5ce7" stroke="#fff" stroke-width="2"/>
+  <text x="70" y="105" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="10" font-weight="bold">42</text>
+  
+  <!-- 보너스 볼 (작은 원) - 중앙 -->
+  <circle cx="70" cy="70" r="6" fill="#fd79a8" stroke="#fff" stroke-width="1.5"/>
+  <text x="70" y="73" text-anchor="middle" fill="white" font-family="Arial, sans-serif" font-size="8" font-weight="bold">+</text>
+</svg>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import RecommendationCard from '../components/RecommendationCard';
+// import RecommendationCard from '../components/RecommendationCard';
 import LottoBall from '../components/LottoBall';
 import PastDraws from '../components/PastDraws';
 
@@ -38,14 +38,8 @@ const History: React.FC = () => {
     try {
       setLoading(true);
       
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-      const response = await fetch(`${apiUrl}/api/v1/recommendations/history?limit=50&offset=0`);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const result = await response.json();
+      const { recommendationsAPI } = await import('../services/apiService');
+      const result = await recommendationsAPI.getHistory(50, 0);
       
       if (result.success && result.data) {
         const histories: RecommendationHistory[] = result.data.map((item: any) => ({
@@ -74,7 +68,7 @@ const History: React.FC = () => {
           setSelectedSession(histories[0].session_id);
         }
       } else {
-        throw new Error(result.message || '데이터를 불러올 수 없습니다');
+        throw new Error(result.error?.message || '데이터를 불러올 수 없습니다');
       }
     } catch (error) {
       console.error('추천 기록 조회 실패:', error);
@@ -223,8 +217,7 @@ const History: React.FC = () => {
         <PastDraws 
           limit={20} 
           showPagination={true}
-          onDrawSelect={(draw) => {
-            console.log('선택된 회차:', draw);
+          onDrawSelect={(_draw) => {
             // 필요시 상세 보기 모달 등을 추가할 수 있음
           }}
         />

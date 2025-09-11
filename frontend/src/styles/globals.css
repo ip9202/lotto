@@ -2,8 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* AdSense 스타일 import */
-@import './components/adsense.css';
+/* AdSense 스타일 제거 (심사 완료 후 추가 예정) */
 
 @layer base {
   html {
@@ -78,6 +77,17 @@
     min-height: 6px !important;
     max-width: 6px !important;
     max-height: 6px !important;
+  }
+
+  /* 숫자 입력 필드 스피너 화살표 제거 */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  input[type="number"] {
+    -moz-appearance: textfield;
   }
 }
 

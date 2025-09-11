@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- 🎯 기본 SEO 메타 태그 -->
-    <title>로또리아 AI - 인공지능 로또 번호 예측 서비스 | AI 로또 분석</title>
-    <meta name="description" content="AI 머신러닝으로 로또 6/45 당첨번호를 분석하고 예측하는 로또리아. 과거 당첨 데이터 통계 분석, 패턴 인식, 확률 계산으로 더 스마트한 로또 번호 선택을 도와드립니다. 무료 AI 로또 번호 추천 서비스." />
-    <meta name="keywords" content="로또번호예측, AI로또, 머신러닝로또, 로또분석, 당첨번호예측, 로또통계, 인공지능로또, 로또6/45, 로또번호생성, 로또확률, 당첨패턴, 로또AI, 무료로또, 로또예상번호" />
+    <title>로또리아 AI - 인공지능 로또 번호 예측 서비스</title>
+    <meta name="description" content="AI 머신러닝으로 로또 번호를 분석하는 로또리아. 과거 데이터 기반 통계 분석과 패턴 인식으로 참고용 번호 선택을 도와드립니다. 19세 이상 이용 가능." />
+    <meta name="keywords" content="로또번호예측, AI로또, 머신러닝로또, 로또분석, 당첨번호예측, 로또통계, 인공지능로또" />
     <meta name="author" content="Lottoria" />
     <meta name="robots" content="index, follow" />
     <meta name="googlebot" content="index, follow, max-snippet:160, max-image-preview:large" />
@@ -21,8 +21,8 @@
     <meta name="category" content="games, lottery, AI, machine learning" />
     
     <!-- 🌐 오픈그래프 태그 -->
-    <meta property="og:title" content="로또리아 AI - 인공지능 로또 번호 예측 서비스" />
-    <meta property="og:description" content="AI 머신러닝으로 로또 6/45 당첨번호를 분석하고 예측합니다. 무료 AI 로또 번호 추천으로 당첨 확률을 높여보세요!" />
+    <meta property="og:title" content="로또리아 AI - 인공지능 로또 번호 예측" />
+    <meta property="og:description" content="AI 머신러닝 기술로 로또 번호 분석을 도와드립니다. 참고용 서비스입니다." />
     <meta property="og:image" content="https://lottoria.ai.kr/images/og-image.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -38,7 +38,7 @@
     <meta name="twitter:site" content="@lottoria_ai" />
     <meta name="twitter:creator" content="@lottoria_ai" />
     <meta name="twitter:title" content="로또리아 AI - 인공지능 로또 번호 예측" />
-    <meta name="twitter:description" content="AI 머신러닝으로 로또 당첨번호를 분석하고 예측합니다. 무료 로또 번호 추천 서비스" />
+    <meta name="twitter:description" content="AI 머신러닝 기술로 로또 번호 분석을 도와드립니다. 참고용 서비스입니다." />
     <meta name="twitter:image" content="https://lottoria.ai.kr/images/twitter-card.jpg" />
     <meta name="twitter:image:alt" content="로또리아 AI 로고" />
     
@@ -51,6 +51,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#3B82F6" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="로또리아 AI" />
@@ -163,12 +164,41 @@
       });
     </script>
     
-    <!-- 🎯 Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1813089661807173"
-     crossorigin="anonymous"></script>
+    <!-- Google AdSense with Consent Mode v2 -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1813089661807173" crossorigin="anonymous"></script>
+    
+    <!-- Google Consent Mode v2 -->
     <script>
-      (adsbygoogle = window.adsbygoogle || []).push({});
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      
+      // 기본 동의 상태 설정 (거부)
+      gtag('consent', 'default', {
+        'ad_storage': 'denied',
+        'analytics_storage': 'denied',
+        'functionality_storage': 'denied',
+        'personalization_storage': 'denied',
+        'security_storage': 'granted'
+      });
+      
+      // 동의 상태 업데이트 함수
+      window.updateConsent = function(consent) {
+        gtag('consent', 'update', consent);
+      };
     </script>
+    
+    <!-- 🔐 소셜 로그인 SDK -->
+    <!-- 카카오 JavaScript SDK (최신 버전) -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" 
+            crossorigin="anonymous"
+            onload="window.kakaoSDKLoaded = true;"
+            onerror="window.kakaoSDKLoaded = false;"></script>
+    
+    <!-- 네이버 JavaScript SDK -->
+    <script type="text/javascript" 
+            src="https://static.nid.naver.com/js/naveridlogin_js_sdk_2.0.2.js"
+            onload="window.naverSDKLoaded = true;"
+            onerror="window.naverSDKLoaded = false;"></script>
     
     <style>
       body {

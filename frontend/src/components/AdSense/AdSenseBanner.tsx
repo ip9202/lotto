@@ -1,20 +1,16 @@
 import React from 'react';
-import AdSense from './AdSense';
+// import AdSense from './AdSense'; // 심사 완료 후 활성화
 
 interface AdSenseBannerProps {
   className?: string;
 }
 
 const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ className = '' }) => {
-  // 실제 광고 단위 ID가 생성되면 여기에 입력
-  const adSlot = "1234567890"; // 임시 광고 단위 ID
-  
+  // 심사 중이므로 AdSense 비활성화
   return (
-    <AdSense 
-      adSlot={adSlot} 
-      adFormat="auto"
-      className={`w-full ${className}`}
-    />
+    <div className={`w-full ${className}`} style={{ display: 'none' }}>
+      {/* AdSense 심사 완료 후 활성화 예정 */}
+    </div>
   );
 };
 

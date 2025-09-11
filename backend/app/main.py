@@ -1,11 +1,13 @@
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+import json
 from .database import engine, Base
 from .config import settings
-from .api import lotto, recommendations, admin, sessions
+from .api import lotto, recommendations, admin, sessions, auth, saved_recommendations, public_recommendations, winning_comparison, user_preferences
+from .api.v1.endpoints import unified_auth
 from .services.auto_updater import auto_updater
 
 # 로깅 설정
@@ -52,6 +54,24 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# 요청 로깅 미들웨어
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    if request.url.path == "/api/v1/saved-recommendations" and request.method == "POST":
+        body = await request.body()
+        print(f"🔍 저장 요청 로그:")
+        print(f"   URL: {request.url}")
+        print(f"   Headers: {dict(request.headers)}")
+        print(f"   Body: {body.decode('utf-8') if body else 'Empty'}")
+        
+        # body를 다시 읽을 수 있도록 설정
+        async def receive():
+            return {"type": "http.request", "body": body}
+        request._receive = receive
+    
+    response = await call_next(request)
+    return response
+
 # CORS 미들웨어 설정 - lottoria.ai.kr 도메인 포함
 app.add_middleware(
     CORSMiddleware,
@@ -73,6 +93,12 @@ app.include_router(lotto.router, prefix="")
 app.include_router(recommendations.router, prefix="")
 app.include_router(admin.router, prefix="")
 app.include_router(sessions.router, prefix="")
+app.include_router(auth.router, prefix="")  # 인증 API
+app.include_router(saved_recommendations.router, prefix="")  # 저장된 추천번호 API
+app.include_router(public_recommendations.router, prefix="")  # 공공 추천 데이터 API
+app.include_router(winning_comparison.router, prefix="")  # 당첨 비교 API
+app.include_router(user_preferences.router, prefix="/api/v1/user")  # 사용자 설정 API
+app.include_router(unified_auth.router, prefix="/api/v1/auth")  # 통합 인증 API
 
 # 전역 예외 처리
 @app.exception_handler(Exception)

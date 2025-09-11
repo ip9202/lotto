@@ -27,11 +27,21 @@ services:
       DATABASE_URL: postgresql://lotto_user:lotto_password@postgres:5432/lotto_db
       API_HOST: 0.0.0.0
       API_PORT: 8000
+      # 소셜 로그인 설정
+      KAKAO_REST_API_KEY: 932fccce67821851edcda7436612c582
+      NAVER_CLIENT_ID: TroDslwxToSSQGV0tuBu
+      NAVER_CLIENT_SECRET: v7hl8B4lyY
     volumes:
       - ./backend:/app
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
 
   frontend:

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LottoBall from '../components/LottoBall';
-import AdSenseBanner from '../components/AdSense/AdSenseBanner';
-// import AdSense from '../components/AdSense/AdSense'; // AdSense 정책 위반 방지를 위해 제거
+// import AdSenseBanner from '../components/AdSense/AdSenseBanner'; // 심사 완료 후 추가 예정
+import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 
 interface LottoDraw {
   draw_number: number;
@@ -14,8 +14,137 @@ interface LottoDraw {
 }
 
 const Home: React.FC = () => {
+  useNavigate();
+  const { socialLogin } = useUnifiedAuth();
   const [latestDraw, setLatestDraw] = useState<LottoDraw | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // 카카오 콜백 처리
+  useEffect(() => {
+    const handleKakaoCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      
+      if (code && state && state.startsWith('kakao_login_')) {
+        
+        try {
+          // 카카오 SDK 초기화
+          if (!window.Kakao || !window.Kakao.isInitialized()) {
+            window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+          }
+          
+          // 카카오에서 액세스 토큰 가져오기
+          const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              grant_type: 'authorization_code',
+              client_id: import.meta.env.VITE_KAKAO_APP_KEY,
+              redirect_uri: `${window.location.origin}/`,
+              code: code
+            })
+          });
+          
+          const tokenData = await tokenResponse.json();
+          
+          if (tokenData.access_token) {
+            // 카카오 사용자 정보 가져오기
+            const userResponse = await fetch('https://kapi.kakao.com/v2/user/me', {
+              headers: {
+                'Authorization': `Bearer ${tokenData.access_token}`
+              }
+            });
+            
+            await userResponse.json(); // userData
+            
+            // 카카오 사용자 정보 확인
+            const checkResponse = await fetch('http://localhost:8000/api/v1/auth/check-kakao-user', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                provider: 'kakao',
+                access_token: tokenData.access_token
+              })
+            });
+
+            const checkResult = await checkResponse.json();
+            
+            if (checkResult.success) {
+              if (checkResult.data.is_registered) {
+                // 기존 계정이 있으면 자동 로그인
+                const success = await socialLogin('kakao', tokenData.access_token);
+                if (success) {
+                  // URL 정리
+                  window.history.replaceState({}, document.title, window.location.pathname);
+                }
+              } else {
+                // 가입된 계정이 없으면 자동 회원가입 후 로그인
+                await handleKakaoRegister(checkResult.data.user_info, tokenData.access_token);
+              }
+            }
+          } else {
+            console.error('카카오 인증 실패');
+          }
+        } catch (error) {
+          console.error('카카오 콜백 처리 오류:', error);
+        }
+      }
+    };
+
+    handleKakaoCallback();
+  }, [socialLogin]);
+
+  const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
+    try {
+      // 카카오 사용자 정보로 자동 회원가입
+      const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: kakaoUser.email || `${kakaoUser.id}@kakao.temp`,
+          password: `kakao_${kakaoUser.id}_${Date.now()}`,
+          nickname: kakaoUser.nickname || '카카오 사용자'
+        })
+      });
+
+      const registerResult = await registerResponse.json();
+      
+      if (registerResult.success) {
+        // 회원가입 성공 후 카카오 연동
+        const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${registerResult.data.access_token}`
+          },
+          body: JSON.stringify({
+            provider: 'kakao',
+            access_token: accessToken
+          })
+        });
+
+        const linkResult = await linkResponse.json();
+        
+        if (linkResult.success) {
+          // 연동 성공 후 자동 로그인
+          const loginSuccess = await socialLogin('kakao', accessToken);
+          if (loginSuccess) {
+            // URL 정리
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('카카오 회원가입 오류:', error);
+    }
+  };
 
   useEffect(() => {
       const fetchLatestDraw = async () => {
@@ -62,7 +191,7 @@ const Home: React.FC = () => {
           
           {/* 설명 문구 */}
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
-            AI 머신러닝 기술의 로또 분석으로 과거 데이터 기반 통계 분석과 패턴 인식을 통해 더 스마트한 로또 번호 선택을 경험해보세요!
+            AI 머신러닝 기술의 로또 분석으로 과거 데이터 기반 통계 분석과 패턴 인식을 통해 참고용 번호 선택을 도와드립니다. 19세 이상 이용 가능한 오락 서비스입니다.
           </p>
           
           {/* CTA 버튼 */}
@@ -80,8 +209,8 @@ const Home: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
-      {/* 상단 광고 배너 */}
-      <AdSenseBanner className="my-8" />
+      {/* 상단 광고 배너 - 심사 완료 후 추가 예정 */}
+      {/* <AdSenseBanner className="my-8" /> */}
 
       {/* 최신 당첨 번호 */}
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -111,20 +240,20 @@ const Home: React.FC = () => {
             
             {/* 당첨 번호들 - 가운데 정렬, 간격 개선 */}
             <div className="flex justify-center">
-              <div className="flex flex-wrap gap-5 sm:gap-6 lg:gap-8 justify-center max-w-fit">
+              <div className="flex flex-wrap gap-2 sm:gap-4 lg:gap-6 justify-center max-w-fit">
                 {latestDraw.numbers.map((number) => (
                   <LottoBall
                     key={number}
                     number={number}
-                    size="lg"
+                    size="responsive"
                     variant="default"
                   />
                 ))}
                 <div className="flex items-center">
-                  <span className="text-2xl text-gray-400 mx-3 sm:mx-4">+</span>
+                  <span className="text-lg sm:text-xl text-gray-400 mx-2 sm:mx-3">+</span>
                   <LottoBall
                     number={latestDraw.bonus_number}
-                    size="lg"
+                    size="responsive"
                     variant="default"
                   />
                 </div>
@@ -149,7 +278,7 @@ const Home: React.FC = () => {
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">AI 머신러닝 기술의 로또 분석</h3>
           <p className="text-gray-600">
-            머신러닝 알고리즘으로 과거 당첨 패턴을 분석하여 최적의 번호를 추천합니다.
+            머신러닝 알고리즘으로 과거 패턴을 분석하여 참고용 번호를 제안합니다.
           </p>
         </div>
         
@@ -183,7 +312,7 @@ const Home: React.FC = () => {
           지금 바로 시작하세요!
         </h2>
         <p className="text-xl mb-6 opacity-90">
-          AI가 분석한 로또 번호로 당첨 확률을 높여보세요.
+          AI가 분석한 로또 번호로 참고용 선택을 도와드립니다.
         </p>
         <Link
           to="/recommendation"

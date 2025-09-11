@@ -1,0 +1,5 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="180" height="180" rx="20" fill="#4F46E5"/>
+<circle cx="90" cy="90" r="40" fill="white"/>
+<text x="90" y="100" font-family="Arial, sans-serif" font-size="40" fill="#4F46E5" text-anchor="middle">🎯</text>
+</svg>

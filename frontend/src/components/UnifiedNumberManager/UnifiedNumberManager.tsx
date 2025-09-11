@@ -1,5 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import LottoBall from '../LottoBall';
+import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
+import { userPreferencesAPI, UserPreferences } from '../../services/apiService';
+import { useNotification } from '../../contexts/NotificationContext';
 
 interface UnifiedNumberManagerProps {
   includeNumbers: number[];
@@ -30,9 +33,12 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
   maxNumbersPerCombination = 6,
   combinationSettings
 }) => {
+  const { isAuthenticated } = useUnifiedAuth();
+  const { showSuccess, showError } = useNotification();
   const [mode, setMode] = useState<Mode>('include');
   const [currentCombinationIndex, setCurrentCombinationIndex] = useState(0);
   const [error, setError] = useState<string>('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // 안전한 상태 업데이트 함수들
   const safeUpdateInclude = useCallback((numbers: number[]) => {
@@ -69,6 +75,38 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
       setCurrentCombinationIndex(0);
     }
   }, [combinationSettings?.manual_count, manualCombinations.length, safeUpdateCombinations]);
+
+  // 사용자 설정 저장 함수
+  const handleSavePreferences = async () => {
+    if (!isAuthenticated) return;
+    
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) {
+        showError('로그인이 필요합니다.');
+        return;
+      }
+
+      const preferences: UserPreferences = {
+        include_numbers: includeNumbers,
+        exclude_numbers: excludeNumbers
+      };
+
+      const result = await userPreferencesAPI.savePreferences(token, preferences);
+      
+      if (result.success) {
+        showSuccess('설정이 저장되었습니다.');
+      } else {
+        showError(result.error?.message || '설정 저장에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('설정 저장 오류:', error);
+      showError('설정 저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // 번호 토글 함수
   const handleNumberToggle = useCallback((number: number) => {
@@ -393,66 +431,29 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
         </div>
       </div>
 
-              {/* 선택된 번호 표시 - 반응형 개선 */}
-        <div className="space-y-4">
-          {/* 포함할 번호 */}
-          {includeNumbers.length > 0 && (
-            <div className={`p-3 rounded-lg transition-all ${
-              mode === 'include' ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'
-            }`}>
-              <div className="mb-3">
-                <span className={`text-base font-semibold ${
-                  mode === 'include' ? 'text-green-700' : 'text-gray-600'
-                }`}>
-                  포함할 번호
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {includeNumbers.map((num) => (
-                  <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 border border-green-300 hover:bg-green-200 transition-colors">
-                    {num}
-                    <button
-                      onClick={() => handleNumberRemove(num, 'include')}
-                      className="ml-1 sm:ml-2 hover:opacity-70 text-green-600 text-sm sm:text-lg font-bold"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
 
-                  {/* 제외할 번호 */}
-          {excludeNumbers.length > 0 && (
-            <div className={`p-3 rounded-lg transition-all ${
-              mode === 'exclude' ? 'bg-red-50 border border-red-200' : 'bg-gray-50 border border-gray-200'
-            }`}>
-              <div className="flex flex-row items-center justify-between mb-3">
-                <span className={`text-base font-semibold ${
-                  mode === 'exclude' ? 'text-red-700' : 'text-gray-600'
-                }`}>
-                  제외할 번호
-                </span>
-                <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full font-medium">
-                  ({excludeNumbers.length}개)
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {excludeNumbers.map((num) => (
-                  <span key={num} className="inline-flex items-center px-2 py-1 sm:px-3 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-red-100 text-red-800 border border-red-300 hover:bg-red-200 transition-colors">
-                    {num}
-                    <button
-                      onClick={() => handleNumberRemove(num, 'exclude')}
-                      className="ml-1 sm:ml-2 hover:opacity-70 text-red-600 text-sm sm:text-lg font-bold"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+      {/* 설정 저장 버튼 (회원만) - 포함/제외 모드에서만 보이기 */}
+      {isAuthenticated && (mode === 'include' || mode === 'exclude') && (includeNumbers.length > 0 || excludeNumbers.length > 0) && (
+        <div className="flex justify-center">
+          <button
+            onClick={handleSavePreferences}
+            disabled={isSaving}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] flex items-center space-x-2"
+          >
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>저장 중...</span>
+              </>
+            ) : (
+              <>
+                <span>💾</span>
+                <span>포함/제외 설정 저장</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
         {/* 수동 조합 - 수동 조합 개수가 0일 때는 숨김 */}
         {mode === 'combination' && maxCombinations > 0 && (
@@ -563,7 +564,6 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
             )}
           </div>
         )}
-      </div>
     </div>
   );
 };

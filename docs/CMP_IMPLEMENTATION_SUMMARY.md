@@ -1,6 +1,6 @@
-# Google CMP (Consent Management Platform) 구현 작업 요약
+# 구현 작업 요약
 
-이 문서는 Google AdSense 심사 및 GDPR/ePrivacy 규정 준수를 위해 서비스에 CMP 관련 기능을 구현한 내역을 요약합니다.
+이 문서는 로또 서비스의 주요 구현 작업 내역을 요약합니다.
 
 ## 📅 작업 일자
 
@@ -93,3 +93,68 @@ return (
 
 - Docker 환경에서 개발 서버를 실행하여 현재까지의 작업 내역을 최종 확인합니다.
 - 변경 사항이 최종 확정되면 Git에 커밋 및 푸시합니다.
+
+---
+
+## 🔧 더미 데이터 생성 기능 오류 수정
+
+**작업 일시**: 2025-09-10  
+**작업자**: Claude Code  
+**상태**: ✅ 완료 (모든 오류 해결됨)
+
+### 수정된 오류들
+
+#### 1. `created_at` 필드 중복 설정 오류
+- **오류**: `'hour' is an invalid keyword argument for replace()`
+- **원인**: SQLAlchemy 모델의 `server_default`와 코드의 `datetime.now()` 충돌
+- **수정**: `backend/app/api/admin.py`에서 `created_at=datetime.now()` 제거
+
+#### 2. `matched_numbers` 타입 불일치
+- **오류**: `column "matched_numbers" is of type integer[] but expression is of type json`
+- **원인**: SQLAlchemy 모델과 PostgreSQL DB 타입 불일치
+- **수정**: `backend/app/models/public_recommendation.py`에서 `JSON` → `ARRAY(Integer)` 변경
+
+#### 3. SQLAlchemy `func` 사용 오류
+- **오류**: `'Session' object has no attribute 'func'`
+- **원인**: 통계 API에서 잘못된 `db.func` 사용
+- **수정**: `from sqlalchemy import func` 추가 후 `func.count()` 사용
+
+### 테스트 결과
+✅ 더미 데이터 생성 API 정상 작동  
+✅ 더미 데이터 통계 조회 API 정상 작동  
+✅ 관리자 페이지 연동 완료
+
+---
+
+### 4. 당첨번호 조합 생성 로직 정확성 수정 (추가)
+- **오류**: 3등, 4등, 5등에서 `winning_numbers[:n]` 순서대로 사용하여 부정확한 조합 생성
+- **원인**: 실제로는 당첨번호 중에서 랜덤하게 선택해야 함
+- **수정**: `random.sample(winning_numbers, n)`으로 정확한 랜덤 선택 적용
+
+#### 수정 내용
+```python
+# 수정 전 (부정확)
+if rank == 3:
+    numbers = winning_numbers[:5] + [other_number]
+
+# 수정 후 (정확)
+if rank == 3:
+    base_numbers = random.sample(winning_numbers, 5)
+    numbers = base_numbers + random.sample(other_numbers, 1)
+```
+
+#### 추가 수정사항
+- `Query`, `Optional` import 누락 해결
+- 미당첨 데이터도 정확한 일치 개수(0-2개) 생성
+- 모든 등수별 당첨번호 조합 정확성 보장
+
+### 최종 테스트 결과
+```bash
+# 1187회차 100개 더미 데이터 생성 성공
+POST /admin/dummy-recommendations/generate
+{"success": true, "created_count": 100}
+
+# 통계 확인: 정확한 등수별 분포
+GET /admin/dummy-recommendations/stats
+{"rank_1": 4, "rank_2": 8, "rank_3": 18, "rank_4": 34, "rank_5": 50}
+```

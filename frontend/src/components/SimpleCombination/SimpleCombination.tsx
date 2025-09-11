@@ -1,5 +1,6 @@
 import React from 'react';
 import LottoBall from '../LottoBall';
+import { SaveRecommendation } from '../SaveRecommendation';
 
 interface SimpleCombinationProps {
   numbers: number[];
@@ -15,7 +16,6 @@ const SimpleCombination: React.FC<SimpleCombinationProps> = ({
   index,
   isManual,
   confidenceScore,
-  onRegenerate,
   onShowAnalysis
 }) => {
   const getConfidenceColor = (score: number) => {
@@ -62,7 +62,7 @@ const SimpleCombination: React.FC<SimpleCombinationProps> = ({
       </div>
 
       {/* 번호들 - 깔끔하게 */}
-      <div className="flex justify-center items-center min-h-[80px]">
+      <div className="flex justify-center items-center min-h-[80px] mb-4">
         <div className="flex gap-4 sm:gap-5 lg:gap-6 justify-center">
           {numbers.map((number, numIndex) => (
             <LottoBall
@@ -74,6 +74,15 @@ const SimpleCombination: React.FC<SimpleCombinationProps> = ({
           ))}
         </div>
       </div>
+
+      {/* 저장 버튼 */}
+      <SaveRecommendation
+        numbers={numbers}
+        confidenceScore={confidenceScore}
+        generationMethod={isManual ? 'manual' : 'ai'}
+        analysisData={null}
+        className="mt-3"
+      />
     </div>
   );
 };

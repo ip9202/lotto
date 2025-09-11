@@ -1,5 +1,5 @@
 import React from 'react';
-import { XMarkIcon, ClockIcon, TagIcon, ChartBarIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, TagIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 import { UserSession } from '../../types/session';
 
 interface SessionDetailModalProps {

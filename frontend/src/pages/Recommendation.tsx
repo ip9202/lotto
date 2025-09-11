@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import SimpleCombination from '../components/SimpleCombination';
 import AnalysisModal from '../components/AnalysisModal';
 import UnifiedNumberManager from '../components/UnifiedNumberManager';
-// import AdSenseBanner from '../components/AdSense/AdSenseBanner'; // AdSense 정책 위반 방지를 위해 제거
-// import AdSense from '../components/AdSense/AdSense'; // AdSense 정책 위반 방지를 위해 제거
+import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
+import { userPreferencesAPI } from '../services/apiService';
+// AdSense 관련 import 제거 (심사 완료 후 추가 예정)
 
 interface Recommendation {
   numbers: number[];
@@ -16,6 +17,7 @@ interface Recommendation {
 
 const Recommendation: React.FC = () => {
   // const location = useLocation(); // 현재 사용하지 않음
+  const { isAuthenticated } = useUnifiedAuth();
   const [selectedNumbers, setSelectedNumbers] = useState<number[][]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -55,13 +57,77 @@ const Recommendation: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // 추천 번호 localStorage 저장
+  const saveRecommendationsToStorage = (recommendations: Recommendation[]) => {
+    try {
+      localStorage.setItem('lottoria_recommendations', JSON.stringify(recommendations));
+      console.log('💾 추천 번호 localStorage에 저장됨:', recommendations.length, '개');
+    } catch (error) {
+      console.error('추천 번호 localStorage 저장 실패:', error);
+    }
+  };
+
+  // 추천 번호 localStorage에서 복원
+  const loadRecommendationsFromStorage = (): Recommendation[] => {
+    try {
+      const stored = localStorage.getItem('lottoria_recommendations');
+      if (stored) {
+        const recommendations = JSON.parse(stored);
+        console.log('📂 localStorage에서 추천 번호 복원됨:', recommendations.length, '개');
+        return recommendations;
+      }
+    } catch (error) {
+      console.error('추천 번호 localStorage 복원 실패:', error);
+    }
+    return [];
+  };
+
+  // 페이지 로드 시 저장된 추천 번호 복원
+  useEffect(() => {
+    console.log('🔄 페이지 로드 - 추천 번호 복원 시도');
+    const storedRecommendations = loadRecommendationsFromStorage();
+    console.log('📂 복원된 추천 번호:', storedRecommendations);
+    if (storedRecommendations.length > 0) {
+      setRecommendations(storedRecommendations);
+      console.log('✅ 페이지 로드 시 추천 번호 복원 완료:', storedRecommendations.length, '개');
+    } else {
+      console.log('ℹ️ 저장된 추천 번호 없음');
+    }
+  }, []);
+
+  // 사용자 설정 불러오기 (회원만)
+  useEffect(() => {
+    const loadUserPreferences = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        const result = await userPreferencesAPI.getPreferences(token);
+        if (result.success && result.data) {
+          setPreferences({
+            include_numbers: result.data.include_numbers || [],
+            exclude_numbers: result.data.exclude_numbers || []
+          });
+        }
+      } catch (error) {
+        console.error('사용자 설정 불러오기 오류:', error);
+      }
+    };
+
+    loadUserPreferences();
+  }, [isAuthenticated]);
+
   // 기본 추천 처리 함수
   const handleBasicRecommendations = async () => {
+    console.log('🚀 기본 추천 버튼 클릭됨!');
+    
     setLoading(true);
     try {
       const requestData = {
         session_id: `default_session`,
-        total_count: basicSettings.total_count,
+        total_count: isAuthenticated ? basicSettings.total_count : 5,
         manual_combinations: [],
         preferences: {
           include_numbers: [],
@@ -70,7 +136,6 @@ const Recommendation: React.FC = () => {
         target_draw: null
       };
 
-      console.log('기본 추천 요청 데이터:', requestData);
       
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/recommendations/generate`, {
         method: 'POST',
@@ -87,12 +152,17 @@ const Recommendation: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log('기본 추천 응답 데이터:', data);
       
       if (data.success) {
         const recommendations = data.data.combinations || [];
+        console.log('🎯 기본 추천 생성 성공:', recommendations);
+        
         setRecommendations(recommendations);
-        console.log('기본 추천 조합 생성 완료');
+        console.log('📝 state에 추천 번호 설정 완료');
+        
+        // localStorage에 추천 번호 저장
+        console.log('💾 localStorage 저장 시도...');
+        saveRecommendationsToStorage(recommendations);
       } else {
         alert('기본 추천 조합 생성에 실패했습니다.');
       }
@@ -105,6 +175,13 @@ const Recommendation: React.FC = () => {
   };
 
   const handleGenerateRecommendations = async () => {
+    console.log('🎯 추천 받기 버튼 클릭됨!');
+    
+    // 새로운 추천을 받기 전에 이전 추천 번호 초기화
+    setRecommendations([]);
+    localStorage.removeItem('lottoria_recommendations');
+    console.log('🔄 이전 추천 번호 초기화 완료');
+
     // 수동 조합이 설정되어 있는데 실제로는 없는 경우
     if (combinationSettings.manual_count > 0 && selectedNumbers.length === 0) {
       alert('수동 조합을 추가해주세요.');
@@ -144,37 +221,25 @@ const Recommendation: React.FC = () => {
         target_draw: null
       };
 
-      console.log('요청 데이터:', requestData);
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/recommendations/generate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestData),
-      });
+      const { recommendationsAPI } = await import('../services/apiService');
+      const result = await recommendationsAPI.generateRecommendations(requestData);
 
-      console.log('응답 상태:', response.status);
       
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('API 오류 응답:', errorText);
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('응답 데이터:', data);
-      
-      if (data.success) {
-        console.log('추천 데이터:', data.data);
-        const recommendations = data.data.combinations || [];
+      if (result.success && result.data) {
+        const recommendations = result.data.combinations || [];
+        console.log('🎯 추천 생성 성공:', recommendations);
         
         // 추천기록 기능 일시 비활성화로 history_id 처리 불필요
         setRecommendations(recommendations);
+        console.log('📝 state에 추천 번호 설정 완료');
         
-        console.log('추천 조합 생성 완료');
+        // localStorage에 추천 번호 저장
+        console.log('💾 localStorage 저장 시도...');
+        saveRecommendationsToStorage(recommendations);
+        
       } else {
-        alert('추천 조합 생성에 실패했습니다.');
+        alert(result.error?.message || '추천 조합 생성에 실패했습니다.');
       }
     } catch (error) {
       console.error('추천 생성 오류:', error);
@@ -241,37 +306,46 @@ const Recommendation: React.FC = () => {
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
       </div>
 
-      {/* 상단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
-      {/* <AdSenseBanner className="my-8" /> */}
+      {/* AdSense 배너 제거 (심사 완료 후 추가 예정) */}
 
       {/* 탭 네비게이션 */}
       <div className="bg-white rounded-xl shadow-lg p-6 lg:p-8">
-        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
-          <button
-            onClick={() => setActiveTab('basic')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === 'basic'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            🚀 기본 추천
-          </button>
-          <button
-            onClick={() => setActiveTab('advanced')}
-            className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-              activeTab === 'advanced'
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            ⚙️ 고급 추천
-          </button>
-        </div>
+        {isAuthenticated ? (
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-6">
+            <button
+              onClick={() => setActiveTab('basic')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'basic'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              🚀 기본 추천
+            </button>
+            <button
+              onClick={() => setActiveTab('advanced')}
+              className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'advanced'
+                  ? 'bg-white text-blue-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              ⚙️ 고급 추천
+            </button>
+          </div>
+        ) : (
+          <div className="mb-6">
+            <div className="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-blue-800 text-sm">
+                💡 <strong>회원가입</strong>하시면 고급 추천 기능을 이용하실 수 있습니다!
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* 탭 콘텐츠 */}
-        {activeTab === 'basic' ? (
-          /* 기본 추천 탭 */
+        {!isAuthenticated || activeTab === 'basic' ? (
+          /* 기본 추천 탭 (비회원은 항상 기본 추천만) */
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
@@ -292,18 +366,59 @@ const Recommendation: React.FC = () => {
                   <input
                     type="number"
                     min="1"
-                    max="20"
-                    className="flex-1 px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    value={basicSettings.total_count}
-                    onChange={(e) => setBasicSettings(prev => ({
-                      ...prev,
-                      total_count: parseInt(e.target.value) || 1
-                    }))}
+                    max={isAuthenticated ? "10" : "5"}
+                    disabled={!isAuthenticated}
+                    className={`flex-1 px-4 py-3 text-lg border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      !isAuthenticated 
+                        ? 'bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed' 
+                        : 'border-gray-300'
+                    }`}
+                    value={isAuthenticated ? (basicSettings.total_count || '') : 5}
+                    onChange={(e) => {
+                      if (isAuthenticated) {
+                        const inputValue = e.target.value;
+                        // 빈 문자열이면 그대로 유지 (사용자가 삭제할 수 있도록)
+                        if (inputValue === '') {
+                          setBasicSettings(prev => ({
+                            ...prev,
+                            total_count: 0 // 임시로 0으로 설정
+                          }));
+                          return;
+                        }
+                        
+                        // 숫자가 아닌 경우는 무시 (사용자가 입력 중일 때)
+                        const parsedValue = parseInt(inputValue);
+                        if (isNaN(parsedValue)) {
+                          return;
+                        }
+                        
+                        const clampedValue = Math.min(Math.max(parsedValue, 1), 10);
+                        setBasicSettings(prev => ({
+                          ...prev,
+                          total_count: clampedValue
+                        }));
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (isAuthenticated) {
+                        // 포커스가 벗어날 때 빈 값이거나 1보다 작으면 1로 설정
+                        const value = parseInt(e.target.value);
+                        if (e.target.value === '' || isNaN(value) || value < 1) {
+                          setBasicSettings(prev => ({
+                            ...prev,
+                            total_count: 1
+                          }));
+                        }
+                      }
+                    }}
                   />
                   <span className="text-gray-500 text-sm">개</span>
                 </div>
                 <p className="text-xs text-gray-500 mt-2">
-                  1-20개 사이의 숫자를 입력하세요
+                  {isAuthenticated 
+                    ? '1-10개 사이의 숫자를 입력하세요' 
+                    : '비회원은 5개로 제한됩니다'
+                  }
                 </p>
               </div>
             </div>
@@ -323,165 +438,170 @@ const Recommendation: React.FC = () => {
                 ) : (
                   <div className="flex items-center justify-center space-x-3">
                     <span>🤖</span>
-                    <span>{basicSettings.total_count}개 조합 생성하기</span>
+                    <span>{isAuthenticated ? basicSettings.total_count : 5}개 조합 생성하기</span>
                   </div>
                 )}
               </button>
             </div>
           </div>
         ) : (
-          /* 고급 추천 탭 */
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">
-                ⚙️ 상세 설정을 통한 맞춤형 추천
+          /* 고급 추천 탭 (회원만) */
+          <div className="space-y-8">
+            {/* 헤더 섹션 */}
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
+                ⚙️ 맞춤형 AI 추천
               </h2>
-              <p className="text-sm sm:text-base lg:text-lg text-gray-600">
-                포함/제외 번호, 수동 조합 등을 설정하여 더 정확한 추천을 받아보세요.
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                원하는 조합 수와 포함/제외 번호를 설정하여 더욱 정확한 AI 추천을 받아보세요
               </p>
             </div>
 
-            {/* 조합 설정과 통합 번호 관리를 하나의 통합된 컨테이너 안에 배치 */}
-            <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
-          {/* 왼쪽: 조합 설정 */}
-          <div>
-            <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
-          🎲 조합 설정
-        </h2>
-        
-            <div className="grid grid-cols-3 gap-3 lg:gap-4">
-          {/* 총 조합 수 */}
-          <div>
-                <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
-              총 조합 수
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="20"
-                  className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.total_count}
-              onChange={(e) => {
-                const total = parseInt(e.target.value) || 1;
-                const manual = Math.min(combinationSettings.manual_count, total);
-                const auto = total - manual;
-                setCombinationSettings({
-                  total_count: total,
-                  manual_count: manual,
-                  auto_count: auto
-                });
-              }}
-            />
-          </div>
-
-          {/* 수동 생성 */}
-          <div>
-                <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
-              수동
-            </label>
-            <input
-              type="number"
-              min="0"
-              max={combinationSettings.total_count}
-                  className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.manual_count}
-              onChange={(e) => {
-                const manual = parseInt(e.target.value) || 0;
-                const total = combinationSettings.total_count;
-                const auto = Math.max(0, total - manual);
-                setCombinationSettings({
-                  total_count: total,
-                  manual_count: manual,
-                  auto_count: auto
-                });
-              }}
-            />
-          </div>
-
-          {/* 자동 생성 */}
-          <div>
-                <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-1 lg:mb-2">
-              자동
-            </label>
-            <input
-              type="number"
-              min="0"
-              max={combinationSettings.total_count}
-                  className="w-full px-2 py-1 lg:px-3 lg:py-2 text-sm lg:text-base border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-              value={combinationSettings.auto_count}
-              onChange={(e) => {
-                const auto = parseInt(e.target.value) || 0;
-                const total = combinationSettings.total_count;
-                const manual = Math.max(0, total - auto);
-                setCombinationSettings({
-                  total_count: total,
-                  manual_count: manual,
-                  auto_count: auto
-                });
-              }}
-            />
-          </div>
-        </div>
-
-        {/* 간단한 비율 표시 */}
-            <div className="mt-3 lg:mt-4 bg-gray-50 p-2 lg:p-3 rounded text-center">
-              <div className="text-xs lg:text-sm text-gray-600 mb-1 lg:mb-2">현재: {combinationSettings.manual_count} 수동 + {combinationSettings.auto_count} 자동</div>
-              <div className="flex items-center space-x-1 lg:space-x-2">
-                <div className="flex-1 bg-blue-200 rounded-full h-1.5 lg:h-2">
-                  <div 
-                    className="bg-blue-600 h-1.5 lg:h-2 rounded-full transition-all duration-300"
-                style={{ width: `${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%` }}
-              ></div>
-            </div>
-                <span className="text-xs lg:text-sm text-gray-500 w-8 lg:w-12 text-center">
-              {combinationSettings.manual_count}:{combinationSettings.auto_count}
-            </span>
-          </div>
-        </div>
-      </div>
-
-          {/* 오른쪽: 통합 번호 관리 */}
-          <div>
-            <h2 className="text-lg lg:text-xl font-bold text-gray-900 mb-4 lg:mb-6">
-          🎯 통합 번호 관리
-        </h2>
-        <UnifiedNumberManager
-          includeNumbers={preferences.include_numbers}
-          excludeNumbers={preferences.exclude_numbers}
-          manualCombinations={selectedNumbers}
-          onIncludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, include_numbers: numbers }))}
-          onExcludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, exclude_numbers: numbers }))}
-          onManualCombinationsChange={setSelectedNumbers}
-          maxCombinations={combinationSettings.manual_count}
-          maxNumbersPerCombination={6}
-          combinationSettings={combinationSettings}
-        />
+            {/* 조합 설정 카드 */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+              <div className="flex items-center mb-6">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mr-3">
+                  <span className="text-white text-xl">🎲</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">조합 설정</h3>
               </div>
-      </div>
 
-            {/* 고급 추천 생성 버튼 */}
-            <div className="w-full relative">
-              {/* 배경 장식 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-indigo-50/30 to-purple-50/50 rounded-2xl"></div>
-              
-          <button
-            onClick={handleGenerateRecommendations}
-            disabled={loading || (combinationSettings.manual_count > 0 && selectedNumbers.length === 0)}
-                className="relative w-full py-5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white rounded-2xl text-lg font-semibold hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] border border-blue-500/20"
-          >
-            {loading ? (
-                  <div className="flex items-center justify-center space-x-3">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    <span className="text-lg">AI 분석 중...</span>
-              </div>
-            ) : (
-                  <div className="flex items-center justify-center space-x-3">
-                    <span className="text-xl">🤖</span>
-                    <span>{combinationSettings.total_count}개 조합 생성하기</span>
-                    <span className="text-sm opacity-90">(수동 {combinationSettings.manual_count}개 + 자동 {combinationSettings.auto_count}개)</span>
+              {/* 총 조합 수 설정 */}
+              <div className="mb-8">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  생성할 조합 수
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="relative flex-1 max-w-xs">
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={combinationSettings.total_count}
+                      onChange={(e) => {
+                        const total = parseInt(e.target.value);
+                        const manual = Math.min(combinationSettings.manual_count, total);
+                        const auto = total - manual;
+                        setCombinationSettings({
+                          total_count: total,
+                          manual_count: manual,
+                          auto_count: auto
+                        });
+                      }}
+                      className="w-full h-2 bg-blue-200 rounded-lg appearance-none cursor-pointer slider [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-blue-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #3B82F6 0%, #3B82F6 ${(combinationSettings.total_count / 10) * 100}%, #DBEAFE ${(combinationSettings.total_count / 10) * 100}%, #DBEAFE 100%)`
+                      }}
+                    />
                   </div>
-            )}
-          </button>
+                  <div className="flex items-center justify-center w-16 h-12 bg-white rounded-xl border-2 border-blue-200">
+                    <span className="text-xl font-bold text-blue-600">{combinationSettings.total_count}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 수동/자동 비율 설정 */}
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  수동 조합 개수
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="relative flex-1 max-w-xs">
+                    <input
+                      type="range"
+                      min="0"
+                      max={combinationSettings.total_count}
+                      value={combinationSettings.manual_count}
+                      onChange={(e) => {
+                        const manual = parseInt(e.target.value);
+                        const total = combinationSettings.total_count;
+                        const auto = total - manual;
+                        setCombinationSettings({
+                          total_count: total,
+                          manual_count: manual,
+                          auto_count: auto
+                        });
+                      }}
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-green-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-green-500 [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right, #10B981 0%, #10B981 ${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%, #F3F4F6 ${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%, #F3F4F6 100%)`
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-center w-16 h-12 bg-white rounded-xl border-2 border-green-200">
+                    <span className="text-xl font-bold text-green-600">{combinationSettings.manual_count}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 비율 시각화 */}
+              <div className="bg-white rounded-xl p-4 border border-blue-200">
+                <div className="flex items-center justify-between text-sm font-medium text-gray-600 mb-2">
+                  <span>💚 수동 {combinationSettings.manual_count}개</span>
+                  <span>🤖 AI 자동 {combinationSettings.auto_count}개</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div className="flex h-full">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-green-500 transition-all duration-300"
+                      style={{ width: `${(combinationSettings.manual_count / combinationSettings.total_count) * 100}%` }}
+                    ></div>
+                    <div 
+                      className="bg-gradient-to-r from-blue-400 to-blue-500 transition-all duration-300"
+                      style={{ width: `${(combinationSettings.auto_count / combinationSettings.total_count) * 100}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 번호 관리 카드 */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 border border-purple-100">
+              <div className="flex items-center mb-6">
+                <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center mr-3">
+                  <span className="text-white text-xl">🎯</span>
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">번호 관리</h3>
+              </div>
+              
+              <UnifiedNumberManager
+                includeNumbers={preferences.include_numbers}
+                excludeNumbers={preferences.exclude_numbers}
+                manualCombinations={selectedNumbers}
+                onIncludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, include_numbers: numbers }))}
+                onExcludeNumbersChange={(numbers: number[]) => setPreferences(prev => ({ ...prev, exclude_numbers: numbers }))}
+                onManualCombinationsChange={setSelectedNumbers}
+                maxCombinations={combinationSettings.manual_count}
+                maxNumbersPerCombination={6}
+                combinationSettings={combinationSettings}
+              />
+            </div>
+
+            {/* 생성 버튼 */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-200/50 via-purple-200/50 to-fuchsia-200/50 rounded-2xl blur-xl"></div>
+              <button
+                onClick={handleGenerateRecommendations}
+                disabled={loading || (combinationSettings.manual_count > 0 && selectedNumbers.length === 0)}
+                className="relative w-full py-6 bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white rounded-2xl text-lg font-bold hover:from-violet-700 hover:via-purple-700 hover:to-fuchsia-700 transition-all duration-300 shadow-2xl hover:shadow-3xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.01] border border-white/20"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-3">
+                    <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white"></div>
+                    <span className="text-xl">AI가 최적 조합을 분석하고 있습니다...</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center space-y-2">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">🚀</span>
+                      <span className="text-xl">{combinationSettings.total_count}개 맞춤형 조합 생성</span>
+                    </div>
+                    <span className="text-sm opacity-90 font-normal">
+                      수동 {combinationSettings.manual_count}개 + AI 자동 {combinationSettings.auto_count}개
+                    </span>
+                  </div>
+                )}
+              </button>
             </div>
           </div>
         )}
@@ -581,10 +701,7 @@ const Recommendation: React.FC = () => {
             </div>
           ) : (
           <div className="space-y-8">
-            {/* 추천 결과 상단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
-            {/* {recommendations.length > 0 && (
-              <AdSense adSlot="9876543210" className="my-6" />
-            )} */}
+            {/* AdSense 광고 제거 (심사 완료 후 추가 예정) */}
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {recommendations.map((rec, index) => (
@@ -594,7 +711,7 @@ const Recommendation: React.FC = () => {
                   index={index}
                   isManual={rec.is_manual}
                   confidenceScore={rec.confidence_score || 0}
-                onRegenerate={() => handleRegenerateCombination(index)}
+                  onRegenerate={() => handleRegenerateCombination(index)}
                   onShowAnalysis={() => handleShowAnalysis(
                     rec.numbers,
                     rec.is_manual ? '수동' : 'AI',
@@ -605,10 +722,7 @@ const Recommendation: React.FC = () => {
               ))}
             </div>
             
-            {/* 추천 결과 하단 광고 - AdSense 정책 위반 방지를 위해 제거 */}
-            {/* {recommendations.length > 0 && (
-              <AdSense adSlot="5432109876" className="my-6" />
-            )} */}
+            {/* AdSense 광고 제거 (심사 완료 후 추가 예정) */}
           </div>
           )}
       </div>

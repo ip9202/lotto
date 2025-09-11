@@ -3,7 +3,7 @@ import { clsx } from 'clsx';
 
 interface LottoBallProps {
   number: number;
-  size?: 'mobile' | 'xs' | 'sm' | 'md' | 'lg';
+  size?: 'mobile' | 'xs' | 'sm' | 'md' | 'lg' | 'responsive';
   variant?: 'default' | 'bonus' | 'selected' | 'recommended' | 'winning';
   onClick?: () => void;
   className?: string;
@@ -37,7 +37,8 @@ const LottoBall: React.FC<LottoBallProps> = ({
     xs: 'w-8 h-8 text-sm sm:w-10 sm:h-10 sm:text-base',
     sm: 'w-8 h-8 text-sm sm:w-10 sm:h-10 sm:text-base',
     md: 'w-10 h-10 text-base sm:w-12 sm:h-12 sm:text-lg',
-    lg: 'w-12 h-12 text-lg sm:w-16 sm:h-16 sm:text-xl'
+    lg: 'w-12 h-12 text-lg sm:w-16 sm:h-16 sm:text-xl',
+    responsive: 'w-8 h-8 text-sm sm:w-10 sm:h-10 sm:text-base md:w-12 md:h-12 md:text-lg lg:w-14 lg:h-14 lg:text-xl xl:w-16 xl:h-16 xl:text-2xl'
   };
 
   // 로또 공 색깔별 스타일

@@ -5,6 +5,8 @@ from ..database import get_db
 from ..models.user_history import UserHistory
 from ..models.recommendation import Recommendation
 from ..models.session import UserSession
+from ..models.lotto import LottoDraw
+from ..models.public_recommendation import PublicRecommendation
 from ..schemas.recommendation import (
     RecommendationRequest, 
     RecommendationResponse, 
@@ -16,6 +18,93 @@ from ..services.recommendation_engine import RecommendationEngine
 from ..services.lotto_analyzer import LottoAnalyzer
 
 router = APIRouter(prefix="/api/v1/recommendations", tags=["recommendations"])
+
+def get_current_draw_number(db: Session) -> int:
+    """현재 회차 번호 조회 (추천 생성용)"""
+    latest = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
+    if not latest:
+        raise HTTPException(status_code=404, detail="로또 데이터가 없습니다")
+    return latest.draw_number + 1
+
+def check_user_recommendation_limit(
+    db: Session, 
+    user_type: str = "guest",
+    session_id: str = None,
+    user_id: int = None
+) -> tuple[bool, int, int]:
+    """사용자 추천 제한 확인"""
+    try:
+        # 주간 제한 설정
+        weekly_limit = 5 if user_type == "guest" else 10
+        
+        # 현재 주의 시작일 계산 (월요일 기준)
+        from datetime import datetime, timedelta
+        today = datetime.now()
+        days_since_monday = today.weekday()
+        week_start = today - timedelta(days=days_since_monday)
+        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        if user_type == "guest":
+            # 비회원: 전체 비회원 공통으로 5개 제한
+            count = db.query(PublicRecommendation).filter(
+                PublicRecommendation.user_type == "guest",
+                PublicRecommendation.created_at >= week_start
+            ).count()
+        else:
+            # 회원: 개인 계정별로 10개 제한 (개인 저장 데이터 기준)
+            if user_id is None:
+                # user_id가 없으면 공공 데이터로 확인
+                count = db.query(PublicRecommendation).filter(
+                    PublicRecommendation.user_type == "member",
+                    PublicRecommendation.created_at >= week_start
+                ).count()
+            else:
+                # user_id가 있으면 개인 저장 데이터로 확인
+                from ..models.saved_recommendation import SavedRecommendation
+                count = db.query(SavedRecommendation).filter(
+                    SavedRecommendation.user_id == user_id,
+                    SavedRecommendation.created_at >= week_start
+                ).count()
+        
+        remaining = max(0, weekly_limit - count)
+        can_generate = count < weekly_limit
+        
+        print(f"사용자 제한 확인: {user_type}, 이번주 생성: {count}/{weekly_limit}, 남은 개수: {remaining}")
+        print(f"can_generate: {can_generate}")
+        
+        return can_generate, count, remaining
+        
+    except Exception as e:
+        print(f"사용자 제한 확인 실패: {str(e)}")
+        # 실패 시 보수적으로 제한 적용
+        return False, 5, 0  # 실패 시 제한 있음
+
+def save_public_recommendation(
+    db: Session, 
+    numbers: List[int], 
+    generation_method: str, 
+    confidence_score: float = None,
+    user_type: str = "guest"
+) -> None:
+    """공공 추천 데이터 저장"""
+    try:
+        current_draw = get_current_draw_number(db)
+        
+        public_rec = PublicRecommendation(
+            numbers=sorted(numbers),
+            generation_method=generation_method,
+            confidence_score=int(confidence_score) if confidence_score else None,
+            analysis_data=None,
+            draw_number=current_draw,
+            user_type=user_type
+        )
+        
+        db.add(public_rec)
+        print(f"공공 추천 데이터 저장: {numbers} (회차: {current_draw}, 방법: {generation_method}, 사용자: {user_type})")
+        
+    except Exception as e:
+        print(f"공공 추천 데이터 저장 실패: {str(e)}")
+        # 공공 데이터 저장 실패는 전체 프로세스를 중단시키지 않음
 
 def ensure_session_exists(db: Session, session_id: str) -> str:
     """세션이 존재하지 않으면 자동으로 생성"""
@@ -60,6 +149,19 @@ async def generate_recommendations(
         session_id = ensure_session_exists(db, request.session_id)
         print(f"사용할 세션 ID: {session_id}")
         
+        # 0.5. 사용자 타입별 추천 생성 규칙 확인
+        user_type = "member"  # 테스트용, 나중에 인증 정보로 업데이트 예정
+        
+        # 비회원의 경우 5개로 고정
+        if user_type == "guest":
+            if request.total_count != 5:
+                return APIResponse(
+                    success=False,
+                    data=None,
+                    message="비회원은 5개로 고정되어 있습니다. total_count를 5로 설정해주세요."
+                )
+        # 회원의 경우 갯수 제한 없음 (추천 생성은 자유)
+        
         # 1. 추천 기록 생성
         history = UserHistory(
             session_id=session_id,
@@ -83,6 +185,15 @@ async def generate_recommendations(
             )
             db.add(recommendation)
             combinations.append(recommendation)
+            
+            # 공공 데이터 자동 저장 (수동 조합)
+            save_public_recommendation(
+                db=db,
+                numbers=manual_combo.numbers,
+                generation_method="manual",
+                confidence_score=None,
+                user_type=user_type
+            )
         
         # 3. AI 자동 추천 생성
         engine = RecommendationEngine(db)
@@ -105,6 +216,15 @@ async def generate_recommendations(
                 )
                 db.add(recommendation)
                 combinations.append(recommendation)
+                
+                # 공공 데이터 자동 저장 (AI 추천)
+                save_public_recommendation(
+                    db=db,
+                    numbers=auto_combo.numbers,
+                    generation_method="ai",
+                    confidence_score=float(auto_combo.confidence_score),
+                    user_type=user_type
+                )
         
         db.commit()
         

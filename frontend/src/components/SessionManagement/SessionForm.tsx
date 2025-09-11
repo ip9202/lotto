@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PlusIcon } from '@heroicons/react/24/outline';
 import { UserSession, SessionCreate, SessionUpdate } from '../../types/session';
 
 interface SessionFormProps {
@@ -156,7 +156,7 @@ const SessionForm: React.FC<SessionFormProps> = ({
       return;
     }
 
-    if (formData.manual_ratio + formData.auto_ratio !== 100) {
+    if ((formData.manual_ratio || 0) + (formData.auto_ratio || 0) !== 100) {
       alert('수동과 AI 비율의 합이 100%가 되어야 합니다.');
       return;
     }
