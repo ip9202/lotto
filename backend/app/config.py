@@ -20,7 +20,8 @@ class Settings(BaseSettings):
         default=[
             "http://localhost:5173",  # 개발환경 프론트엔드
             "https://lottoria.ai.kr",  # 프로덕션 도메인
-            "https://www.lottoria.ai.kr"  # www 도메인
+            "https://www.lottoria.ai.kr",  # www 도메인
+            "*"  # 임시 긴급 수정 - 모든 Origin 허용
         ]
     )
     
