@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 import { useLoading } from '../../hooks/common';
@@ -9,7 +9,9 @@ interface SaveRecommendationProps {
   confidenceScore: number;
   generationMethod: 'ai' | 'manual' | 'hybrid';
   analysisData?: any;
+  isSaved?: boolean; // 외부에서 전달받은 저장 상태
   onSaved?: (savedId: number) => void;
+  onSavedStatusChange?: (isSaved: boolean) => void; // 저장 상태 변경 콜백
   className?: string;
 }
 
@@ -18,14 +20,17 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
   confidenceScore,
   generationMethod,
   analysisData,
+  isSaved: externalIsSaved = false,
   onSaved,
+  onSavedStatusChange,
   className = ''
 }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, refreshUser } = useUnifiedAuth();
   const { isLoading, withLoading } = useLoading();
   const { showSuccess, showError } = useNotification();
-  const [isSaved, setIsSaved] = useState(false);
+  // 외부에서 전달받은 저장 상태 사용 (내부 state 제거)
+  const isSaved = externalIsSaved;
 
   const canSave = isAuthenticated && user?.can_save_number;
 
@@ -142,7 +147,10 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
         });
 
         if (result.success && result.data) {
-          setIsSaved(true); // 저장 완료 상태로 변경
+          // 외부 콜백으로 저장 상태 변경 알림
+          if (onSavedStatusChange) {
+            onSavedStatusChange(true);
+          }
           
           // 사용자 정보 새로고침 (저장 개수 업데이트)
           await refreshUser();

@@ -7,8 +7,10 @@ interface SimpleCombinationProps {
   index: number;
   isManual: boolean;
   confidenceScore: number;
+  isSaved?: boolean; // 저장 상태 추가
   onRegenerate: () => void;
   onShowAnalysis: () => void;
+  onSavedStatusChange?: (isSaved: boolean) => void; // 저장 상태 변경 콜백 추가
 }
 
 const SimpleCombination: React.FC<SimpleCombinationProps> = ({
@@ -16,7 +18,9 @@ const SimpleCombination: React.FC<SimpleCombinationProps> = ({
   index,
   isManual,
   confidenceScore,
-  onShowAnalysis
+  isSaved = false,
+  onShowAnalysis,
+  onSavedStatusChange
 }) => {
   const getConfidenceColor = (score: number) => {
     const percentScore = Math.round(score * 100);
@@ -81,6 +85,8 @@ const SimpleCombination: React.FC<SimpleCombinationProps> = ({
         confidenceScore={confidenceScore}
         generationMethod={isManual ? 'manual' : 'ai'}
         analysisData={null}
+        isSaved={isSaved}
+        onSavedStatusChange={onSavedStatusChange}
         className="mt-3"
       />
     </div>

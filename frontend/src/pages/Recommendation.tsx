@@ -13,6 +13,7 @@ interface Recommendation {
   confidence_score?: number;
   // history_id?: string; // 추천기록 기능 일시 비활성화
   analysis?: any;
+  isSaved?: boolean; // 저장 상태 추가
 }
 
 const Recommendation: React.FC = () => {
@@ -57,7 +58,7 @@ const Recommendation: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // 추천 번호 localStorage 저장
+  // 추천 번호 localStorage 저장 (저장 상태 포함)
   const saveRecommendationsToStorage = (recommendations: Recommendation[]) => {
     try {
       localStorage.setItem('lottoria_recommendations', JSON.stringify(recommendations));
@@ -65,6 +66,18 @@ const Recommendation: React.FC = () => {
     } catch (error) {
       console.error('추천 번호 localStorage 저장 실패:', error);
     }
+  };
+
+  // 특정 추천 번호의 저장 상태 업데이트
+  const updateRecommendationSavedStatus = (index: number, isSaved: boolean) => {
+    setRecommendations(prev => {
+      const updated = prev.map((rec, i) => 
+        i === index ? { ...rec, isSaved } : rec
+      );
+      // localStorage에도 업데이트된 상태 저장
+      saveRecommendationsToStorage(updated);
+      return updated;
+    });
   };
 
   // 추천 번호 localStorage에서 복원
@@ -154,7 +167,10 @@ const Recommendation: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        const recommendations = data.data.combinations || [];
+        const recommendations = (data.data.combinations || []).map((rec: any) => ({
+          ...rec,
+          isSaved: false // 새로운 추천은 모두 저장되지 않은 상태로 시작
+        }));
         console.log('🎯 기본 추천 생성 성공:', recommendations);
         
         setRecommendations(recommendations);
@@ -177,10 +193,10 @@ const Recommendation: React.FC = () => {
   const handleGenerateRecommendations = async () => {
     console.log('🎯 추천 받기 버튼 클릭됨!');
     
-    // 새로운 추천을 받기 전에 이전 추천 번호 초기화
+    // 새로운 추천을 받기 전에 이전 추천 번호 및 저장 상태 초기화
     setRecommendations([]);
     localStorage.removeItem('lottoria_recommendations');
-    console.log('🔄 이전 추천 번호 초기화 완료');
+    console.log('🔄 이전 추천 번호 및 저장 상태 초기화 완료');
 
     // 수동 조합이 설정되어 있는데 실제로는 없는 경우
     if (combinationSettings.manual_count > 0 && selectedNumbers.length === 0) {
@@ -227,7 +243,10 @@ const Recommendation: React.FC = () => {
 
       
       if (result.success && result.data) {
-        const recommendations = result.data.combinations || [];
+        const recommendations = (result.data.combinations || []).map((rec: any) => ({
+          ...rec,
+          isSaved: false // 새로운 추천은 모두 저장되지 않은 상태로 시작
+        }));
         console.log('🎯 추천 생성 성공:', recommendations);
         
         // 추천기록 기능 일시 비활성화로 history_id 처리 불필요
@@ -711,6 +730,7 @@ const Recommendation: React.FC = () => {
                   index={index}
                   isManual={rec.is_manual}
                   confidenceScore={rec.confidence_score || 0}
+                  isSaved={rec.isSaved || false}
                   onRegenerate={() => handleRegenerateCombination(index)}
                   onShowAnalysis={() => handleShowAnalysis(
                     rec.numbers,
@@ -718,6 +738,7 @@ const Recommendation: React.FC = () => {
                     rec.confidence_score || 0,
                     rec.analysis
                   )}
+                  onSavedStatusChange={(isSaved) => updateRecommendationSavedStatus(index, isSaved)}
                 />
               ))}
             </div>

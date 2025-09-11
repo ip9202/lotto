@@ -226,3 +226,4 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 ---
 
 **⚠️ 중요**: 모든 응답과 커뮤니케이션은 한국어로 진행합니다.
+- 빌드 및 테스트는 모두 docker 안에서 이루어진다(강조).
