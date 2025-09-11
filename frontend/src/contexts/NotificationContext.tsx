@@ -42,17 +42,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       ...notification
     };
 
-    console.log('🔔 NotificationContext: 새 알림 추가됨', newNotification);
-    setNotifications(prev => {
-      console.log('🔔 기존 알림 목록:', prev);
-      console.log('🔔 새로운 알림 목록:', [...prev, newNotification]);
-      return [...prev, newNotification];
-    });
+    setNotifications(prev => [...prev, newNotification]);
 
     // 자동 제거
     if (newNotification.autoClose && newNotification.duration) {
       setTimeout(() => {
-        console.log('🔔 자동 제거:', id);
         hideNotification(id);
       }, newNotification.duration);
     }
@@ -61,12 +55,10 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   }, []);
 
   const hideNotification = useCallback((id: string) => {
-    console.log('🔔 알림 제거:', id);
     setNotifications(prev => prev.filter(notification => notification.id !== id));
   }, []);
 
   const clearAllNotifications = useCallback(() => {
-    console.log('🔔 모든 알림 제거');
     setNotifications([]);
   }, []);
 
@@ -81,7 +73,6 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
   }, [showNotification]);
 
   const showError = useCallback((message: string, title?: string, options?: Partial<Notification>) => {
-    console.log('🚨 showError 호출됨:', message);
     return showNotification({
       type: 'error',
       title,

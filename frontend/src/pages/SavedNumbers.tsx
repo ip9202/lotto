@@ -22,11 +22,9 @@ const SavedNumbers: React.FC = () => {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/lotto/latest`);
       if (response.ok) {
         const data = await response.json();
-        console.log('현재 회차 API 응답:', data);
         // API 응답 구조: { success: true, data: { draw_number: 1188, ... } }
         if (data.success && data.data) {
           const nextDrawNumber = data.data.draw_number + 1;
-          console.log('다음 회차 번호:', nextDrawNumber);
           setCurrentDrawNumber(nextDrawNumber);
           return nextDrawNumber;
         }
@@ -43,17 +41,14 @@ const SavedNumbers: React.FC = () => {
       const token = localStorage.getItem('access_token');
       if (!token) return;
 
-      console.log('저장된 추천번호 조회 - targetDraw:', targetDraw);
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/saved-recommendations?target_draw=${targetDraw}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      console.log('저장된 추천번호 API 응답 상태:', response.status);
       if (response.ok) {
         const data = await response.json();
-        console.log('저장된 추천번호 API 응답:', data);
         // API 응답이 { items: [...], total: ... } 형태이므로 items 배열을 사용
         setSavedRecommendations(data.items || []);
       } else {
@@ -72,10 +67,7 @@ const SavedNumbers: React.FC = () => {
       if (!token) return;
 
       const result = await userPreferencesAPI.getPreferences(token);
-      console.log('사용자 설정 API 응답:', result);
       if (result.success && result.data) {
-        console.log('설정된 포함 번호:', result.data.include_numbers);
-        console.log('설정된 제외 번호:', result.data.exclude_numbers);
         setUserPreferences(result.data);
       }
     } catch (error) {
@@ -250,7 +242,6 @@ const SavedNumbers: React.FC = () => {
             {/* 포함할 번호 */}
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-3">포함할 번호</h3>
-              {console.log('렌더링 시 userPreferences:', userPreferences)}
               {!userPreferences.include_numbers || userPreferences.include_numbers.length === 0 ? (
                 <div className="text-center py-4 text-gray-500 bg-gray-50 rounded-lg">
                   <p className="text-sm">포함할 번호가 설정되지 않았습니다</p>

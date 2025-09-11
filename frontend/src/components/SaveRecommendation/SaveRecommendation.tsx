@@ -67,11 +67,8 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
   };
 
   const handleQuickSave = async () => {
-    console.log('🔍 저장 시도 - canSave:', canSave);
-    console.log('🔍 저장 시도 - user?.total_saved_numbers:', user?.total_saved_numbers);
     
     // 사용자 정보를 먼저 새로고침해서 최신 상태를 확인
-    console.log('🔄 사용자 정보 새로고침 중...');
     await refreshUser();
     
     // 백엔드에서 실제 저장 개수 확인
@@ -83,14 +80,9 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
         // 올바른 저장 개수 계산 (data.total 또는 data.items.length 사용)
         const actualSavedCount = savedList.data?.total || savedList.data?.items?.length || 0;
         
-        console.log('📊 백엔드 실제 저장 개수:', actualSavedCount);
-        console.log('📊 프론트엔드 user.total_saved_numbers:', user?.total_saved_numbers);
-        console.log('📊 백엔드 items 배열 길이:', savedList.data?.items?.length || 0);
-        console.log('📊 백엔드 total 값:', savedList.data?.total || 0);
         
         // 실제 저장 개수가 10개 이상이면 저장 중단
         if (actualSavedCount >= 10) {
-          console.log('⚠️ 실제 저장 개수가 10개 이상 - API 호출 중단');
           showError(
             '💾 저장 한도 초과!\n\n' +
             `현재 저장된 번호: ${actualSavedCount}개 (한도: 10개)\n` +
@@ -102,7 +94,6 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
         }
       } catch (error) {
         console.error('저장 개수 확인 중 오류:', error);
-        console.log('🚨 API 호출 오류로 인해 저장을 중단합니다.');
         showError('저장 상태 확인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
         return;
       }
@@ -110,20 +101,14 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
     
     // 새로고침 후 다시 확인
     if (!isAuthenticated || !user?.can_save_number) {
-      console.log('⚠️ 저장 불가능 - API 호출 중단');
-      console.log('⚠️ isAuthenticated:', isAuthenticated);
-      console.log('⚠️ can_save_number:', user?.can_save_number);
-      console.log('⚠️ total_saved_numbers:', user?.total_saved_numbers);
       
       showError('저장 한도가 초과되어 저장할 수 없습니다. 먼저 저장된 번호를 삭제해주세요.');
       return;
     }
 
     // 중복 번호 조합 체크
-    console.log('🔍 중복 번호 조합 체크 중...');
     const isDuplicate = await checkDuplicateNumbers(numbers);
     if (isDuplicate) {
-      console.log('⚠️ 중복 번호 조합 발견 - 저장 중단');
       showError(
         '⚠️ 이미 저장된 번호입니다!\n\n' +
         `번호: ${numbers.sort((a, b) => a - b).join(', ')}\n\n` +
@@ -132,7 +117,6 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
       );
       return;
     }
-    console.log('✅ 중복 없음 - 저장 진행');
 
     await withLoading(async () => {
       try {
@@ -165,15 +149,12 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
           const errorMessage = result.error?.message || '';
           const errorCode = result.error?.code || '';
           
-          console.log('🚨 저장 실패 - 에러 코드:', errorCode);
-          console.log('🚨 저장 실패 - 에러 메시지:', errorMessage);
           
           if (errorCode === 'HTTP_403' || 
               errorMessage.includes('한도') || 
               errorMessage.includes('limit') || 
               errorMessage.includes('초과') ||
               errorMessage.includes('Forbidden')) {
-            console.log('💾 한도 초과 감지됨 - showError 호출');
             showError(
               '💾 저장 한도 초과!\n\n' +
               '회원님의 저장 한도(10개)가 가득 찼습니다.\n' +
@@ -184,7 +165,6 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
             // 사용자 정보 새로고침하여 can_save_number 상태 업데이트
             await refreshUser();
           } else {
-            console.log('💾 일반 에러 처리');
             showError(result.error?.message || '저장에 실패했습니다.');
           }
         }
@@ -195,16 +175,12 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
         const errorMessage = err?.response?.data?.message || err?.message || '';
         const statusCode = err?.response?.status;
         
-        console.log('🚨 catch 블록 - 상태 코드:', statusCode);
-        console.log('🚨 catch 블록 - 에러 메시지:', errorMessage);
-        console.log('🚨 catch 블록 - 전체 에러:', err);
         
         if (statusCode === 403 || 
             errorMessage.includes('한도') || 
             errorMessage.includes('limit') || 
             errorMessage.includes('초과') ||
             errorMessage.includes('Forbidden')) {
-          console.log('💾 catch에서 한도 초과 감지됨 - showError 호출');
           showError(
             '💾 저장 한도 초과!\n\n' +
             '회원님의 저장 한도(10개)가 가득 찼습니다.\n' +
@@ -215,7 +191,6 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
           // 사용자 정보 새로고침하여 can_save_number 상태 업데이트
           await refreshUser();
         } else {
-          console.log('💾 catch에서 일반 에러 처리');
           showError('저장 중 오류가 발생했습니다.');
         }
       }
