@@ -11,7 +11,7 @@ import {
   ApiResponse
 } from '../types/session';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 // 공통 API 호출 함수
 async function apiCall<T>(

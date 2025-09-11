@@ -19,7 +19,7 @@ const SavedNumbers: React.FC = () => {
   // 현재 회차 번호 조회
   const fetchCurrentDrawNumber = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/v1/lotto/latest');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/lotto/latest`);
       if (response.ok) {
         const data = await response.json();
         console.log('현재 회차 API 응답:', data);
@@ -44,7 +44,7 @@ const SavedNumbers: React.FC = () => {
       if (!token) return;
 
       console.log('저장된 추천번호 조회 - targetDraw:', targetDraw);
-      const response = await fetch(`http://localhost:8000/api/v1/saved-recommendations?target_draw=${targetDraw}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/saved-recommendations?target_draw=${targetDraw}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
