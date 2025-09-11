@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
 import { userPreferencesAPI, UserPreferences, savedRecommendationsAPI } from '../services/apiService';
-import { useNotification } from '../hooks/common';
+import { useNotification } from '../contexts/NotificationContext';
 import LottoBall from '../components/LottoBall';
 
 const SavedNumbers: React.FC = () => {
@@ -173,7 +173,7 @@ const SavedNumbers: React.FC = () => {
               <span className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                 💾
               </span>
-              {currentDrawNumber ? `제${currentDrawNumber}회차` : '이번 회차'} 저장된 추천번호 ({savedRecommendations.length}개)
+              {currentDrawNumber ? `제${currentDrawNumber}회차` : '이번 회차'} 저장된 추천번호
             </h2>
 
             {savedRecommendations.length === 0 ? (
@@ -189,9 +189,14 @@ const SavedNumbers: React.FC = () => {
                 {savedRecommendations.map((rec, index) => (
                   <div key={rec.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                            <div className="flex items-center justify-between mb-3">
-                             <span className="text-sm font-medium text-gray-600">
-                               {rec.title ? rec.title.replace(/\d{4}\.\s*\d{1,2}\.\s*\d{1,2}\./g, '').trim() || 'AI 추천' : 'AI 추천'}
-                             </span>
+                             <div className="flex items-center space-x-3">
+                               <span className="inline-flex items-center justify-center w-6 h-6 bg-blue-500 text-white text-xs font-bold rounded-full">
+                                 {savedRecommendations.length - index}
+                               </span>
+                               <span className="text-sm font-medium text-gray-600">
+                                 {rec.title ? rec.title.replace(/\d{4}\.\s*\d{1,2}\.\s*\d{1,2}\./g, '').trim() || 'AI 추천' : 'AI 추천'}
+                               </span>
+                             </div>
                              <div className="flex items-center gap-2">
                                <span className="text-xs text-gray-500">
                                  {new Date(rec.created_at).toLocaleDateString()}

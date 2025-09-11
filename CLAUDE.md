@@ -125,7 +125,44 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 2. **모바일 최적화 (PWA)**
 3. **고급 분석 기능**
 
-### 최근 수정 사항 (2025-09-10)
+### 최근 수정 사항 (2025-09-11)
+
+**고급 추천 탭 UI/UX 대폭 개선 완료** ✅:
+- **깔끔한 카드 레이아웃**: 조합 설정과 번호 관리를 별도 카드로 분리
+- **직관적인 슬라이더 인터페이스**: 기존 3개 입력 필드 → 2개 슬라이더로 단순화
+- **시각적 비율 표시**: 수동/자동 조합 비율을 프로그레스 바로 시각화
+- **모던한 디자인 요소**: 부드러운 그라데이션과 3D 효과로 입체감 강조
+- **반응형 최적화**: 모바일과 데스크탑에서 모두 완벽한 사용자 경험
+
+**저장 한도 초과 에러 처리 완전 개선** ✅:
+- **사전 차단 로직**: 실제 저장 개수 확인 후 10개 이상 시 POST 요청 없이 알림만 표시
+- **정확한 개수 계산**: API 응답 구조 `data.total` 값 사용으로 올바른 저장 개수 확인
+- **친절한 에러 메시지**: 현재 저장 개수와 해결 방법을 명시한 상세 안내
+- **403 에러 완전 방지**: 백엔드 호출 전 프론트엔드에서 한도 체크
+
+**전역 알림 시스템 구축** ✅:
+- **NotificationContext 생성**: 모든 컴포넌트가 동일한 알림 상태 공유
+- **토스트 알림 표시**: 화면 우상단에 5초간 에러/성공 메시지 표시
+- **일관된 사용자 경험**: 모든 페이지에서 통일된 알림 시스템 사용
+
+**저장된 번호 페이지 개선** ✅:
+- **제목 정리**: 개수 표시 제거로 깔끔한 제목
+- **순번 표시**: 저장된 번호에 내림차순 번호 배지 추가 (상단이 큰 수)
+- **시각적 개선**: 파란색 원형 배지로 번호 식별 용이
+
+**포함/제외 설정 저장 버튼 개선** ✅:
+- **조건부 표시**: 포함/제외 번호 선택 시에만 저장 버튼 표시
+- **시각적 강화**: 그라데이션 버튼과 아이콘으로 사용성 향상
+
+**주요 수정 파일**:
+- `frontend/src/pages/Recommendation.tsx`: 고급 추천 탭 UI 완전 개편
+- `frontend/src/components/SaveRecommendation/SaveRecommendation.tsx`: 저장 한도 체크 로직 완전 개선
+- `frontend/src/contexts/NotificationContext.tsx`: 전역 알림 시스템 구축
+- `frontend/src/components/UnifiedNumberManager/UnifiedNumberManager.tsx`: 설정 저장 버튼 조건부 표시
+- `frontend/src/pages/SavedNumbers.tsx`: 번호 순서 표시 및 제목 개선
+- `frontend/src/App.tsx`: NotificationProvider 통합
+
+### 이전 수정 사항 (2025-09-10)
 
 **더미 데이터 생성 기능 오류 4건 해결**:
 - `created_at` 필드 중복 설정 문제 ✅
@@ -144,12 +181,6 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 - **정확한 당첨자 수**: `is_winner` 필드를 사용하여 실제 당첨자 수 계산
 - **회차별 구매 기간 매핑**: 1186회차(8/17~8/23), 1187회차(8/24~8/30), 1188회차(8/31~9/6) 정확한 날짜 설정
 - **데이터베이스 날짜 수정**: 1186회차, 1187회차, 1188회차 추첨일 및 구매 기간 데이터 정확성 확보
-
-**주요 수정 파일**:
-- `frontend/src/components/Statistics/StatisticsDashboard.tsx`: 실제 데이터 기반 차트 생성 로직
-- `backend/app/api/admin.py`: 더미 데이터 생성 시 정확한 날짜 분산
-- `backend/app/models/public_recommendation.py`: `bonus_number` 컬럼 추가
-- `backend/app/api/winning_comparison.py`: 더미 데이터 처리 로직 개선
 
 ---
 

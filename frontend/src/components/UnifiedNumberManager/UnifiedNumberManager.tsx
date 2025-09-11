@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import LottoBall from '../LottoBall';
 import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 import { userPreferencesAPI, UserPreferences } from '../../services/apiService';
-import { useNotification } from '../../hooks/common';
+import { useNotification } from '../../contexts/NotificationContext';
 
 interface UnifiedNumberManagerProps {
   includeNumbers: number[];
@@ -432,18 +432,28 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
       </div>
 
 
-        {/* 저장 버튼 (회원만) - 수동 조합 섹션 위에 */}
-        {isAuthenticated && mode === 'combination' && maxCombinations > 0 && (
-          <div className="mb-4">
-            <button
-              onClick={handleSavePreferences}
-              disabled={isSaving}
-              className="w-full py-2 px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSaving ? '저장 중...' : '설정 저장'}
-            </button>
-          </div>
-        )}
+      {/* 설정 저장 버튼 (회원만) - 포함/제외 모드에서만 보이기 */}
+      {isAuthenticated && (mode === 'include' || mode === 'exclude') && (includeNumbers.length > 0 || excludeNumbers.length > 0) && (
+        <div className="flex justify-center">
+          <button
+            onClick={handleSavePreferences}
+            disabled={isSaving}
+            className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] flex items-center space-x-2"
+          >
+            {isSaving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>저장 중...</span>
+              </>
+            ) : (
+              <>
+                <span>💾</span>
+                <span>포함/제외 설정 저장</span>
+              </>
+            )}
+          </button>
+        </div>
+      )}
 
         {/* 수동 조합 - 수동 조합 개수가 0일 때는 숨김 */}
         {mode === 'combination' && maxCombinations > 0 && (

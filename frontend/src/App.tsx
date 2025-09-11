@@ -17,6 +17,8 @@ import CookieSettings from './pages/CookieSettings';
 import Terms from './pages/Terms';
 import WinningHistory from './pages/WinningHistory';
 import SavedNumbers from './pages/SavedNumbers';
+import { NotificationContainer } from './components/common';
+import { NotificationProvider, useNotification } from './contexts/NotificationContext';
 // import History from './pages/History'; // 이전기록 기능 개발 중 - 일시 비활성화
 
 // 전역 콜백 처리 컴포넌트
@@ -121,30 +123,50 @@ const CallbackHandler: React.FC = () => {
   return null;
 };
 
+// App 컴포넌트를 감싸는 래퍼 - 알림 기능 포함
+const AppWithNotifications: React.FC = () => {
+  const { notifications, hideNotification } = useNotification();
+
+  return (
+    <>
+      <UnifiedAuthProvider>
+        <CallbackHandler />
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/recommendation" element={<Recommendation />} />
+            <Route path="/statistics" element={<Statistics />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/profile-settings" element={<ProfileSettings />} />
+            <Route path="/kakao-link" element={<KakaoLink />} />
+            <Route path="/kakao-login-guide" element={<KakaoLoginGuide />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/cookie-settings" element={<CookieSettings />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/winning-history" element={<WinningHistory />} />
+            <Route path="/saved-numbers" element={<SavedNumbers />} />
+            {/* <Route path="/history" element={<History />} /> 이전기록 기능 개발 중 - 일시 비활성화 */}
+          </Routes>
+        </Layout>
+      </UnifiedAuthProvider>
+      
+      {/* 전역 알림 컨테이너 */}
+      <NotificationContainer
+        notifications={notifications}
+        onClose={hideNotification}
+        position="top-right"
+      />
+    </>
+  );
+};
+
 const App: React.FC = () => {
   return (
-    <UnifiedAuthProvider>
-      <CallbackHandler />
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/recommendation" element={<Recommendation />} />
-          <Route path="/statistics" element={<Statistics />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/profile-settings" element={<ProfileSettings />} />
-          <Route path="/kakao-link" element={<KakaoLink />} />
-          <Route path="/kakao-login-guide" element={<KakaoLoginGuide />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/cookie-settings" element={<CookieSettings />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/winning-history" element={<WinningHistory />} />
-          <Route path="/saved-numbers" element={<SavedNumbers />} />
-          {/* <Route path="/history" element={<History />} /> 이전기록 기능 개발 중 - 일시 비활성화 */}
-        </Routes>
-      </Layout>
-    </UnifiedAuthProvider>
+    <NotificationProvider>
+      <AppWithNotifications />
+    </NotificationProvider>
   );
 };
 

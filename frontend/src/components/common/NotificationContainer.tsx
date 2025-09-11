@@ -66,10 +66,18 @@ const NotificationContainer: React.FC<NotificationContainerProps> = ({
     }
   };
 
-  if (notifications.length === 0) return null;
-
+  if (notifications.length === 0) {
+    return null;
+  }
+  
   return (
-    <div className={`fixed ${getPositionClasses()} z-50 space-y-2 max-w-md w-full`}>
+    <div 
+      className={`fixed ${getPositionClasses()} space-y-2 max-w-md w-full`} 
+      style={{ 
+        pointerEvents: 'none',
+        zIndex: 9999
+      }}
+    >
       {notifications.map((notification) => {
         const styles = getNotificationStyles(notification.type);
         const IconComponent = styles.icon;
@@ -79,6 +87,10 @@ const NotificationContainer: React.FC<NotificationContainerProps> = ({
             key={notification.id}
             className={`p-4 rounded-lg border shadow-lg transform transition-all duration-300 ease-in-out ${styles.container}`}
             role="alert"
+            style={{ 
+              pointerEvents: 'auto',
+              zIndex: 10000
+            }}
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
