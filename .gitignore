@@ -132,4 +132,4 @@ dmypy.json
 
 # Environment variables
 .env.local
-.env.production
+# .env.production  # Railway 배포를 위해 임시 허용
