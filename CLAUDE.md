@@ -125,6 +125,23 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 2. **모바일 최적화 (PWA)**
 3. **고급 분석 기능**
 
+### 최근 수정 사항 (2025-01-11)
+
+**Google AdSense 정책 위반 방지 조치 완료** ✅:
+- **Consent Mode v2 적용**: 동의 전 광고 스크립트 미로딩으로 정책 준수
+- **연령 보호 강화**: 19세 이상 이용 가능 명시 및 미성년자 접근 차단 안내
+- **도박 관련 표현 개선**: "당첨 보장" → "참고용 서비스"로 변경하여 과도한 유도 표현 제거
+- **정책 준수 페이지 추가**: `/adsense-policy` 경로로 상세한 정책 안내 제공
+- **메타 태그 개선**: SEO 메타 태그에서 과도한 유도 표현 제거
+- **ads.txt 검증 완료**: 올바른 pub ID 설정 확인
+
+**주요 수정 파일**:
+- `frontend/index.html`: Consent Mode v2 적용, 메타 태그 개선
+- `frontend/src/hooks/useCookieConsent.ts`: Consent Mode v2 연동
+- `frontend/src/pages/Home.tsx`: 도박 관련 표현 개선
+- `frontend/src/pages/AdSensePolicy.tsx`: 정책 준수 페이지 신규 생성
+- `frontend/src/App.tsx`: 정책 페이지 라우팅 추가
+
 ### 최근 수정 사항 (2025-09-11)
 
 **고급 추천 탭 UI/UX 대폭 개선 완료** ✅:
