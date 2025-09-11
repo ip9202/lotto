@@ -57,6 +57,40 @@ const Recommendation: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  // 추천 번호 localStorage 저장
+  const saveRecommendationsToStorage = (recommendations: Recommendation[]) => {
+    try {
+      localStorage.setItem('lottoria_recommendations', JSON.stringify(recommendations));
+      console.log('💾 추천 번호 localStorage에 저장됨:', recommendations.length, '개');
+    } catch (error) {
+      console.error('추천 번호 localStorage 저장 실패:', error);
+    }
+  };
+
+  // 추천 번호 localStorage에서 복원
+  const loadRecommendationsFromStorage = (): Recommendation[] => {
+    try {
+      const stored = localStorage.getItem('lottoria_recommendations');
+      if (stored) {
+        const recommendations = JSON.parse(stored);
+        console.log('📂 localStorage에서 추천 번호 복원됨:', recommendations.length, '개');
+        return recommendations;
+      }
+    } catch (error) {
+      console.error('추천 번호 localStorage 복원 실패:', error);
+    }
+    return [];
+  };
+
+  // 페이지 로드 시 저장된 추천 번호 복원
+  useEffect(() => {
+    const storedRecommendations = loadRecommendationsFromStorage();
+    if (storedRecommendations.length > 0) {
+      setRecommendations(storedRecommendations);
+      console.log('🔄 페이지 로드 시 추천 번호 복원 완료');
+    }
+  }, []);
+
   // 사용자 설정 불러오기 (회원만)
   useEffect(() => {
     const loadUserPreferences = async () => {
@@ -128,6 +162,11 @@ const Recommendation: React.FC = () => {
   };
 
   const handleGenerateRecommendations = async () => {
+    // 새로운 추천을 받기 전에 이전 추천 번호 초기화
+    setRecommendations([]);
+    localStorage.removeItem('lottoria_recommendations');
+    console.log('🔄 이전 추천 번호 초기화 완료');
+
     // 수동 조합이 설정되어 있는데 실제로는 없는 경우
     if (combinationSettings.manual_count > 0 && selectedNumbers.length === 0) {
       alert('수동 조합을 추가해주세요.');
@@ -177,6 +216,9 @@ const Recommendation: React.FC = () => {
         
         // 추천기록 기능 일시 비활성화로 history_id 처리 불필요
         setRecommendations(recommendations);
+        
+        // localStorage에 추천 번호 저장
+        saveRecommendationsToStorage(recommendations);
         
       } else {
         alert(result.error?.message || '추천 조합 생성에 실패했습니다.');

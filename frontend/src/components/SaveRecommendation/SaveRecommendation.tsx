@@ -29,6 +29,37 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
 
   const canSave = isAuthenticated && user?.can_save_number;
 
+  // 중복 번호 조합 체크 함수
+  const checkDuplicateNumbers = async (targetNumbers: number[]): Promise<boolean> => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) return false;
+
+      const { savedRecommendationsAPI } = await import('../../services/apiService');
+      const savedList = await savedRecommendationsAPI.getSavedRecommendations(token);
+      
+      if (savedList.success && savedList.data?.items) {
+        // 저장된 번호들을 정렬해서 비교
+        const sortedTargetNumbers = [...targetNumbers].sort((a, b) => a - b);
+        
+        for (const savedItem of savedList.data.items) {
+          if (savedItem.numbers && Array.isArray(savedItem.numbers)) {
+            const sortedSavedNumbers = [...savedItem.numbers].sort((a, b) => a - b);
+            
+            // 배열 길이와 각 요소가 모두 같은지 확인
+            if (sortedTargetNumbers.length === sortedSavedNumbers.length &&
+                sortedTargetNumbers.every((num, index) => num === sortedSavedNumbers[index])) {
+              return true; // 중복 발견
+            }
+          }
+        }
+      }
+      return false; // 중복 없음
+    } catch (error) {
+      console.error('중복 체크 중 오류:', error);
+      return false; // 오류 시 저장 허용
+    }
+  };
 
   const handleQuickSave = async () => {
     console.log('🔍 저장 시도 - canSave:', canSave);
@@ -82,6 +113,21 @@ const SaveRecommendation: React.FC<SaveRecommendationProps> = ({
       showError('저장 한도가 초과되어 저장할 수 없습니다. 먼저 저장된 번호를 삭제해주세요.');
       return;
     }
+
+    // 중복 번호 조합 체크
+    console.log('🔍 중복 번호 조합 체크 중...');
+    const isDuplicate = await checkDuplicateNumbers(numbers);
+    if (isDuplicate) {
+      console.log('⚠️ 중복 번호 조합 발견 - 저장 중단');
+      showError(
+        '⚠️ 이미 저장된 번호입니다!\n\n' +
+        `번호: ${numbers.sort((a, b) => a - b).join(', ')}\n\n` +
+        '같은 번호 조합이 이미 저장되어 있습니다.\n' +
+        '다른 번호 조합을 선택하거나 저장된 번호를 확인해주세요.'
+      );
+      return;
+    }
+    console.log('✅ 중복 없음 - 저장 진행');
 
     await withLoading(async () => {
       try {
