@@ -105,6 +105,103 @@ const ProfileSettings: React.FC = () => {
     }
   }, []);
 
+  // 카카오 연동 처리 함수
+  const handleKakaoLinkClick = () => {
+    // 카카오 SDK 초기화
+    if (!window.Kakao || !window.Kakao.isInitialized()) {
+      window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+    }
+
+    // 환경에 따른 Redirect URI 설정
+    const redirectUri = `${window.location.origin}/profile-settings`;
+    const kakaoAuthUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${import.meta.env.VITE_KAKAO_APP_KEY}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&state=kakao_link_${Date.now()}`;
+    
+    // 카카오 인증으로 직접 이동
+    window.location.href = kakaoAuthUrl;
+  };
+
+  // 카카오 연동 콜백 처리
+  useEffect(() => {
+    const handleKakaoLinkCallback = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      
+      // 카카오 연동 콜백인지 확인
+      if (code && state && state.startsWith('kakao_link_')) {
+        // URL 파라미터 즉시 제거
+        window.history.replaceState({}, document.title, '/profile-settings');
+        
+        try {
+          // 카카오 액세스 토큰 획득
+          const redirectUri = `${window.location.origin}/profile-settings`;
+          
+          const tokenResponse = await fetch('https://kauth.kakao.com/oauth/token', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+              grant_type: 'authorization_code',
+              client_id: import.meta.env.VITE_KAKAO_APP_KEY,
+              redirect_uri: redirectUri,
+              code: code
+            })
+          });
+          
+          const tokenData = await tokenResponse.json();
+          
+          if (tokenData.access_token) {
+            // 카카오 계정 연동 API 호출
+            const linkResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/link/kakao`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+              },
+              body: JSON.stringify({
+                provider: 'kakao',
+                access_token: tokenData.access_token
+              })
+            });
+
+            const linkResult = await linkResponse.json();
+            
+            if (linkResult.success) {
+              // 연동 성공
+              setSuccessMessage('카카오 계정 연동이 완료되었습니다!');
+              
+              // 사용자 정보 새로고침
+              const token = localStorage.getItem('access_token');
+              if (token) {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/me`, {
+                  headers: {
+                    'Authorization': `Bearer ${token}`
+                  }
+                });
+                if (response.ok) {
+                  const userData = await response.json();
+                  setUser(userData);
+                }
+              }
+            } else {
+              // 연동 실패
+              const errorMessage = linkResult.error?.message || '카카오 연동에 실패했습니다.';
+              setErrors({ submit: errorMessage });
+            }
+          } else {
+            setErrors({ submit: '카카오 인증에 실패했습니다.' });
+          }
+        } catch (error) {
+          console.error('카카오 연동 콜백 처리 오류:', error);
+          setErrors({ submit: '카카오 연동 중 오류가 발생했습니다.' });
+        }
+      }
+    };
+
+    handleKakaoLinkCallback();
+  }, []);
+
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({
@@ -366,10 +463,7 @@ const ProfileSettings: React.FC = () => {
                 
                 {/* 카카오 연동 버튼 */}
                 <button
-                  onClick={() => {
-                    // 로그인 페이지로 이동해서 카카오 연동 진행
-                    window.location.href = '/login?action=kakao_link';
-                  }}
+                  onClick={handleKakaoLinkClick}
                   className="w-full flex items-center justify-center gap-3 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
