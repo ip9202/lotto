@@ -102,7 +102,7 @@ const Register: React.FC = () => {
         if (kakaoUser && accessToken) {
           // 카카오 사용자 정보가 있으면 바로 카카오 연동 진행
           try {
-            const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+            const linkResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/link/kakao`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',

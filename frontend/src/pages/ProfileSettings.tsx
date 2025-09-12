@@ -37,7 +37,7 @@ const ProfileSettings: React.FC = () => {
           return;
         }
 
-        const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -114,7 +114,7 @@ const ProfileSettings: React.FC = () => {
     setSuccessMessage('');
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/change-password', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/auth/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,10 +161,10 @@ const ProfileSettings: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">프로필 설정</h1>
-            <p className="text-gray-600">계정 정보를 관리하고 비밀번호를 변경할 수 있습니다.</p>
-          </div>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">프로필 설정</h1>
+              <p className="text-gray-600">계정 정보를 관리하고 비밀번호를 변경할 수 있습니다.</p>
+            </div>
 
           {/* 사용자 정보 섹션 */}
           <div className="mb-8">

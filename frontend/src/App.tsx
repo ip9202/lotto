@@ -29,7 +29,7 @@ const CallbackHandler: React.FC = () => {
   const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
     try {
       // 카카오 사용자 정보로 자동 회원가입
-      const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
+      const registerResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/register/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ const CallbackHandler: React.FC = () => {
       
       if (registerResult.success) {
         // 회원가입 성공 후 카카오 연동
-        const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+        const linkResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/link/kakao', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

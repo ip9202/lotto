@@ -153,7 +153,7 @@ const Login: React.FC = () => {
         } else {
           // 일반 로그인인 경우 사용자 정보 확인 후 카카오 연동 상태 체크
           try {
-            const response = await fetch('http://localhost:8000/api/v1/auth/me', {
+            const response = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/me', {
               headers: {
                 'Authorization': `Bearer ${localStorage.getItem('access_token')}`
               }
@@ -198,7 +198,7 @@ const Login: React.FC = () => {
   const handleKakaoLogin = async (accessToken: string, _user: any) => {
     try {
       // 1. 먼저 카카오 사용자 정보 확인
-      const checkResponse = await fetch('http://localhost:8000/api/v1/auth/check-kakao-user', {
+      const checkResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/check-kakao-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -217,7 +217,7 @@ const Login: React.FC = () => {
           setIsLoading(true);
           setErrors({ submit: '카카오 로그인 중...' });
           
-          const loginResponse = await fetch('http://localhost:8000/api/v1/auth/login/social', {
+          const loginResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/login/social', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -269,7 +269,7 @@ const Login: React.FC = () => {
   const handleKakaoRegister = async (kakaoUser: any, accessToken: string) => {
     try {
       // 카카오 사용자 정보로 자동 회원가입
-      const registerResponse = await fetch('http://localhost:8000/api/v1/auth/register/email', {
+      const registerResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/register/email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +285,7 @@ const Login: React.FC = () => {
       
       if (registerResult.success) {
         // 회원가입 성공 후 카카오 연동
-        const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+        const linkResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/link/kakao', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -301,7 +301,7 @@ const Login: React.FC = () => {
         
         if (linkResult.success) {
           // 연동 성공 후 자동 로그인
-          const loginResponse = await fetch('http://localhost:8000/api/v1/auth/login/social', {
+          const loginResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/login/social', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -336,7 +336,7 @@ const Login: React.FC = () => {
   const handleKakaoLink = async (accessToken: string) => {
     try {
       // 현재 로그인된 사용자와 카카오 연동
-      const linkResponse = await fetch('http://localhost:8000/api/v1/auth/link/kakao', {
+      const linkResponse = await fetch('${import.meta.env.VITE_API_URL}/api/v1/auth/link/kakao', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
