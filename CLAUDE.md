@@ -154,10 +154,16 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 - `frontend/src/pages/Home.tsx`: 카카오 사용자 확인 API (3개 API)
 
 **개발용 콘솔 로그 완전 제거** ✅:
-- **정리된 파일**: SavedNumbers.tsx, Recommendation.tsx, SaveRecommendation.tsx, NotificationContext.tsx
-- **제거된 로그**: 25+ 개의 개발용 console.log, console.debug 문
+- **정리된 파일**: SavedNumbers.tsx, Recommendation.tsx, SaveRecommendation.tsx, NotificationContext.tsx, ProfileSettings.tsx
+- **제거된 로그**: 30+ 개의 개발용 console.log, console.debug 문
 - **보존된 로그**: 에러 처리용 console.error만 유지
 - **효과**: 프로덕션 성능 향상 및 콘솔 정리
+- **커밋**: 커밋 2f7aced와 9a506c6으로 배포 완료
+
+**카카오 로그인 연동 이슈 해결** ✅:
+- **문제**: 카카오 연동 처리 과정에서 메인페이지가 두 번 표시되는 깜박임 현상
+- **해결**: 로그인 콜백 처리 로직 개선으로 직접 프로필설정으로 이동
+- **결과**: 카카오 연동 시 UX 개선 및 깜박임 없는 자연스러운 페이지 전환
 
 ### 주요 완료 기능 요약
 

@@ -82,8 +82,9 @@ const Login: React.FC = () => {
           
           // 연동용인지 로그인용인지 구분해서 처리
           if (state.startsWith('kakao_link_')) {
-            // 카카오 연동 처리
+            // 카카오 연동 처리 (바로 handleKakaoLink 호출)
             await handleKakaoLink(tokenData.access_token);
+            return; // 여기서 종료하여 아래 로직 실행 안함
           } else {
             // 일반 카카오 로그인 처리
             await handleKakaoLogin(tokenData.access_token, userData);
@@ -360,11 +361,14 @@ const Login: React.FC = () => {
         // 연동 성공 - ProfileSettings 페이지로 이동 (연동 완료 알림 표시)
         window.location.href = '/profile-settings?kakao_link=success';
       } else {
-        setErrors({ submit: '카카오 연동에 실패했습니다.' });
+        // 백엔드에서 온 구체적인 에러 메시지 표시하고 바로 ProfileSettings로 이동
+        const errorMessage = linkResult.error?.message || '카카오 연동에 실패했습니다.';
+        window.location.href = `/profile-settings?kakao_link=error&message=${encodeURIComponent(errorMessage)}`;
       }
     } catch (error) {
       console.error('카카오 연동 오류:', error);
-      setErrors({ submit: '카카오 연동 중 오류가 발생했습니다.' });
+      const errorMessage = '카카오 연동 중 오류가 발생했습니다.';
+      window.location.href = `/profile-settings?kakao_link=error&message=${encodeURIComponent(errorMessage)}`;
     }
   };
 
@@ -435,15 +439,31 @@ const Login: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // 이미 로그인된 경우 홈으로 리다이렉트
+  // 이미 로그인된 경우 홈으로 리다이렉트 (카카오 연동 상태가 아닐 때만)
   useEffect(() => {
-    if (isAuthenticated && !showKakaoLink) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    const code = urlParams.get('code');
+    const state = urlParams.get('state');
+    
+    // 카카오 연동 관련 상태가 아닐 때만 홈으로 리다이렉트
+    const isKakaoLinkFlow = action === 'kakao_link' || 
+                           (code && state && state.startsWith('kakao_link_'));
+    
+    if (isAuthenticated && !showKakaoLink && !isKakaoLinkFlow) {
       navigate('/');
     }
   }, [isAuthenticated, showKakaoLink, navigate]);
 
-  // 이미 로그인된 경우 로딩 표시
-  if (isAuthenticated && !showKakaoLink) {
+  // 이미 로그인된 경우 로딩 표시 (카카오 연동 상태가 아닐 때만)
+  const urlParams = new URLSearchParams(window.location.search);
+  const action = urlParams.get('action');
+  const code = urlParams.get('code');
+  const state = urlParams.get('state');
+  const isKakaoLinkFlow = action === 'kakao_link' || 
+                         (code && state && state.startsWith('kakao_link_'));
+  
+  if (isAuthenticated && !showKakaoLink && !isKakaoLinkFlow) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">

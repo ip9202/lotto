@@ -65,11 +65,11 @@ const ProfileSettings: React.FC = () => {
     const kakaoLinkResult = urlParams.get('kakao_link');
     
     if (kakaoLinkResult === 'success') {
-      // URL 파라미터 제거
-      window.history.replaceState({}, document.title, '/profile-settings');
-      
       // 성공 메시지 표시
       setSuccessMessage('카카오 계정 연동이 완료되었습니다!');
+      
+      // URL 파라미터 제거 (즉시)
+      window.history.replaceState({}, document.title, '/profile-settings');
       
       // 사용자 정보 새로고침 (연동 상태 업데이트)
       const refreshUserInfo = async () => {
@@ -94,11 +94,14 @@ const ProfileSettings: React.FC = () => {
       refreshUserInfo();
       
     } else if (kakaoLinkResult === 'error') {
-      // URL 파라미터 제거
-      window.history.replaceState({}, document.title, '/profile-settings');
+      // URL 파라미터에서 구체적인 에러 메시지 추출
+      const errorMessage = urlParams.get('message') || '카카오 연동 중 오류가 발생했습니다. 다시 시도해주세요.';
       
       // 오류 메시지 표시
-      setErrors({ submit: '카카오 연동 중 오류가 발생했습니다. 다시 시도해주세요.' });
+      setErrors({ submit: decodeURIComponent(errorMessage) });
+      
+      // URL 파라미터 제거 (즉시)
+      window.history.replaceState({}, document.title, '/profile-settings');
     }
   }, []);
 

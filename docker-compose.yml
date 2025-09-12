@@ -56,5 +56,21 @@ services:
       - backend
     restart: unless-stopped
 
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: lotto_pgadmin
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@lotto.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
 volumes:
   postgres_data:
+  pgadmin_data:

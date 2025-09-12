@@ -278,6 +278,13 @@ async def link_kakao_account(
 ):
     """로그인된 사용자의 카카오 계정 연동"""
     try:
+        # 현재 사용자가 이미 카카오 연동되어 있는지 확인
+        if current_user.linked_social_providers and "KAKAO" in current_user.linked_social_providers:
+            return AuthResponse(
+                success=False,
+                error={"message": "이미 카카오 계정이 연동되어 있습니다."}
+            )
+        
         # 카카오에서 사용자 정보 가져오기
         result = await UnifiedAuthService.get_social_user_info(
             provider=link_data.provider,
@@ -291,16 +298,33 @@ async def link_kakao_account(
             )
         
         user_info = result["data"]
+        kakao_social_id = str(user_info.get("id"))
+        
+        # 해당 카카오 계정이 이미 다른 사용자에게 연동되어 있는지 확인
+        existing_user = db.query(User).filter(
+            and_(
+                User.social_provider == SocialProvider.KAKAO,
+                User.social_id == kakao_social_id,
+                User.is_active == True,
+                User.id != current_user.id  # 현재 사용자는 제외
+            )
+        ).first()
+        
+        if existing_user:
+            return AuthResponse(
+                success=False,
+                error={"message": "이 카카오 계정은 이미 다른 사용자에게 연동되어 있습니다."}
+            )
         
         # 현재 사용자에게 카카오 계정 연결
-        current_user.social_provider = "KAKAO"
-        current_user.social_id = user_info.get("id")
+        current_user.social_provider = SocialProvider.KAKAO
+        current_user.social_id = kakao_social_id
         
         if not current_user.linked_social_providers:
-            current_user.linked_social_providers = []
-        
-        if "KAKAO" not in current_user.linked_social_providers:
-            current_user.linked_social_providers.append("KAKAO")
+            current_user.linked_social_providers = ["KAKAO"]
+        else:
+            if "KAKAO" not in current_user.linked_social_providers:
+                current_user.linked_social_providers.append("KAKAO")
         
         db.commit()
         
@@ -311,6 +335,7 @@ async def link_kakao_account(
         
     except Exception as e:
         logger.error(f"카카오 연동 오류: {e}")
+        db.rollback()  # 에러 발생 시 롤백
         return AuthResponse(
             success=False,
             error={"message": "카카오 연동 중 오류가 발생했습니다."}
