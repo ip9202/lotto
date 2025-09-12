@@ -26,7 +26,7 @@ const Login: React.FC = () => {
       const code = urlParams.get('code');
       const state = urlParams.get('state');
       
-      if (!code || !state || !state.startsWith('kakao_login_')) {
+      if (!code || !state || (!state.startsWith('kakao_login_') && !state.startsWith('kakao_link_'))) {
         return;
       }
 
@@ -80,8 +80,14 @@ const Login: React.FC = () => {
           
           const userData = await userResponse.json();
           
-          // handleKakaoLogin 함수 호출
-          await handleKakaoLogin(tokenData.access_token, userData);
+          // 연동용인지 로그인용인지 구분해서 처리
+          if (state.startsWith('kakao_link_')) {
+            // 카카오 연동 처리
+            await handleKakaoLink(tokenData.access_token);
+          } else {
+            // 일반 카카오 로그인 처리
+            await handleKakaoLogin(tokenData.access_token, userData);
+          }
         } else {
           setErrors({ submit: '카카오 인증에 실패했습니다.' });
         }
@@ -351,8 +357,8 @@ const Login: React.FC = () => {
       const linkResult = await linkResponse.json();
       
       if (linkResult.success) {
-        // 연동 성공 - 메인 페이지로 이동
-        window.location.href = '/';
+        // 연동 성공 - ProfileSettings 페이지로 이동 (연동 완료 알림 표시)
+        window.location.href = '/profile-settings?kakao_link=success';
       } else {
         setErrors({ submit: '카카오 연동에 실패했습니다.' });
       }
@@ -370,6 +376,64 @@ const Login: React.FC = () => {
   // Prevent unused variable warnings
   void handleKakaoLoginClick;
   void handleKakaoRegister;
+
+  // ProfileSettings에서 카카오 연동 요청 처리
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action');
+    
+    if (action === 'kakao_link' && isAuthenticated) {
+      // 이미 로그인된 사용자가 카카오 연동을 위해 왔을 때
+      // URL 파라미터 제거
+      window.history.replaceState({}, document.title, '/login');
+      
+      // 카카오 로그인 시작 (SocialLogin 컴포넌트의 로직 활용)
+      const startKakaoAuth = async () => {
+        try {
+          // 카카오 SDK 초기화 확인
+          if (!window.Kakao || !window.Kakao.isInitialized()) {
+            if (window.Kakao) {
+              window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+            }
+          }
+          
+          if (window.Kakao && window.Kakao.Auth && window.Kakao.Auth.authorize) {
+            // 카카오 인증 시작 (연동 목적임을 state에 표시)
+            window.Kakao.Auth.authorize({
+              redirectUri: `${window.location.origin}/login`,
+              state: 'kakao_link_' + Date.now(), // 연동용 state
+              scope: 'profile_nickname'
+            });
+          } else {
+            console.error('카카오 SDK가 준비되지 않았습니다.');
+            navigate('/profile-settings?kakao_link=error');
+          }
+        } catch (error) {
+          console.error('카카오 연동 시작 오류:', error);
+          navigate('/profile-settings?kakao_link=error');
+        }
+      };
+      
+      // 카카오 SDK 로딩 확인 후 실행
+      if (window.Kakao) {
+        startKakaoAuth();
+      } else {
+        // SDK 로딩 대기
+        const checkSDK = setInterval(() => {
+          if (window.Kakao) {
+            clearInterval(checkSDK);
+            startKakaoAuth();
+          }
+        }, 100);
+        
+        // 5초 후 타임아웃
+        setTimeout(() => {
+          clearInterval(checkSDK);
+          navigate('/profile-settings?kakao_link=error');
+        }, 5000);
+      }
+    }
+  }, [isAuthenticated, navigate]);
 
   // 이미 로그인된 경우 홈으로 리다이렉트
   useEffect(() => {
