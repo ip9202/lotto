@@ -8,6 +8,8 @@ class LottoDraw(Base):
     id = Column(Integer, primary_key=True, index=True)
     draw_number = Column(Integer, unique=True, nullable=False, index=True)  # 회차
     draw_date = Column(Date, nullable=False, index=True)  # 추첨일
+    purchase_start_date = Column(Date, nullable=True)  # 구매시작일
+    purchase_end_date = Column(Date, nullable=True)  # 구매종료일
     number_1 = Column(Integer, nullable=False)
     number_2 = Column(Integer, nullable=False)
     number_3 = Column(Integer, nullable=False)
@@ -44,5 +46,34 @@ class LottoDraw(Base):
     def numbers(self):
         """당첨 번호 6개를 리스트로 반환"""
         return [self.number_1, self.number_2, self.number_3, self.number_4, self.number_5, self.number_6]
+    
+    @property
+    def purchase_period(self):
+        """구매기간을 문자열로 반환"""
+        if self.purchase_start_date and self.purchase_end_date:
+            start = self.purchase_start_date.strftime('%m/%d')
+            end = self.purchase_end_date.strftime('%m/%d')
+            return f"{start} ~ {end}"
+        return None
+    
+    def calculate_purchase_dates(self):
+        """추첨일을 기준으로 구매기간 자동 계산 (추첨일 전주 일요일~토요일)"""
+        from datetime import timedelta
+        # 추첨일(토요일) 기준으로 전주 일요일부터 당일까지
+        draw_weekday = self.draw_date.weekday()  # 0=월, 6=일
+        
+        # 토요일이면 weekday()는 5
+        if draw_weekday == 5:  # 토요일
+            # 전주 일요일 계산: 토요일에서 6일 빼기
+            purchase_start = self.draw_date - timedelta(days=6)
+            purchase_end = self.draw_date
+        else:
+            # 토요일이 아닌 경우 가장 가까운 이전 토요일 찾기
+            days_since_saturday = (draw_weekday + 2) % 7
+            last_saturday = self.draw_date - timedelta(days=days_since_saturday)
+            purchase_start = last_saturday - timedelta(days=6)
+            purchase_end = last_saturday
+            
+        return purchase_start, purchase_end
 
 

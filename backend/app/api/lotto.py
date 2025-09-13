@@ -23,10 +23,16 @@ async def get_latest_draw(db: Session = Depends(get_db)):
         
         # 날짜를 문자열로 변환
         draw_date_str = latest.draw_date.strftime('%Y-%m-%d') if latest.draw_date else "2025-08-23"
+        purchase_start_str = latest.purchase_start_date.strftime('%Y-%m-%d') if latest.purchase_start_date else None
+        purchase_end_str = latest.purchase_end_date.strftime('%Y-%m-%d') if latest.purchase_end_date else None
+        purchase_period = latest.purchase_period if hasattr(latest, 'purchase_period') else None
         
         data = LottoNumber(
             draw_number=latest.draw_number,
             draw_date=draw_date_str,
+            purchase_start_date=purchase_start_str,
+            purchase_end_date=purchase_end_str,
+            purchase_period=purchase_period,
             numbers=latest.numbers,
             bonus_number=latest.bonus_number,
             first_winners=latest.first_winners,
@@ -92,10 +98,16 @@ async def get_draws(
         for draw in draws:
             # 날짜를 문자열로 변환
             draw_date_str = draw.draw_date.strftime('%Y-%m-%d') if draw.draw_date else "2025-08-23"
+            purchase_start_str = draw.purchase_start_date.strftime('%Y-%m-%d') if draw.purchase_start_date else None
+            purchase_end_str = draw.purchase_end_date.strftime('%Y-%m-%d') if draw.purchase_end_date else None
+            purchase_period = draw.purchase_period if hasattr(draw, 'purchase_period') else None
             
             data.append(LottoNumber(
                 draw_number=draw.draw_number,
                 draw_date=draw_date_str,
+                purchase_start_date=purchase_start_str,
+                purchase_end_date=purchase_end_str,
+                purchase_period=purchase_period,
                 numbers=draw.numbers,
                 bonus_number=draw.bonus_number,
                 first_winners=draw.first_winners,
@@ -149,7 +161,7 @@ async def get_draw_by_number(
     draw_number: int,
     db: Session = Depends(get_db)
 ):
-    """특정 회차 당첨번호 조회"""
+    """특정 회차 당첨번호 조회 (구매기간 포함)"""
     try:
         draw = db.query(LottoDraw).filter(LottoDraw.draw_number == draw_number).first()
         if not draw:
@@ -157,10 +169,16 @@ async def get_draw_by_number(
         
         # 날짜를 문자열로 변환
         draw_date_str = draw.draw_date.strftime('%Y-%m-%d') if draw.draw_date else "2025-08-23"
+        purchase_start_str = draw.purchase_start_date.strftime('%Y-%m-%d') if draw.purchase_start_date else None
+        purchase_end_str = draw.purchase_end_date.strftime('%Y-%m-%d') if draw.purchase_end_date else None
+        purchase_period = draw.purchase_period if hasattr(draw, 'purchase_period') else None
         
         data = LottoNumber(
             draw_number=draw.draw_number,
             draw_date=draw_date_str,
+            purchase_start_date=purchase_start_str,
+            purchase_end_date=purchase_end_str,
+            purchase_period=purchase_period,
             numbers=draw.numbers,
             bonus_number=draw.bonus_number,
             first_winners=draw.first_winners,

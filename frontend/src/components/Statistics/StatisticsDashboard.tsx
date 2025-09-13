@@ -48,6 +48,10 @@ const StatisticsDashboard: React.FC = () => {
     numbers: number[];
     bonus_number: number;
   }>>([]);
+  const [currentDrawInfo, setCurrentDrawInfo] = useState<{
+    draw_date: string;
+    purchase_period: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchStatistics();
@@ -94,6 +98,41 @@ const StatisticsDashboard: React.FC = () => {
       const statsData = await statsResponse.json();
       const winningData = await winningResponse.json();
 
+      // 회차 정보 조회 (추첨일, 구매기간)
+      let drawInfo = null;
+      
+      // 1189회차인 경우 최신 회차 API에서 구매기간 정보를 가져올 수 있음
+      if (targetDrawNumber === 1189) {
+        const latestResponse = await fetch(`${baseURL}/api/v1/lotto/latest`);
+        if (latestResponse.ok) {
+          const latestData = await latestResponse.json();
+          if (latestData.success && latestData.data && latestData.data.draw_number === 1189) {
+            drawInfo = latestData.data;
+          }
+        }
+      }
+      
+      // 최신 회차 API에서 정보를 못 가져온 경우, 개별 조회 API 사용
+      if (!drawInfo) {
+        const individualDrawResponse = await fetch(`${baseURL}/api/v1/lotto/draw/${targetDrawNumber}`);
+        if (individualDrawResponse.ok) {
+          const individualDrawData = await individualDrawResponse.json();
+          if (individualDrawData.success && individualDrawData.data) {
+            drawInfo = individualDrawData.data;
+          }
+        }
+      }
+      
+      // 회차 정보가 있으면 상태 업데이트
+      if (drawInfo) {
+        const drawDate = new Date(drawInfo.draw_date);
+        const formattedDate = `${drawDate.getMonth() + 1}월 ${drawDate.getDate()}일 (${['일','월','화','수','목','금','토'][drawDate.getDay()]})`;
+        setCurrentDrawInfo({
+          draw_date: formattedDate,
+          purchase_period: drawInfo.purchase_period || '구매 기간'
+        });
+      }
+
       // 공공 데이터로 통계 생성
       const statisticsData: StatisticsData = {
         publicStats: {
@@ -114,7 +153,7 @@ const StatisticsDashboard: React.FC = () => {
             grade5: winningData.data?.grade_stats?.grade_5 || 0
           }
         },
-        performanceData: generatePerformanceData(winningData.data, targetDrawNumber), // 선택된 회차 또는 전회차 데이터 사용
+        performanceData: await generatePerformanceData(winningData.data, targetDrawNumber), // 선택된 회차 또는 전회차 데이터 사용
         winRateData: generateWinRateData(statsData.data)
       };
 
@@ -139,52 +178,40 @@ const StatisticsDashboard: React.FC = () => {
     }
   };
 
-  const generatePerformanceData = (winningData: any, drawNumber: number) => {
+  const generatePerformanceData = async (winningData: any, drawNumber: number) => {
     // 실제 API 데이터를 사용하여 차트 데이터 생성
     const data = [];
     
-    // 회차별 구매 기간 날짜 매핑
-    const getPurchasePeriod = (drawNum: number) => {
-      // 1186회차는 2025-08-23 (토) 추첨
-      if (drawNum === 1186) {
-        return [
-          { label: '8/17 (일)', date: '2025-08-17' },
-          { label: '8/18 (월)', date: '2025-08-18' },
-          { label: '8/19 (화)', date: '2025-08-19' },
-          { label: '8/20 (수)', date: '2025-08-20' },
-          { label: '8/21 (목)', date: '2025-08-21' },
-          { label: '8/22 (금)', date: '2025-08-22' },
-          { label: '8/23 (토)', date: '2025-08-23' }
-        ];
+    // API에서 해당 회차의 구매기간 정보 가져오기
+    const getPurchasePeriod = async (drawNum: number) => {
+      try {
+        const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+        const response = await fetch(`${baseURL}/api/v1/lotto/draw/${drawNum}`);
+        if (response.ok) {
+          const drawData = await response.json();
+          const draw = drawData.data;
+          
+          if (draw.purchase_start_date && draw.purchase_end_date) {
+            // 구매기간을 일별로 분할
+            const periods = [];
+            const startDate = new Date(draw.purchase_start_date);
+            const endDate = new Date(draw.purchase_end_date);
+            
+            for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+              const dayName = ['일', '월', '화', '수', '목', '금', '토'][d.getDay()];
+              periods.push({
+                label: `${d.getMonth() + 1}/${d.getDate()} (${dayName})`,
+                date: d.toISOString().split('T')[0]
+              });
+            }
+            return periods;
+          }
+        }
+      } catch (error) {
+        console.error('구매기간 정보 조회 실패:', error);
       }
       
-      // 1187회차는 2025-08-30 (토) 추첨
-      if (drawNum === 1187) {
-        return [
-          { label: '8/24 (일)', date: '2025-08-24' },
-          { label: '8/25 (월)', date: '2025-08-25' },
-          { label: '8/26 (화)', date: '2025-08-26' },
-          { label: '8/27 (수)', date: '2025-08-27' },
-          { label: '8/28 (목)', date: '2025-08-28' },
-          { label: '8/29 (금)', date: '2025-08-29' },
-          { label: '8/30 (토)', date: '2025-08-30' }
-        ];
-      }
-      
-      // 1188회차는 2025-09-06 (토) 추첨
-      if (drawNum === 1188) {
-        return [
-          { label: '8/31 (일)', date: '2025-08-31' },
-          { label: '9/1 (월)', date: '2025-09-01' },
-          { label: '9/2 (화)', date: '2025-09-02' },
-          { label: '9/3 (수)', date: '2025-09-03' },
-          { label: '9/4 (목)', date: '2025-09-04' },
-          { label: '9/5 (금)', date: '2025-09-05' },
-          { label: '9/6 (토)', date: '2025-09-06' }
-        ];
-      }
-      
-      // 기본 패턴 (일요일 ~ 토요일)
+      // 폴백: 기본 패턴 (일요일 ~ 토요일)
       return [
         { label: '일요일', date: '2025-08-17' },
         { label: '월요일', date: '2025-08-18' },
@@ -196,7 +223,7 @@ const StatisticsDashboard: React.FC = () => {
       ];
     };
     
-    const purchasePeriod = getPurchasePeriod(drawNumber);
+    const purchasePeriod = await getPurchasePeriod(drawNumber);
     
     // 실제 API 데이터에서 results 배열 사용
     const results = winningData?.results || [];
@@ -296,17 +323,13 @@ const StatisticsDashboard: React.FC = () => {
           </div>
           <div className="text-center">
             <div className="text-lg sm:text-xl font-bold text-gray-800">
-              {data.publicStats.latestDraw === 1186 ? '8월 23일 (토)' : 
-               data.publicStats.latestDraw === 1187 ? '8월 30일 (토)' : 
-               data.publicStats.latestDraw === 1188 ? '9월 6일 (토)' : '추첨일'}
+              {currentDrawInfo?.draw_date || '추첨일'}
             </div>
             <div className="text-xs sm:text-sm text-gray-600">추첨일</div>
           </div>
           <div className="text-center">
             <div className="text-sm sm:text-base font-bold text-gray-600">
-              {data.publicStats.latestDraw === 1186 ? '8/17~8/23' : 
-               data.publicStats.latestDraw === 1187 ? '8/24~8/30' : 
-               data.publicStats.latestDraw === 1188 ? '8/31~9/6' : '구매 기간'}
+              {currentDrawInfo?.purchase_period || '구매 기간'}
             </div>
             <div className="text-xs sm:text-sm text-gray-600">구매 기간</div>
           </div>

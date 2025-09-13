@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, date, timedelta
 from typing import List, Optional
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -385,14 +385,36 @@ class AutoUpdater:
         
         logger.error(f"{draw_number}회차: 모든 시도가 실패했습니다.")
         return None
+    
+    def _calculate_purchase_dates(self, draw_date: date) -> tuple[date, date]:
+        """
+        추첨일을 기준으로 구매기간 계산
+        로또는 매주 토요일 추첨이므로, 전주 일요일부터 추첨일(토요일)까지가 구매기간
+        """
+        # 추첨일(토요일) 기준으로 해당 주의 일요일 계산
+        # 토요일의 weekday()는 5
+        if draw_date.weekday() != 5:  # 토요일이 아닌 경우 에러 로그
+            logger.warning(f"추첨일이 토요일이 아닙니다: {draw_date} (weekday: {draw_date.weekday()})")
+        
+        # 이번 주 일요일 계산 (추첨일 - 6일)
+        purchase_start = draw_date - timedelta(days=6)
+        purchase_end = draw_date
+        
+        return purchase_start, purchase_end
         
     def _insert_new_draws(self, db: Session, new_draws: List[dict]):
-        """새로운 데이터를 DB에 입력"""
+        """새로운 데이터를 DB에 입력 (구매기간 포함)"""
         for draw_data in new_draws:
             try:
+                # 추첨일을 기준으로 구매기간 자동 계산
+                draw_date = draw_data['draw_date']
+                purchase_start, purchase_end = self._calculate_purchase_dates(draw_date)
+                
                 new_draw = LottoDraw(
                     draw_number=draw_data['draw_number'],
-                    draw_date=draw_data['draw_date'],
+                    draw_date=draw_date,
+                    purchase_start_date=purchase_start,
+                    purchase_end_date=purchase_end,
                     number_1=draw_data['numbers'][0],
                     number_2=draw_data['numbers'][1],
                     number_3=draw_data['numbers'][2],
@@ -405,7 +427,7 @@ class AutoUpdater:
                 )
                 db.add(new_draw)
                 db.commit()
-                logger.info(f"{draw_data['draw_number']}회차가 성공적으로 입력되었습니다.")
+                logger.info(f"{draw_data['draw_number']}회차가 성공적으로 입력되었습니다. (구매기간: {purchase_start} ~ {purchase_end})")
             except Exception as e:
                 db.rollback()
                 logger.error(f"{draw_data['draw_number']}회차 입력 실패: {str(e)}")
