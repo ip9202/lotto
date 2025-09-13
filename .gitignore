@@ -133,3 +133,8 @@ dmypy.json
 # Environment variables
 .env.local
 # .env.production  # Railway 배포를 위해 임시 허용
+
+# Database connection configs (sensitive information)
+railway_db_config.md
+*_db_config.md
+*_credentials.md
