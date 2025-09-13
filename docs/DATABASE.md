@@ -78,6 +78,32 @@ CREATE TABLE saved_recommendations (
 );
 ```
 
+### Lotto draws table (구매기간 포함 - 2025-09-14 업데이트)
+```sql
+CREATE TABLE lotto_draws (
+    id SERIAL PRIMARY KEY,
+    draw_number INTEGER UNIQUE NOT NULL,
+    draw_date DATE NOT NULL,
+    purchase_start_date DATE,                        -- 구매 시작일 (일요일)
+    purchase_end_date DATE,                          -- 구매 종료일 (추첨일, 토요일)
+    number_1 INTEGER NOT NULL,
+    number_2 INTEGER NOT NULL,
+    number_3 INTEGER NOT NULL,
+    number_4 INTEGER NOT NULL,
+    number_5 INTEGER NOT NULL,
+    number_6 INTEGER NOT NULL,
+    bonus_number INTEGER NOT NULL,
+    first_winners INTEGER DEFAULT 0,                 -- 1등 당첨자 수
+    first_amount BIGINT DEFAULT 0,                   -- 1등 당첨금액
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 구매기간 자동 계산을 위한 인덱스
+CREATE INDEX idx_lotto_draws_draw_number ON lotto_draws(draw_number);
+CREATE INDEX idx_lotto_draws_draw_date ON lotto_draws(draw_date);
+```
+
 ## Recent Database Schema Changes (2025-09-07)
 - **Major Schema Updates**: Database structure significantly updated to match SQLAlchemy models
 - **User Table**: Added `user_id`, `is_verified`, `subscription_plan`, `preferences`, `notification_settings`, `last_login_at`
@@ -90,6 +116,14 @@ CREATE TABLE saved_recommendations (
 - **Foreign Key Updates**: `saved_recommendations.user_id` now references `users.id` instead of `users.user_id`
 - **Enum Values**: All enum values converted to uppercase (KAKAO, NAVER, FREE, PREMIUM, PRO)
 - **Authentication Fix**: JWT token now uses `users.id` for authentication instead of `users.user_id`
+
+## 구매기간 자동 관리 시스템 (2025-09-14)
+- **LottoDraw Table**: Added `purchase_start_date`, `purchase_end_date` 필드 추가
+- **자동 계산 로직**: 추첨일(토요일) 기준으로 해당 주 일요일~토요일이 구매기간
+- **API 확장**: 모든 로또 API에서 구매기간 정보 포함 (`purchase_period` 속성)
+- **통계 대시보드**: 하드코딩 제거, API 기반 동적 구매기간 표시
+- **auto_updater**: 새 회차 업데이트 시 구매기간 자동 계산 및 저장
+- **마이그레이션**: Railway 프로덕션 환경 적용 완료 (1185개 회차 업데이트)
 
 ## 추천번호 저장 시스템 구조
 
