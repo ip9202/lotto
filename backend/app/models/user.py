@@ -129,14 +129,72 @@ class User(Base):
         return self.daily_recommendation_count < 5
     
     @property
+    def current_week_saved_count(self):
+        """이번 주 저장 개수 (동적 계산) - 저장 API와 동일한 로직"""
+        from sqlalchemy.orm import Session
+        from .saved_recommendation import SavedRecommendation
+        from datetime import datetime, timedelta
+
+        try:
+            from ..database import get_db
+            db = next(get_db())
+
+            # 로또 구매 가능 기간과 동일한 주간 계산 로직 (일요일 0시 ~ 토요일 20시, 한국 시간)
+            from datetime import timezone, timedelta as td
+            kst = timezone(td(hours=9))  # 한국 시간대
+            now = datetime.now(kst)
+
+            # 로또 구매 기간에 따른 주간 계산
+            if now.weekday() == 6:  # 일요일
+                # 새로운 주: 오늘(일요일)부터
+                week_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+            elif now.weekday() == 5 and now.hour >= 20:  # 토요일 20시 이후
+                # 내일(일요일)부터 새로운 주
+                week_start = now + timedelta(days=1)
+                week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+            else:  # 월~금, 토요일 20시 이전
+                # 현재 주: 가장 최근 일요일부터
+                days_back = (now.weekday() + 1) % 7
+                if days_back == 0:  # 일요일인 경우 7일 전
+                    days_back = 7
+                week_start = now - timedelta(days=days_back)
+                week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            # 로또 구매 종료 시간 (토요일 20시)
+            week_end = week_start + timedelta(days=6, hours=20, minutes=0, seconds=0)
+
+            # 이번 주 기준으로 저장된 개수 확인 (활성 상태인 것만)
+            # DB의 UTC 시간을 KST로 변환하여 비교
+            week_start_utc = week_start.astimezone(timezone(td(hours=0)))  # UTC
+            week_end_utc = week_end.astimezone(timezone(td(hours=0)))  # UTC
+
+            # 현재 회차 조회 (최신 당첨번호 + 1)
+            from .lotto import LottoDraw
+            latest_draw = db.query(LottoDraw).order_by(LottoDraw.draw_number.desc()).first()
+            current_draw = latest_draw.draw_number + 1 if latest_draw else 1
+
+            count = db.query(SavedRecommendation).filter(
+                SavedRecommendation.user_id == self.id,
+                SavedRecommendation.created_at >= week_start_utc,
+                SavedRecommendation.created_at <= week_end_utc,
+                SavedRecommendation.is_active == True,
+                SavedRecommendation.target_draw_number == current_draw  # 현재 회차만
+            ).count()
+
+            return count
+
+        except Exception:
+            # 에러 발생 시 기존 값 반환
+            return self.total_saved_numbers
+
+    @property
     def can_save_number(self):
         """번호 저장 가능 여부 (주간 제한)"""
         if self.is_premium:
             return True
         
-        # 무료 사용자는 주간 10개 제한 (실제 제한은 API에서 체크)
-        # 여기서는 기본적으로 True 반환하고, 실제 제한은 saved_recommendations.py에서 처리
-        return True
+        # 무료 사용자는 현재 회차 기준 주간 10개 제한
+        return self.current_week_saved_count < 10
     
     @property
     def subscription_status(self):
@@ -220,7 +278,7 @@ class User(Base):
             "preferences": self.preferences,
             "notification_settings": self.notification_settings,
             "daily_recommendation_count": self.daily_recommendation_count,
-            "total_saved_numbers": self.total_saved_numbers,
+            "total_saved_numbers": self.current_week_saved_count,  # 현재 회차 기준 동적 계산
             "can_generate_recommendation": self.can_generate_recommendation,
             "can_save_number": self.can_save_number,
             "created_at": self.created_at.isoformat() if self.created_at else None,

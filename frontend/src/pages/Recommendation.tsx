@@ -622,6 +622,8 @@ const Recommendation: React.FC = () => {
                   setPreferences(prev => ({
                     ...prev
                   }));
+                  // localStorage에서 캐시된 추천 번호 제거
+                  localStorage.removeItem('lottoria_recommendations');
                 }}
                 className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium flex items-center space-x-2"
               >

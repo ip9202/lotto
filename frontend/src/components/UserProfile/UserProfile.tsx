@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUnifiedAuth } from '../../contexts/UnifiedAuthContext';
 
 const UserProfile: React.FC = () => {
-  const { user, logout, isAuthenticated } = useUnifiedAuth();
+  const { user, logout, isAuthenticated, refreshUser } = useUnifiedAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -15,6 +15,7 @@ const UserProfile: React.FC = () => {
     logout();
     setIsMenuOpen(false);
   };
+
 
   return (
     <div className="relative">

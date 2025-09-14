@@ -47,18 +47,52 @@ async def save_recommendation(
         current_draw = get_current_draw_number(db)
         logger.info(f"현재 회차: {current_draw}")
         
-        # 저장 가능 여부 확인 (주간 10개 제한 - 현재 회차 기준)
-        today = datetime.now()
-        days_since_monday = today.weekday()
-        week_start = today - timedelta(days=days_since_monday)
-        week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        # 이번 주 + 현재 회차로 저장된 개수 확인
+        # 저장 가능 여부 확인 (로또 구매 기간 기준: 일요일 0시 ~ 토요일 20시, 한국 시간)
+        from datetime import timezone, timedelta as td
+        kst = timezone(td(hours=9))  # 한국 시간대
+        now = datetime.now(kst)
+
+        # 로또 구매 기간에 따른 주간 계산
+        if now.weekday() == 6:  # 일요일
+            # 새로운 주: 오늘(일요일)부터
+            week_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        elif now.weekday() == 5 and now.hour >= 20:  # 토요일 20시 이후
+            # 내일(일요일)부터 새로운 주
+            week_start = now + timedelta(days=1)
+            week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+        else:  # 월~금, 토요일 20시 이전
+            # 현재 주: 가장 최근 일요일부터
+            days_back = (now.weekday() + 1) % 7
+            if days_back == 0:  # 일요일인 경우 7일 전
+                days_back = 7
+            week_start = now - timedelta(days=days_back)
+            week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        # 로또 구매 종료 시간 (토요일 20시)
+        week_end = week_start + timedelta(days=6, hours=20, minutes=0, seconds=0)
+
+        # 디버그 로깅
+        logger.info(f"🕐 현재 한국 시간: {now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        logger.info(f"📅 주간 시작: {week_start.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        logger.info(f"📅 주간 종료: {week_end.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        logger.info(f"⏰ 현재 시간이 구매 가능 기간 내인가? {week_start <= now <= week_end}")
+
+        # 이번 주 기준으로 저장된 개수 확인 (활성 상태인 것만, 회차 제한 제거)
+        # DB의 UTC 시간을 KST로 변환하여 비교
+        week_start_utc = week_start.astimezone(timezone.utc)
+        week_end_utc = week_end.astimezone(timezone.utc)
+
         weekly_saved_count = db.query(SavedRecommendation).filter(
             SavedRecommendation.user_id == current_user.id,
-            SavedRecommendation.created_at >= week_start,
-            SavedRecommendation.target_draw_number == current_draw
+            SavedRecommendation.created_at >= week_start_utc,
+            SavedRecommendation.created_at <= week_end_utc,
+            SavedRecommendation.is_active == True,
+            SavedRecommendation.target_draw_number == current_draw  # 현재 회차만
         ).count()
+
+        # 추가 디버깅
+        logger.info(f"📊 UTC 기준 주간 시작: {week_start_utc.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        logger.info(f"📊 UTC 기준 주간 종료: {week_end_utc.strftime('%Y-%m-%d %H:%M:%S %Z')}")
         
         logger.info(f"주간 저장 개수: {weekly_saved_count}/10")
         
@@ -82,8 +116,7 @@ async def save_recommendation(
         
         db.add(saved_rec)
         
-        # 사용자 저장 카운트 증가
-        current_user.increment_saved_count()
+        # 사용자 저장 카운트는 동적 계산으로 처리 (total_saved_numbers 필드 업데이트 불필요)
         
         db.commit()
         db.refresh(saved_rec)
@@ -119,26 +152,29 @@ async def get_saved_recommendations(
     """사용자의 저장된 추천번호 목록 조회"""
     
     try:
-        # 기본 쿼리
+        # 현재 회차 조회 (기본값으로 현재 회차만 보여줌)
+        current_draw = get_current_draw_number(db)
+        if not target_draw:
+            target_draw = current_draw
+
+        # 기본 쿼리 (현재 회차 기본 필터 적용)
         query = db.query(SavedRecommendation).filter(
             and_(
                 SavedRecommendation.user_id == current_user.id,
-                SavedRecommendation.is_active == True
+                SavedRecommendation.is_active == True,
+                SavedRecommendation.target_draw_number == target_draw
             )
         )
-        
+
         # 필터 적용
         if generation_method:
             query = query.filter(SavedRecommendation.generation_method == generation_method)
-        
+
         if is_favorite is not None:
             query = query.filter(SavedRecommendation.is_favorite == is_favorite)
-        
+
         if is_purchased is not None:
             query = query.filter(SavedRecommendation.is_purchased == is_purchased)
-        
-        if target_draw:
-            query = query.filter(SavedRecommendation.target_draw_number == target_draw)
         
         if is_winner is not None:
             if is_winner:
@@ -271,7 +307,7 @@ async def delete_saved_recommendation(
     
     try:
         db.delete(saved_rec)
-        current_user.decrement_saved_count()
+        # 사용자 저장 카운트는 동적 계산으로 처리 (total_saved_numbers 필드 업데이트 불필요)
         db.commit()
         
         return {
