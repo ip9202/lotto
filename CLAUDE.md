@@ -89,11 +89,6 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 - **Error Handling**: 모든 API 호출에 try/catch 적용
 - **반응형 디자인**: Tailwind CSS + mobile-first 접근
 
-### MCP 사용 규칙
-- **Sequential Thinking**: 명시적 요청 시에만 사용 (--think 플래그 또는 "깊게 분석해줘" 등)
-- **기본 추론**: 일반적인 질문과 작업에는 sequential-thinking 사용하지 않음
-- **토큰 효율**: 복잡한 분석이 명시적으로 요청되지 않은 경우 기본 추론 사용
-
 ### 품질 체크
 - `npm run lint` 통과 필수
 - 빌드 에러 없이 `docker-compose up -d` 실행 가능
@@ -107,137 +102,37 @@ docker exec -it lotto_postgres psql -U lotto_user -d lotto_db
 - `DATABASE.md`: 데이터베이스 스키마
 - `AUTHENTICATION.md`: 인증 시스템
 - `DOCKER_SETUP.md`: Docker 환경 설정
+- `DEVELOPMENT_SETUP.md`: 개발 환경 설정
 
 ## 🚀 현재 상태
 
-### Railway 배포 완료 (2025-09-11) ✅
-
-**🌐 프로덕션 서비스**:
+### 프로덕션 서비스 ✅
 - **Frontend**: https://lottoria.ai.kr
 - **Backend API**: https://lotto-backend-production-e7f6.up.railway.app/docs
 - **자동 배포**: GitHub push → Railway 자동 빌드/배포
 
-**주요 해결 사항**:
-- ✅ CORS 설정: Railway 환경변수로 직접 설정
-- ✅ 소셜 로그인: 카카오/네이버 앱 키 Railway 대시보드 설정  
-- ✅ DB 스키마: 완전한 saved_recommendations 테이블 재생성
-- ✅ 환경변수: .env 파일 → Railway 대시보드 환경변수로 전환
-
 ### 완료된 기능 ✅
-- 소셜 로그인 (카카오/네이버)
-- 번호 저장 및 관리
-- 당첨 비교 시스템
-- 통계 대시보드
-- 관리자 기능
-- **더미 데이터 생성 시스템** (2025-09-10 오류 수정 완료)
-
-### 더미 데이터 생성 기능 상세
-- 관리자가 회차별로 더미 추천 데이터 대량 생성 가능
-- 등수별 분포 설정 (1등~5등, 미당첨)
-- 통계 대시보드에서 더미 데이터 별도 통계 확인
-- API: `/admin/dummy-recommendations/generate`, `/admin/dummy-recommendations/stats`
+- **소셜 로그인**: 카카오/네이버 OAuth 인증
+- **번호 저장 시스템**: 개인별 추천번호 저장 및 관리
+- **자동 당첨 비교**: 매주 당첨번호 자동 비교 및 통계
+- **통계 대시보드**: 실시간 성과 분석 및 차트
+- **관리자 시스템**: 사용자 관리 및 데이터 업데이트
+- **구매기간 자동 관리**: 회차별 구매기간 자동 계산
+- **모바일 최적화**: 반응형 디자인 완료
+- **주간 저장 한도**: 회차 기반 정확한 한도 관리
 
 ### 개발 우선순위
 1. **유료 서비스 시스템**
-2. **모바일 최적화 (PWA)**
+2. **PWA 기능 추가**
 3. **고급 분석 기능**
 
-### 최근 수정 사항 (2025-09-12)
-
-**프로덕션 환경 API 연동 완전 해결** ✅:
-- **문제점**: Railway 프로덕션에서 하드코딩된 `localhost:8000` URL 호출로 인한 401 Unauthorized 에러
-- **해결방안**: 모든 API 호출을 `${import.meta.env.VITE_API_URL}` 환경변수 기반으로 변경
-- **영향 범위**: 15개 API 엔드포인트, 5개 주요 페이지
-- **결과**: Railway 프로덕션에서 모든 인증 및 API 기능 정상 작동
-
-**수정된 파일 및 API**:
-- `frontend/src/pages/ProfileSettings.tsx`: 사용자 정보 조회, 비밀번호 변경 (2개 API)
-- `frontend/src/pages/Login.tsx`: 모든 인증 관련 API (7개 API)
-- `frontend/src/pages/Register.tsx`: 카카오 연동 API (1개 API)
-- `frontend/src/App.tsx`: 콜백 핸들러 API (2개 API)
-- `frontend/src/pages/Home.tsx`: 카카오 사용자 확인 API (3개 API)
-
-**개발용 콘솔 로그 완전 제거** ✅:
-- **정리된 파일**: SavedNumbers.tsx, Recommendation.tsx, SaveRecommendation.tsx, NotificationContext.tsx, ProfileSettings.tsx
-- **제거된 로그**: 30+ 개의 개발용 console.log, console.debug 문
-- **보존된 로그**: 에러 처리용 console.error만 유지
-- **효과**: 프로덕션 성능 향상 및 콘솔 정리
-- **커밋**: 커밋 2f7aced와 9a506c6으로 배포 완료
-
-**카카오 연동 UX 개선 완료** ✅:
-- **문제**: 프로필설정에서 카카오 연동 시 메인페이지로 2번 이동하는 깜박임 현상
-- **원인**: 복잡한 리다이렉트 경로 (ProfileSettings → Login → 카카오 → 메인 → ProfileSettings)
-- **해결**: ProfileSettings에서 직접 카카오 OAuth 처리 구현
-- **기술적 변경**:
-  - 카카오 개발자 콘솔에 `/profile-settings` Redirect URI 추가
-  - 직접 카카오 인증 URL 구성 및 콜백 처리
-  - 불필요한 페이지 이동 제거
-- **결과**: 깜박임 없는 자연스러운 카카오 연동 경험
-
-**고급추천 설정 UPDATE 문제 완전 해결** ✅:
-- **문제**: 고급추천 포함/제외 번호 설정 시 UPDATE가 작동하지 않는 치명적 버그
-- **증상**: INSERT는 성공하지만 UPDATE 시 API는 성공 응답하나 DB에 반영 안됨
-- **원인**: SQLAlchemy JSON 필드 변경 감지 실패 및 세션 동기화 문제
-- **해결책**:
-  - 새로운 독립 세션(`SessionLocal()`) 사용으로 동시성 문제 해결
-  - `flag_modified()` 강제 적용으로 JSON 필드 변경 감지 보장
-  - Raw SQL 대신 안전한 ORM 기반 업데이트 방식 적용
-  - with문을 통한 자동 트랜잭션 관리로 안정성 확보
-- **테스트 결과**: INSERT/UPDATE 모두 정상 작동 확인
-- **영향**: 사용자 경험 대폭 개선, 고급추천 기능 완전 정상화
-
-### 주요 완료 기능 요약
-
-**핵심 시스템** ✅:
-- localStorage 기반 추천번호 지속성 및 중복 저장 방지
-- 전역 알림 시스템 (NotificationContext)
-- 저장 한도 관리 및 에러 처리
-- Google AdSense 정책 준수 (Consent Mode v2)
-
-**UI/UX 개선** ✅:
-- 고급 추천 탭 슬라이더 인터페이스
-- 저장된 번호 페이지 순번 표시
-- 포함/제외 설정 조건부 저장 버튼
-- 반응형 디자인 최적화
-
-**데이터 정확성** ✅:
-- 더미 데이터 생성 시스템 오류 수정
-- 통계 대시보드 실제 데이터 기반 차트
-- 회차별 구매 기간 정확한 매핑
-
-**구매기간 자동 관리 시스템** ✅ (2025-09-14 업데이트):
-- auto_updater에서 새 회차 업데이트 시 구매기간 자동 계산
-- 추첨일(토요일) 기준으로 해당 주 일요일~토요일이 구매기간
-- 모든 API에서 구매기간 정보 포함 (latest, draw/{id}, draws)
-- 통계 대시보드에서 동적 구매기간 표시
-- 데이터베이스 스키마: purchase_start_date, purchase_end_date 필드 추가
-- Railway 프로덕션 환경 마이그레이션 완료
-
-### 최신 수정 사항 (2025-09-14)
-
-**주간 저장 한도 리셋 문제 완전 해결** ✅:
-- **문제점**: 새로운 로또 주차(1190회차)가 시작되었음에도 주간 저장 한도가 "10/10"으로 표시되어 저장 불가
-- **근본 원인**: 시간 기준으로만 주간 계산하여 이전 회차(1189) 데이터까지 포함
-- **해결방안**:
-  - User 모델 `current_week_saved_count` 속성에 현재 회차 필터 추가
-  - saved_recommendations API에 동일한 회차 기반 필터링 적용
-  - 저장된 추천번호 조회 API 기본값으로 현재 회차만 표시하도록 수정
-- **기술적 변경**:
-  - `SavedRecommendation.target_draw_number == current_draw` 조건 추가
-  - `get_current_draw_number()` 함수 활용: 최신 당첨번호 + 1
-- **결과**: 1189→1190회차 전환 시 정상적으로 0/10으로 리셋 확인
-
-**사용자 경험 개선** ✅:
-- **추천 페이지 초기화 기능 강화**: 초기화 버튼 클릭 시 localStorage까지 완전 제거
-- **사용자 프로필 UI 정리**: 불필요한 캐시 관리 버튼들(🔄, 🗑️) 제거로 인터페이스 간소화
-- **데이터 표시 일관성**: 현재 회차 기준으로 통일된 데이터 표시
-
-**배포 현황**:
-- **커밋**: f6933b8 (2025-09-14)
-- **Railway 자동 배포**: GitHub push 완료, 프로덕션 반영 대기 중
-- **데이터베이스 마이그레이션**: 불필요 (스키마 변경 없음)
+### 최신 해결 사항 (2025-09-14)
+- **주간 저장 한도 리셋 문제**: 회차 전환 시 정상적으로 0/10 리셋
+- **구매기간 자동 관리**: auto_updater에서 자동 계산 및 저장
+- **API 환경변수**: Railway 프로덕션 환경 완전 대응
+- **UX 개선**: 깜박임 현상 해결 및 UI 간소화
 
 ---
 
 **⚠️ 중요**: 모든 응답과 커뮤니케이션은 한국어로 진행합니다.
-- 빌드 및 테스트는 모두 docker 안에서 이루어진다(강조).
+- 빌드 및 테스트는 모두 Docker 안에서 이루어집니다.
