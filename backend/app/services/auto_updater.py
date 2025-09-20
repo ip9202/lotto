@@ -408,6 +408,9 @@ class AutoUpdater:
             try:
                 # 추첨일을 기준으로 구매기간 자동 계산
                 draw_date = draw_data['draw_date']
+                # 문자열인 경우 date 객체로 변환
+                if isinstance(draw_date, str):
+                    draw_date = datetime.strptime(draw_date, '%Y-%m-%d').date()
                 purchase_start, purchase_end = self._calculate_purchase_dates(draw_date)
                 
                 new_draw = LottoDraw(
