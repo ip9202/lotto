@@ -433,7 +433,7 @@ const UnifiedNumberManager: React.FC<UnifiedNumberManagerProps> = ({
 
 
       {/* 설정 저장 버튼 (회원만) - 포함/제외 모드에서만 보이기 */}
-      {isAuthenticated && (mode === 'include' || mode === 'exclude') && (includeNumbers.length > 0 || excludeNumbers.length > 0) && (
+      {isAuthenticated && (mode === 'include' || mode === 'exclude') &&  (
         <div className="flex justify-center">
           <button
             onClick={handleSavePreferences}
