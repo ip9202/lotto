@@ -58,48 +58,16 @@ const Recommendation: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // 추천 번호 localStorage 저장 (저장 상태 포함)
-  const saveRecommendationsToStorage = (recommendations: Recommendation[]) => {
-    try {
-      localStorage.setItem('lottoria_recommendations', JSON.stringify(recommendations));
-    } catch (error) {
-      console.error('추천 번호 localStorage 저장 실패:', error);
-    }
-  };
-
-  // 특정 추천 번호의 저장 상태 업데이트
+  // 특정 추천 번호의 저장 상태 업데이트 (일회성 데이터)
   const updateRecommendationSavedStatus = (index: number, isSaved: boolean) => {
     setRecommendations(prev => {
       const updated = prev.map((rec, i) => 
         i === index ? { ...rec, isSaved } : rec
       );
-      // localStorage에도 업데이트된 상태 저장
-      saveRecommendationsToStorage(updated);
       return updated;
     });
   };
 
-  // 추천 번호 localStorage에서 복원
-  const loadRecommendationsFromStorage = (): Recommendation[] => {
-    try {
-      const stored = localStorage.getItem('lottoria_recommendations');
-      if (stored) {
-        const recommendations = JSON.parse(stored);
-        return recommendations;
-      }
-    } catch (error) {
-      console.error('추천 번호 localStorage 복원 실패:', error);
-    }
-    return [];
-  };
-
-  // 페이지 로드 시 저장된 추천 번호 복원
-  useEffect(() => {
-    const storedRecommendations = loadRecommendationsFromStorage();
-    if (storedRecommendations.length > 0) {
-      setRecommendations(storedRecommendations);
-    }
-  }, []);
 
   // 사용자 설정 불러오기 (회원만)
   useEffect(() => {
@@ -233,11 +201,8 @@ const Recommendation: React.FC = () => {
           isSaved: false // 새로운 추천은 모두 저장되지 않은 상태로 시작
         }));
         
-        // 추천기록 기능 일시 비활성화로 history_id 처리 불필요
+        // 일회성 데이터: 메모리에만 저장 (localStorage 저장 안함)
         setRecommendations(recommendations);
-        
-        // localStorage에 추천 번호 저장
-        saveRecommendationsToStorage(recommendations);
         
       } else {
         alert(result.error?.message || '추천 조합 생성에 실패했습니다.');
