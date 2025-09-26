@@ -133,9 +133,24 @@ docker-compose down
 - **스케줄러 안정화**: 자동 업데이트 시스템 완전 정상화 (2025-09-20)
 
 ### 🎯 개발 예정
+- **모바일 앱**: React Native 기반 iOS/Android 앱 개발
 - **유료 서비스**: 프리미엄 기능 및 결제 시스템
 - **PWA 기능**: 앱 설치 및 오프라인 지원
 - **고급 분석**: AI 기반 패턴 분석 고도화
+
+## 📱 모바일 앱 개발
+
+### 현재 진행 상황
+- **PRD 완성**: 제품 요구사항 문서 작성 완료
+- **개발 계획**: 4주 개발 계획서 작성 완료
+- **디자인 가이드**: 2025년 모던·그레이 중심 UI 가이드 완성
+- **기술 스택**: React Native + TypeScript + 기존 백엔드 API 공유
+
+### 모바일 앱 문서
+- [`docs/mobile-app/`](./docs/mobile-app/) - 모바일 앱 관련 모든 문서
+- [`PRD`](./docs/mobile-app/PRD_LottoAI_Mobile_App.md) - 제품 요구사항
+- [`개발계획서`](./docs/mobile-app/MOBILE_APP_DEVELOPMENT_PLAN.md) - 상세 개발 계획
+- [`디자인가이드`](./docs/mobile-app/LOTTO_APP_DESIGN_GUIDE.md) - UI/UX 디자인 가이드
 
 ## 🚨 문제 해결
 
