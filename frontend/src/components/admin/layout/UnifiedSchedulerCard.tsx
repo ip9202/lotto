@@ -50,11 +50,20 @@ const UnifiedSchedulerCard: React.FC<UnifiedSchedulerCardProps> = ({
       const data = await response.json();
       
       if (data.success) {
-        setConfig(data.data);
+        // 새 API 응답 구조에 맞게 수정
+        const schedulerData = data.data.scheduler_config || data.data;
+        setConfig({
+          day_of_week: schedulerData.day_of_week || 'sat',
+          day_name: schedulerData.day_name || '토요일',
+          hour: schedulerData.hour || 21,
+          minute: schedulerData.minute || 20,
+          is_running: data.data.is_running || false,
+          next_run: data.data.next_run_time ? new Date(data.data.next_run_time).toLocaleString('ko-KR') : '알 수 없음'
+        });
         setFormData({
-          day_of_week: data.data.day_of_week,
-          hour: data.data.hour,
-          minute: data.data.minute
+          day_of_week: schedulerData.day_of_week || 'sat',
+          hour: schedulerData.hour || 21,
+          minute: schedulerData.minute || 20
         });
       } else {
         setMessage({ type: 'error', text: data.error?.message || '설정 조회에 실패했습니다.' });
@@ -221,7 +230,7 @@ const UnifiedSchedulerCard: React.FC<UnifiedSchedulerCardProps> = ({
               <div className="flex justify-between">
                 <span className="text-sm text-gray-600">실행 시간:</span>
                 <span className="text-sm font-medium">
-                  {config.hour.toString().padStart(2, '0')}:{config.minute.toString().padStart(2, '0')}
+                  {(config.hour || 0).toString().padStart(2, '0')}:{(config.minute || 0).toString().padStart(2, '0')}
                 </span>
               </div>
               <div className="flex justify-between">
