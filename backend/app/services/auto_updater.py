@@ -29,30 +29,57 @@ class AutoUpdater:
         }
         
     def start_scheduler(self):
-        """스케줄러 시작"""
-        if not self.is_running:
-            # 매주 토요일 실행되도록 설정
-            self.scheduler.add_job(
-                self.check_and_update_latest_data,
-                CronTrigger(
-                    day_of_week=self.schedule_config['day_of_week'],
-                    hour=self.schedule_config['hour'],
-                    minute=self.schedule_config['minute']
-                ),
-                id='weekly_lotto_update',
-                name=f"매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} 로또 데이터 업데이트"
-            )
-            
-            self.scheduler.start()
-            self.is_running = True
-            logger.info(f"자동 업데이트 스케줄러가 시작되었습니다. (매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d})")
+        """스케줄러 시작 - 개선된 버전"""
+        try:
+            if not self.is_running:
+                # 기존 작업이 있다면 제거
+                try:
+                    self.scheduler.remove_job('weekly_lotto_update')
+                    logger.info("기존 스케줄러 작업을 제거했습니다.")
+                except:
+                    pass  # 기존 작업이 없을 수 있음
+                
+                # 매주 토요일 실행되도록 설정
+                self.scheduler.add_job(
+                    self.check_and_update_latest_data,
+                    CronTrigger(
+                        day_of_week=self.schedule_config['day_of_week'],
+                        hour=self.schedule_config['hour'],
+                        minute=self.schedule_config['minute']
+                    ),
+                    id='weekly_lotto_update',
+                    name=f"매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} 로또 데이터 업데이트",
+                    max_instances=1,  # 동시 실행 방지
+                    coalesce=True,    # 누적된 작업을 하나로 합치기
+                    misfire_grace_time=300  # 5분 내 실행 지연 허용
+                )
+                
+                self.scheduler.start()
+                self.is_running = True
+                logger.info(f"자동 업데이트 스케줄러가 시작되었습니다. (매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d})")
+                
+                # 다음 실행 시간 로그
+                jobs = self.scheduler.get_jobs()
+                for job in jobs:
+                    if job.id == 'weekly_lotto_update':
+                        logger.info(f"다음 실행 예정 시간: {job.next_run_time}")
+            else:
+                logger.info("스케줄러가 이미 실행 중입니다.")
+                
+        except Exception as e:
+            logger.error(f"스케줄러 시작 실패: {str(e)}")
+            self.is_running = False
             
     def stop_scheduler(self):
-        """스케줄러 중지"""
+        """스케줄러 중지 - 개선된 버전"""
         if self.is_running:
-            self.scheduler.shutdown()
-            self.is_running = False
-            logger.info("자동 업데이트 스케줄러가 중지되었습니다.")
+            try:
+                self.scheduler.shutdown(wait=False)
+                self.is_running = False
+                logger.info("자동 업데이트 스케줄러가 중지되었습니다.")
+            except Exception as e:
+                logger.error(f"스케줄러 중지 실패: {str(e)}")
+                self.is_running = False
     
     def _get_day_name(self, day_of_week: str) -> str:
         """요일 코드를 한국어 이름으로 변환"""
@@ -109,30 +136,62 @@ class AutoUpdater:
         }
             
     async def check_and_update_latest_data(self):
-        """최신 데이터 확인 및 업데이트 (자동 실행)"""
-        try:
-            logger.info("자동 데이터 업데이트를 시작합니다...")
-            
-            # DB에서 최신 회차 확인
-            db = next(get_db())
-            latest_db_draw = self._get_latest_draw_number(db)
-            
-            # 로또 사이트에서 최신 회차 확인
-            latest_site_draw = await self._get_latest_site_draw_number()
-            
-            if latest_site_draw > latest_db_draw:
-                logger.info(f"새로운 데이터가 발견되었습니다. {latest_db_draw + 1}회차부터 {latest_site_draw}회차까지")
+        """최신 데이터 확인 및 업데이트 (자동 실행) - 개선된 버전"""
+        max_retries = 3
+        retry_delay = 5
+        
+        for attempt in range(max_retries):
+            try:
+                logger.info(f"자동 데이터 업데이트를 시작합니다... (시도 {attempt + 1}/{max_retries})")
                 
-                # 새로운 데이터 스크래핑 및 입력
-                new_draws = await self._scrape_new_draws(latest_db_draw + 1, latest_site_draw)
-                self._insert_new_draws(db, new_draws)
+                # DB 세션 관리 개선
+                db = next(get_db())
+                try:
+                    # DB에서 최신 회차 확인
+                    latest_db_draw = self._get_latest_draw_number(db)
+                    logger.info(f"현재 DB 최신 회차: {latest_db_draw}")
+                    
+                    # 로또 사이트에서 최신 회차 확인
+                    latest_site_draw = await self._get_latest_site_draw_number()
+                    logger.info(f"사이트 최신 회차: {latest_site_draw}")
+                    
+                    if latest_site_draw > latest_db_draw:
+                        logger.info(f"새로운 데이터가 발견되었습니다. {latest_db_draw + 1}회차부터 {latest_site_draw}회차까지")
+                        
+                        # 새로운 데이터 스크래핑 및 입력
+                        new_draws = await self._scrape_new_draws(latest_db_draw + 1, latest_site_draw)
+                        
+                        if new_draws:
+                            self._insert_new_draws(db, new_draws)
+                            logger.info(f"자동 업데이트가 완료되었습니다. {len(new_draws)}개 회차가 추가되었습니다.")
+                            
+                            # 업데이트 성공 시 즉시 반환
+                            return
+                        else:
+                            logger.warning("스크래핑된 데이터가 없습니다. 재시도합니다...")
+                            if attempt < max_retries - 1:
+                                import asyncio
+                                await asyncio.sleep(retry_delay)
+                                continue
+                    else:
+                        logger.info("새로운 데이터가 없습니다.")
+                        return
+                        
+                finally:
+                    # DB 세션 명시적 닫기
+                    db.close()
+                    
+            except Exception as e:
+                logger.error(f"자동 업데이트 시도 {attempt + 1} 실패: {str(e)}")
+                import traceback
+                logger.error(f"상세 오류: {traceback.format_exc()}")
                 
-                logger.info(f"자동 업데이트가 완료되었습니다. {len(new_draws)}개 회차가 추가되었습니다.")
-            else:
-                logger.info("새로운 데이터가 없습니다.")
-                
-        except Exception as e:
-            logger.error(f"자동 업데이트 중 오류가 발생했습니다: {str(e)}")
+                if attempt < max_retries - 1:
+                    logger.info(f"{retry_delay}초 후 재시도합니다...")
+                    import asyncio
+                    await asyncio.sleep(retry_delay)
+                else:
+                    logger.error("모든 재시도가 실패했습니다. 자동 업데이트를 중단합니다.")
             
     def _get_latest_draw_number(self, db: Session) -> int:
         """DB에서 최신 회차 조회"""
@@ -214,24 +273,46 @@ class AutoUpdater:
         return latest_db  # DB와 동일하게 설정하여 새 데이터 없음으로 처리
         
     async def _scrape_new_draws(self, start_draw: int, end_draw: int) -> List[dict]:
-        """새로운 회차 데이터 스크래핑"""
+        """새로운 회차 데이터 스크래핑 - 개선된 버전"""
         new_draws = []
+        failed_draws = []
+        
         for draw_num in range(start_draw, end_draw + 1):
-            try:
-                logger.info(f"{draw_num}회차 데이터 스크래핑 시작...")
-                
-                # 동행복권 당첨번호 페이지에서 데이터 스크래핑
-                draw_data = await self._scrape_single_draw(draw_num)
-                
-                if draw_data:
-                    new_draws.append(draw_data)
-                    logger.info(f"{draw_num}회차 스크래핑 성공")
-                else:
-                    logger.warning(f"{draw_num}회차 데이터를 찾을 수 없습니다.")
+            max_attempts = 3
+            success = False
+            
+            for attempt in range(max_attempts):
+                try:
+                    logger.info(f"{draw_num}회차 데이터 스크래핑 시작... (시도 {attempt + 1}/{max_attempts})")
                     
-            except Exception as e:
-                logger.error(f"{draw_num}회차 스크래핑 실패: {str(e)}")
-                
+                    # 동행복권 당첨번호 페이지에서 데이터 스크래핑
+                    draw_data = await self._scrape_single_draw(draw_num)
+                    
+                    if draw_data:
+                        new_draws.append(draw_data)
+                        logger.info(f"{draw_num}회차 스크래핑 성공: {draw_data['numbers']} + {draw_data['bonus_number']}")
+                        success = True
+                        break
+                    else:
+                        logger.warning(f"{draw_num}회차 시도 {attempt + 1}: 데이터를 찾을 수 없습니다.")
+                        
+                except Exception as e:
+                    logger.error(f"{draw_num}회차 시도 {attempt + 1} 실패: {str(e)}")
+                    
+                # 재시도 전 대기
+                if attempt < max_attempts - 1:
+                    import asyncio
+                    await asyncio.sleep(2 * (attempt + 1))  # 점진적 대기 시간
+            
+            if not success:
+                failed_draws.append(draw_num)
+                logger.error(f"{draw_num}회차: 모든 시도가 실패했습니다.")
+        
+        # 결과 요약
+        if failed_draws:
+            logger.warning(f"스크래핑 실패한 회차: {failed_draws}")
+        logger.info(f"스크래핑 완료: 성공 {len(new_draws)}개, 실패 {len(failed_draws)}개")
+        
         return new_draws
         
     async def _scrape_single_draw(self, draw_number: int) -> Optional[dict]:

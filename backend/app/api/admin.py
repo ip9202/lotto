@@ -31,6 +31,83 @@ class DrawNumberResponse(BaseModel):
     numbers: List[int]
     bonus_number: int
 
+@router.post("/manual-update")
+async def manual_update_lotto_data(background_tasks: BackgroundTasks) -> Dict[str, Any]:
+    """수동 로또 데이터 업데이트 실행"""
+    try:
+        logger.info("수동 업데이트 요청이 접수되었습니다.")
+        
+        # 백그라운드에서 업데이트 실행
+        background_tasks.add_task(auto_updater.check_and_update_latest_data)
+        
+        return {
+            "success": True,
+            "message": "수동 업데이트가 시작되었습니다. 로그를 확인하세요.",
+            "data": {
+                "status": "started",
+                "timestamp": datetime.now().isoformat()
+            }
+        }
+    except Exception as e:
+        logger.error(f"수동 업데이트 시작 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"수동 업데이트 시작 실패: {str(e)}")
+
+@router.get("/scheduler-status")
+async def get_scheduler_status() -> Dict[str, Any]:
+    """스케줄러 상태 확인"""
+    try:
+        config = auto_updater.get_schedule_config()
+        jobs = auto_updater.scheduler.get_jobs()
+        
+        next_run_time = None
+        for job in jobs:
+            if job.id == 'weekly_lotto_update':
+                next_run_time = job.next_run_time
+                break
+        
+        return {
+            "success": True,
+            "data": {
+                "scheduler_config": config,
+                "next_run_time": next_run_time.isoformat() if next_run_time else None,
+                "is_running": auto_updater.is_running,
+                "total_jobs": len(jobs)
+            }
+        }
+    except Exception as e:
+        logger.error(f"스케줄러 상태 확인 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"스케줄러 상태 확인 실패: {str(e)}")
+
+@router.post("/restart-scheduler")
+async def restart_scheduler() -> Dict[str, Any]:
+    """스케줄러 재시작 - 개선된 버전"""
+    try:
+        logger.info("스케줄러 재시작 요청이 접수되었습니다.")
+        
+        # 기존 스케줄러 중지
+        if auto_updater.is_running:
+            auto_updater.stop_scheduler()
+            logger.info("기존 스케줄러를 중지했습니다.")
+            # 중지 후 잠시 대기
+            import asyncio
+            await asyncio.sleep(1)
+        
+        # 새로 시작
+        auto_updater.start_scheduler()
+        logger.info("스케줄러를 재시작했습니다.")
+        
+        return {
+            "success": True,
+            "message": "스케줄러가 재시작되었습니다.",
+            "data": {
+                "is_running": auto_updater.is_running,
+                "timestamp": datetime.now().isoformat()
+            }
+        }
+    except Exception as e:
+        logger.error(f"스케줄러 재시작 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"스케줄러 재시작 실패: {str(e)}")
+
 @router.get("/check-latest-data")
 async def check_latest_data(db: Session = Depends(get_db)) -> Dict[str, Any]:
     """최신 데이터 상태 확인"""
