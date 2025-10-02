@@ -109,7 +109,11 @@ const Recommendation: React.FC = () => {
       };
 
       
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/v1/recommendations/generate`, {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+      console.log('API 요청 URL:', `${apiUrl}/api/v1/recommendations/generate`);
+      console.log('요청 데이터:', requestData);
+      
+      const response = await fetch(`${apiUrl}/api/v1/recommendations/generate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -120,6 +124,7 @@ const Recommendation: React.FC = () => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API 오류 응답:', errorText);
+        console.error('응답 상태:', response.status);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
