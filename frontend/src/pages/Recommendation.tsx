@@ -139,7 +139,7 @@ const Recommendation: React.FC = () => {
         setRecommendations(recommendations);
         
         // localStorage에 추천 번호 저장
-        saveRecommendationsToStorage(recommendations);
+        localStorage.setItem('lottoria_recommendations', JSON.stringify(recommendations));
       } else {
         alert('기본 추천 조합 생성에 실패했습니다.');
       }
