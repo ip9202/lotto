@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
+import pytz
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -13,6 +14,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def get_utc_now():
+    """현재 UTC 시간 반환 (시스템 내부용)"""
+    utc = pytz.timezone('UTC')
+    return datetime.now(utc)
+
 # 패스워드 해싱 (admin 계정용)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -24,11 +30,11 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """JWT 액세스 토큰 생성"""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = get_utc_now() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = get_utc_now() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
-    to_encode.update({"exp": expire, "iat": datetime.utcnow()})
+    to_encode.update({"exp": expire, "iat": get_utc_now()})
     encoded_jwt = jwt.encode(to_encode, settings.secret_key, algorithm=ALGORITHM)
     return encoded_jwt
 

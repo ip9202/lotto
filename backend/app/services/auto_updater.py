@@ -31,6 +31,10 @@ class AutoUpdater:
             'minute': 20,
             'timezone': self.timezone
         }
+    
+    def get_kst_now(self):
+        """현재 한국시간 반환"""
+        return datetime.now(self.timezone)
         
     def start_scheduler(self):
         """스케줄러 시작 - 개선된 버전"""
@@ -408,7 +412,7 @@ class AutoUpdater:
                                         
                                         # 추첨일 추출
                                         date_element = win_result_div.find('p', class_='desc')
-                                        draw_date = datetime.now().strftime('%Y-%m-%d')  # 기본값
+                                        draw_date = self.get_kst_now().strftime('%Y-%m-%d')  # 기본값
                                         
                                         if date_element:
                                             date_text = date_element.text.strip()

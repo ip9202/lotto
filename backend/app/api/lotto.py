@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime
+import pytz
 from ..database import get_db
 from ..models.lotto import LottoDraw
 from ..schemas.lotto import LottoNumber, LottoStatistics
@@ -8,6 +10,33 @@ from ..schemas.recommendation import APIResponse
 from ..services.lotto_analyzer import LottoAnalyzer
 
 router = APIRouter(prefix="/api/v1/lotto", tags=["lotto"])
+
+def to_kst_string(date_obj):
+    """UTC 날짜를 한국시간 문자열로 변환"""
+    if not date_obj:
+        return None
+    
+    # date 객체인 경우 그대로 반환 (이미 올바른 날짜)
+    if hasattr(date_obj, 'date') and not hasattr(date_obj, 'tzinfo'):
+        # datetime.date 객체인 경우 그대로 반환
+        return date_obj.strftime('%Y-%m-%d')
+    
+    # datetime 객체인 경우 시간대 변환
+    if hasattr(date_obj, 'tzinfo'):
+        utc = pytz.timezone('UTC')
+        kst = pytz.timezone('Asia/Seoul')
+        
+        if date_obj.tzinfo is None:
+            # timezone 정보가 없는 경우 UTC로 가정
+            utc_date = utc.localize(date_obj)
+        else:
+            utc_date = date_obj.astimezone(utc)
+        
+        kst_date = utc_date.astimezone(kst)
+        return kst_date.strftime('%Y-%m-%d')
+    
+    # 기타 경우 그대로 반환
+    return date_obj.strftime('%Y-%m-%d')
 
 @router.get("/latest", response_model=APIResponse)
 async def get_latest_draw(db: Session = Depends(get_db)):
@@ -21,10 +50,10 @@ async def get_latest_draw(db: Session = Depends(get_db)):
         print(f"DEBUG: latest.draw_date = {latest.draw_date} (type: {type(latest.draw_date)})")
         print(f"DEBUG: latest.numbers = {latest.numbers}")
         
-        # 날짜를 문자열로 변환
-        draw_date_str = latest.draw_date.strftime('%Y-%m-%d') if latest.draw_date else "2025-08-23"
-        purchase_start_str = latest.purchase_start_date.strftime('%Y-%m-%d') if latest.purchase_start_date else None
-        purchase_end_str = latest.purchase_end_date.strftime('%Y-%m-%d') if latest.purchase_end_date else None
+        # 날짜를 한국시간 문자열로 변환
+        draw_date_str = to_kst_string(latest.draw_date) if latest.draw_date else "2025-08-23"
+        purchase_start_str = to_kst_string(latest.purchase_start_date)
+        purchase_end_str = to_kst_string(latest.purchase_end_date)
         purchase_period = latest.purchase_period if hasattr(latest, 'purchase_period') else None
         
         data = LottoNumber(
@@ -96,10 +125,10 @@ async def get_draws(
         
         data = []
         for draw in draws:
-            # 날짜를 문자열로 변환
-            draw_date_str = draw.draw_date.strftime('%Y-%m-%d') if draw.draw_date else "2025-08-23"
-            purchase_start_str = draw.purchase_start_date.strftime('%Y-%m-%d') if draw.purchase_start_date else None
-            purchase_end_str = draw.purchase_end_date.strftime('%Y-%m-%d') if draw.purchase_end_date else None
+            # 날짜를 한국시간 문자열로 변환
+            draw_date_str = to_kst_string(draw.draw_date) if draw.draw_date else "2025-08-23"
+            purchase_start_str = to_kst_string(draw.purchase_start_date)
+            purchase_end_str = to_kst_string(draw.purchase_end_date)
             purchase_period = draw.purchase_period if hasattr(draw, 'purchase_period') else None
             
             data.append(LottoNumber(
@@ -167,10 +196,10 @@ async def get_draw_by_number(
         if not draw:
             raise HTTPException(status_code=404, detail=f"{draw_number}회차 당첨번호를 찾을 수 없습니다")
         
-        # 날짜를 문자열로 변환
-        draw_date_str = draw.draw_date.strftime('%Y-%m-%d') if draw.draw_date else "2025-08-23"
-        purchase_start_str = draw.purchase_start_date.strftime('%Y-%m-%d') if draw.purchase_start_date else None
-        purchase_end_str = draw.purchase_end_date.strftime('%Y-%m-%d') if draw.purchase_end_date else None
+        # 날짜를 한국시간 문자열로 변환
+        draw_date_str = to_kst_string(draw.draw_date) if draw.draw_date else "2025-08-23"
+        purchase_start_str = to_kst_string(draw.purchase_start_date)
+        purchase_end_str = to_kst_string(draw.purchase_end_date)
         purchase_period = draw.purchase_period if hasattr(draw, 'purchase_period') else None
         
         data = LottoNumber(

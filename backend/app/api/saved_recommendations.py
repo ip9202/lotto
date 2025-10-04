@@ -4,6 +4,7 @@ from sqlalchemy import and_, or_, desc, asc
 from typing import List, Optional, Dict, Any
 import logging
 from datetime import datetime, timedelta
+import pytz
 
 from ..database import get_db
 from ..api.auth import get_current_user
@@ -27,6 +28,11 @@ def get_current_draw_number(db: Session) -> int:
 
 router = APIRouter(prefix="/api/v1/saved-recommendations", tags=["저장된 추천번호"])
 
+def get_kst_now():
+    """현재 한국시간 반환"""
+    kst = pytz.timezone('Asia/Seoul')
+    return datetime.now(kst)
+
 @router.post("", response_model=SavedRecommendationResponse, summary="추천번호 저장")
 async def save_recommendation(
     recommendation_data: SavedRecommendationCreate,
@@ -48,9 +54,7 @@ async def save_recommendation(
         logger.info(f"현재 회차: {current_draw}")
         
         # 저장 가능 여부 확인 (로또 구매 기간 기준: 일요일 0시 ~ 토요일 20시, 한국 시간)
-        from datetime import timezone, timedelta as td
-        kst = timezone(td(hours=9))  # 한국 시간대
-        now = datetime.now(kst)
+        now = get_kst_now()
 
         # 로또 구매 기간에 따른 주간 계산
         if now.weekday() == 6:  # 일요일
@@ -79,8 +83,9 @@ async def save_recommendation(
 
         # 이번 주 기준으로 저장된 개수 확인 (활성 상태인 것만, 회차 제한 제거)
         # DB의 UTC 시간을 KST로 변환하여 비교
-        week_start_utc = week_start.astimezone(timezone.utc)
-        week_end_utc = week_end.astimezone(timezone.utc)
+        utc = pytz.timezone('UTC')
+        week_start_utc = week_start.astimezone(utc)
+        week_end_utc = week_end.astimezone(utc)
 
         weekly_saved_count = db.query(SavedRecommendation).filter(
             SavedRecommendation.user_id == current_user.id,

@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 import re
 from datetime import datetime, timedelta
 import random
+import pytz
 from pydantic import BaseModel
 
 from ..database import get_db
@@ -17,6 +18,51 @@ from ..models.lotto import LottoDraw
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+def to_kst_string(date_obj):
+    """UTC 날짜를 한국시간 문자열로 변환"""
+    if not date_obj:
+        return None
+    
+    # date 객체인 경우 그대로 반환 (이미 올바른 날짜)
+    if hasattr(date_obj, 'date') and not hasattr(date_obj, 'tzinfo'):
+        return date_obj.strftime('%Y-%m-%d')
+    
+    # datetime 객체인 경우 시간대 변환
+    if hasattr(date_obj, 'tzinfo'):
+        utc = pytz.timezone('UTC')
+        kst = pytz.timezone('Asia/Seoul')
+        
+        if date_obj.tzinfo is None:
+            utc_date = utc.localize(date_obj)
+        else:
+            utc_date = date_obj.astimezone(utc)
+        
+        kst_date = utc_date.astimezone(kst)
+        return kst_date.strftime('%Y-%m-%d')
+    
+    return date_obj.strftime('%Y-%m-%d')
+
+def to_kst_datetime_string(dt_obj):
+    """UTC datetime을 한국시간 문자열로 변환"""
+    if not dt_obj:
+        return None
+    
+    utc = pytz.timezone('UTC')
+    kst = pytz.timezone('Asia/Seoul')
+    
+    if dt_obj.tzinfo is None:
+        utc_dt = utc.localize(dt_obj)
+    else:
+        utc_dt = dt_obj.astimezone(utc)
+    
+    kst_dt = utc_dt.astimezone(kst)
+    return kst_dt.strftime('%Y-%m-%d %H:%M:%S')
+
+def get_kst_now():
+    """현재 한국시간 반환"""
+    kst = pytz.timezone('Asia/Seoul')
+    return datetime.now(kst)
 
 # 더미 데이터 생성 요청 스키마
 class DummyDataRequest(BaseModel):
@@ -45,7 +91,7 @@ async def manual_update_lotto_data(background_tasks: BackgroundTasks) -> Dict[st
             "message": "수동 업데이트가 시작되었습니다. 로그를 확인하세요.",
             "data": {
                 "status": "started",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": get_kst_now().isoformat()
             }
         }
     except Exception as e:
@@ -101,7 +147,7 @@ async def restart_scheduler() -> Dict[str, Any]:
             "message": "스케줄러가 재시작되었습니다.",
             "data": {
                 "is_running": auto_updater.is_running,
-                "timestamp": datetime.now().isoformat()
+                "timestamp": get_kst_now().isoformat()
             }
         }
     except Exception as e:
@@ -201,7 +247,7 @@ async def get_update_progress(db: Session = Depends(get_db)) -> Dict[str, Any]:
         for draw in recent_draws:
             recent_draws_data.append({
                 "draw_number": draw.draw_number,
-                "draw_date": draw.draw_date.strftime("%Y-%m-%d") if draw.draw_date else None,
+                "draw_date": to_kst_string(draw.draw_date),
                 "numbers": [draw.number_1, draw.number_2, draw.number_3, draw.number_4, draw.number_5, draw.number_6],
                 "bonus_number": draw.bonus_number
             })
@@ -217,7 +263,7 @@ async def get_update_progress(db: Session = Depends(get_db)) -> Dict[str, Any]:
                 },
                 "recent_draws": recent_draws_data,
                 "progress_percentage": 100.0 if new_draws_count == 0 else round((latest_db_draw / latest_site_draw) * 100, 1),
-                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                "last_updated": get_kst_now().strftime("%Y-%m-%d %H:%M:%S")
             },
             "message": "업데이트 진행 상황을 확인했습니다."
         }
@@ -478,8 +524,7 @@ async def get_statistics(
         total_personal_recommendations = personal_query.count()
         
         # 최근 7일간 통계 (회차 필터 적용)
-        from datetime import datetime, timedelta
-        week_ago = datetime.now() - timedelta(days=7)
+        week_ago = get_kst_now() - timedelta(days=7)
         
         recent_public_query = db.query(PublicRecommendation).filter(
             PublicRecommendation.created_at >= week_ago
@@ -539,7 +584,7 @@ async def get_draw_numbers(db: Session = Depends(get_db)) -> Dict[str, Any]:
         for draw in draws:
             draw_list.append({
                 "draw_number": draw.draw_number,
-                "draw_date": draw.draw_date.strftime("%Y-%m-%d") if draw.draw_date else None,
+                "draw_date": to_kst_string(draw.draw_date),
                 "numbers": [draw.number_1, draw.number_2, draw.number_3, draw.number_4, draw.number_5, draw.number_6],
                 "bonus_number": draw.bonus_number
             })

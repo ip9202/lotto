@@ -3,6 +3,12 @@ from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
 from ..database import Base
 from datetime import datetime
+import pytz
+
+def get_utc_now():
+    """현재 UTC 시간 반환 (시스템 내부용)"""
+    utc = pytz.timezone('UTC')
+    return datetime.now(utc)
 
 class SavedRecommendation(Base):
     """저장된 추천 번호 모델"""
@@ -101,7 +107,7 @@ class SavedRecommendation(Base):
     def mark_as_purchased(self, target_draw: int = None):
         """구매 완료 처리"""
         self.is_purchased = True
-        self.purchase_date = datetime.utcnow()
+        self.purchase_date = get_utc_now()
         if target_draw:
             self.target_draw_number = target_draw
     

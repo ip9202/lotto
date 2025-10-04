@@ -3,6 +3,12 @@ from sqlalchemy import and_, or_, func, desc
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import logging
+import pytz
+
+def get_utc_now():
+    """현재 UTC 시간 반환 (시스템 내부용)"""
+    utc = pytz.timezone('UTC')
+    return datetime.now(utc)
 
 from ..models.session import UserSession
 from ..models.user_history import UserHistory
@@ -149,7 +155,7 @@ class SessionManager:
             for field, value in update_fields.items():
                 setattr(session, field, value)
             
-            session.updated_at = datetime.utcnow()
+            session.updated_at = get_utc_now()
             self.db.commit()
             self.db.refresh(session)
             
@@ -268,7 +274,7 @@ class SessionManager:
             expired_sessions = self.db.query(UserSession).filter(
                 and_(
                     UserSession.expires_at.isnot(None),
-                    UserSession.expires_at < datetime.utcnow()
+                    UserSession.expires_at < get_utc_now()
                 )
             ).all()
             

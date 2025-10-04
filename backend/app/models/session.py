@@ -4,6 +4,12 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 import uuid
 from datetime import datetime, timedelta
+import pytz
+
+def get_utc_now():
+    """현재 UTC 시간 반환 (시스템 내부용)"""
+    utc = pytz.timezone('UTC')
+    return datetime.now(utc)
 
 class UserSession(Base):
     """사용자 세션 관리 모델"""
@@ -49,7 +55,7 @@ class UserSession(Base):
         if not self.session_id:
             self.session_id = self.generate_session_id()
         if not self.expires_at:
-            self.expires_at = datetime.utcnow() + timedelta(days=30)  # 기본 30일
+            self.expires_at = get_utc_now() + timedelta(days=30)  # 기본 30일
     
     @staticmethod
     def generate_session_id():
@@ -61,14 +67,14 @@ class UserSession(Base):
         """세션이 만료되었는지 확인"""
         if not self.expires_at:
             return False
-        return datetime.utcnow() > self.expires_at
+        return get_utc_now() > self.expires_at
     
     @property
     def days_until_expiry(self):
         """만료까지 남은 일수"""
         if not self.expires_at:
             return None
-        delta = self.expires_at - datetime.utcnow()
+        delta = self.expires_at - get_utc_now()
         return max(0, delta.days)
     
     @property
@@ -89,17 +95,17 @@ class UserSession(Base):
         if self.expires_at:
             self.expires_at += timedelta(days=days)
         else:
-            self.expires_at = datetime.utcnow() + timedelta(days=days)
+            self.expires_at = get_utc_now() + timedelta(days=days)
     
     def deactivate(self):
         """세션 비활성화"""
         self.is_active = False
-        self.updated_at = datetime.utcnow()
+        self.updated_at = get_utc_now()
     
     def activate(self):
         """세션 활성화"""
         self.is_active = True
-        self.updated_at = datetime.utcnow()
+        self.updated_at = get_utc_now()
     
     def __repr__(self):
         return f"<UserSession(id={self.id}, session_id={self.session_id}, name={self.session_name}, active={self.is_active})>"

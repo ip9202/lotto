@@ -289,7 +289,14 @@ class UnifiedAuthService:
                 current_draw_number = 1189  # 기본값
             
             # 이번 주 계산
-            today = datetime.now()
+            import pytz
+            
+            def get_kst_now():
+                """현재 한국시간 반환"""
+                kst = pytz.timezone('Asia/Seoul')
+                return datetime.now(kst)
+            
+            today = get_kst_now()
             days_since_monday = today.weekday()
             week_start = today - timedelta(days=days_since_monday)
             week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)

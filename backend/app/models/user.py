@@ -5,6 +5,7 @@ from ..database import Base
 import uuid
 from datetime import datetime, timedelta
 import enum
+import pytz
 
 class SocialProvider(enum.Enum):
     """소셜 로그인 제공자"""
@@ -27,6 +28,16 @@ class SubscriptionPlan(enum.Enum):
     FREE = "free"
     PREMIUM = "premium"
     PRO = "pro"
+
+def get_utc_now():
+    """현재 UTC 시간 반환 (시스템 내부용)"""
+    utc = pytz.timezone('UTC')
+    return datetime.now(utc)
+
+def get_kst_now():
+    """현재 한국시간 반환 (사용자 관점용)"""
+    kst = pytz.timezone('Asia/Seoul')
+    return datetime.now(kst)
 
 class User(Base):
     """사용자 모델"""
@@ -112,7 +123,7 @@ class User(Base):
             return False
         if not self.subscription_end_date:
             return False
-        return datetime.utcnow() < self.subscription_end_date
+        return get_utc_now() < self.subscription_end_date
     
     @property
     def can_generate_recommendation(self):
@@ -121,7 +132,7 @@ class User(Base):
             return True
         
         # 날짜가 바뀌면 카운트 리셋
-        today = datetime.utcnow().date()
+        today = get_utc_now().date()
         if not self.last_recommendation_date or self.last_recommendation_date.date() != today:
             return True
         
@@ -140,9 +151,7 @@ class User(Base):
             db = next(get_db())
 
             # 로또 구매 가능 기간과 동일한 주간 계산 로직 (일요일 0시 ~ 토요일 20시, 한국 시간)
-            from datetime import timezone, timedelta as td
-            kst = timezone(td(hours=9))  # 한국 시간대
-            now = datetime.now(kst)
+            now = get_kst_now()
 
             # 로또 구매 기간에 따른 주간 계산
             if now.weekday() == 6:  # 일요일
@@ -165,8 +174,9 @@ class User(Base):
 
             # 이번 주 기준으로 저장된 개수 확인 (활성 상태인 것만)
             # DB의 UTC 시간을 KST로 변환하여 비교
-            week_start_utc = week_start.astimezone(timezone(td(hours=0)))  # UTC
-            week_end_utc = week_end.astimezone(timezone(td(hours=0)))  # UTC
+            utc = pytz.timezone('UTC')
+            week_start_utc = week_start.astimezone(utc)
+            week_end_utc = week_end.astimezone(utc)
 
             # 현재 회차 조회 (최신 당첨번호 + 1)
             from .lotto import LottoDraw
@@ -205,22 +215,22 @@ class User(Base):
         if not self.subscription_end_date:
             return "구독 정보 오류"
         
-        if datetime.utcnow() < self.subscription_end_date:
-            days_left = (self.subscription_end_date - datetime.utcnow()).days
+        if get_utc_now() < self.subscription_end_date:
+            days_left = (self.subscription_end_date - get_utc_now()).days
             return f"프리미엄 ({days_left}일 남음)"
         else:
             return "구독 만료"
     
     def increment_recommendation_count(self):
         """추천 생성 횟수 증가"""
-        today = datetime.utcnow().date()
+        today = get_utc_now().date()
         
         # 날짜가 바뀌면 카운트 리셋
         if not self.last_recommendation_date or self.last_recommendation_date.date() != today:
             self.daily_recommendation_count = 0
         
         self.daily_recommendation_count += 1
-        self.last_recommendation_date = datetime.utcnow()
+        self.last_recommendation_date = get_utc_now()
     
     def increment_saved_count(self):
         """저장된 번호 개수 증가"""
@@ -233,18 +243,18 @@ class User(Base):
     
     def update_last_login(self):
         """마지막 로그인 시간 업데이트"""
-        self.last_login_at = datetime.utcnow()
+        self.last_login_at = get_utc_now()
     
     def extend_subscription(self, plan: SubscriptionPlan, months: int = 1):
         """구독 연장"""
         self.subscription_plan = plan
         
         if not self.subscription_start_date:
-            self.subscription_start_date = datetime.utcnow()
+            self.subscription_start_date = get_utc_now()
         
-        if not self.subscription_end_date or datetime.utcnow() > self.subscription_end_date:
+        if not self.subscription_end_date or get_utc_now() > self.subscription_end_date:
             # 구독이 없거나 만료된 경우 현재 시점부터 시작
-            self.subscription_end_date = datetime.utcnow() + timedelta(days=30 * months)
+            self.subscription_end_date = get_utc_now() + timedelta(days=30 * months)
         else:
             # 기존 구독에 연장
             self.subscription_end_date += timedelta(days=30 * months)
