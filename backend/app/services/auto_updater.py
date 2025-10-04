@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 import requests
 from bs4 import BeautifulSoup
 import re
+import pytz
 
 from ..database import get_db
 from ..models.lotto import LottoDraw
@@ -15,17 +16,20 @@ logger = logging.getLogger(__name__)
 
 class AutoUpdater:
     def __init__(self):
-        self.scheduler = AsyncIOScheduler()
+        # 한국 시간대 설정
+        self.timezone = pytz.timezone('Asia/Seoul')
+        self.scheduler = AsyncIOScheduler(timezone=self.timezone)
         self.is_running = False
         self.session = requests.Session()
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
-        # 기본 스케줄러 설정 (매주 토요일 오후 9시 20분)
+        # 기본 스케줄러 설정 (매주 토요일 오후 9시 20분, 한국시간)
         self.schedule_config = {
             'day_of_week': 'sat',  # 0=월요일, 6=일요일
             'hour': 21,
-            'minute': 20
+            'minute': 20,
+            'timezone': self.timezone
         }
         
     def start_scheduler(self):
@@ -39,16 +43,17 @@ class AutoUpdater:
                 except:
                     pass  # 기존 작업이 없을 수 있음
                 
-                # 매주 토요일 실행되도록 설정
+                # 매주 토요일 실행되도록 설정 (한국시간)
                 self.scheduler.add_job(
                     self.check_and_update_latest_data,
                     CronTrigger(
                         day_of_week=self.schedule_config['day_of_week'],
                         hour=self.schedule_config['hour'],
-                        minute=self.schedule_config['minute']
+                        minute=self.schedule_config['minute'],
+                        timezone=self.schedule_config['timezone']
                     ),
                     id='weekly_lotto_update',
-                    name=f"매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} 로또 데이터 업데이트",
+                    name=f"매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} (한국시간) 로또 데이터 업데이트",
                     max_instances=1,  # 동시 실행 방지
                     coalesce=True,    # 누적된 작업을 하나로 합치기
                     misfire_grace_time=300  # 5분 내 실행 지연 허용
@@ -56,7 +61,7 @@ class AutoUpdater:
                 
                 self.scheduler.start()
                 self.is_running = True
-                logger.info(f"자동 업데이트 스케줄러가 시작되었습니다. (매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d})")
+                logger.info(f"자동 업데이트 스케줄러가 시작되었습니다. (매주 토요일 {self.schedule_config['hour']:02d}:{self.schedule_config['minute']:02d} 한국시간)")
                 
                 # 다음 실행 시간 로그
                 jobs = self.scheduler.get_jobs()
@@ -95,12 +100,13 @@ class AutoUpdater:
         return day_names.get(day_of_week, '알 수 없음')
     
     def update_schedule(self, day_of_week: str, hour: int, minute: int):
-        """스케줄러 설정 업데이트 (매주 토요일 실행)"""
+        """스케줄러 설정 업데이트 (매주 토요일 실행, 한국시간)"""
         # 설정 업데이트
         self.schedule_config = {
             'day_of_week': day_of_week,
             'hour': hour,
-            'minute': minute
+            'minute': minute,
+            'timezone': self.timezone
         }
         
         # 실행 중인 경우 기존 작업 제거 후 재시작
@@ -112,18 +118,19 @@ class AutoUpdater:
             except Exception as e:
                 logger.warning(f"기존 작업 제거 중 오류 (무시됨): {e}")
             
-            # 새 설정으로 작업 추가 (매주 토요일 실행)
+            # 새 설정으로 작업 추가 (매주 토요일 실행, 한국시간)
             self.scheduler.add_job(
                 self.check_and_update_latest_data,
                 CronTrigger(
                     day_of_week=day_of_week,
                     hour=hour,
-                    minute=minute
+                    minute=minute,
+                    timezone=self.timezone
                 ),
                 id='weekly_lotto_update',
-                name=f"매주 토요일 {hour:02d}:{minute:02d} 로또 데이터 업데이트"
+                name=f"매주 토요일 {hour:02d}:{minute:02d} (한국시간) 로또 데이터 업데이트"
             )
-            logger.info(f"스케줄러 설정이 업데이트되었습니다. (매주 토요일 {hour:02d}:{minute:02d})")
+            logger.info(f"스케줄러 설정이 업데이트되었습니다. (매주 토요일 {hour:02d}:{minute:02d} 한국시간)")
     
     def get_schedule_config(self) -> dict:
         """현재 스케줄러 설정 반환"""
@@ -132,6 +139,7 @@ class AutoUpdater:
             'day_name': self._get_day_name(self.schedule_config['day_of_week']),
             'hour': self.schedule_config['hour'],
             'minute': self.schedule_config['minute'],
+            'timezone': str(self.schedule_config['timezone']),
             'is_running': self.is_running
         }
             
