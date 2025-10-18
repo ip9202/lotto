@@ -27,9 +27,9 @@ interface ComparisonResult {
 }
 
 const WinningHistory: React.FC = () => {
-  const { user, isAuthenticated } = useUnifiedAuth();
+  const { isAuthenticated } = useUnifiedAuth();
   const [winningResult, setWinningResult] = useState<WinningResult | null>(null);
-  const [savedRecommendations, setSavedRecommendations] = useState<SavedRecommendation[]>([]);
+
   const [comparisonResults, setComparisonResults] = useState<ComparisonResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +79,7 @@ const WinningHistory: React.FC = () => {
       const savedData = await savedResponse.json();
 
       setWinningResult(winningData.data);
-      setSavedRecommendations(savedData.items || []);
+
 
       // 당첨 번호와 비교
       const results = compareWithWinningNumbers(winningData.data, savedData.items || []);
@@ -150,13 +150,7 @@ const WinningHistory: React.FC = () => {
     }
   };
 
-  const getBallColor = (number: number): string => {
-    if (number >= 1 && number <= 10) return 'yellow';
-    if (number >= 11 && number <= 20) return 'blue';
-    if (number >= 21 && number <= 30) return 'red';
-    if (number >= 31 && number <= 40) return 'black';
-    return 'green';
-  };
+
 
   if (!isAuthenticated) {
     return (

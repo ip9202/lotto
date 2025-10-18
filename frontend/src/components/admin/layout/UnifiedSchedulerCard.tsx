@@ -16,7 +16,7 @@ interface UnifiedSchedulerCardProps {
 
 const UnifiedSchedulerCard: React.FC<UnifiedSchedulerCardProps> = ({ 
   className = '',
-  onTriggerUpdate
+  onTriggerUpdate: _onTriggerUpdate
 }) => {
   const [config, setConfig] = useState<SchedulerConfig | null>(null);
   const [isLoading, setIsLoading] = useState(true);

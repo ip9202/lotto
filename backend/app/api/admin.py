@@ -919,3 +919,52 @@ def _get_winning_amount(rank: int) -> int:
         5: 5000         # 5천
     }
     return amounts.get(rank, 0)
+
+# ✨ 자동 더미 데이터 생성 관련 API
+@router.post("/auto-dummy-config")
+async def update_auto_dummy_config(
+    enabled: bool = True,
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """자동 더미 데이터 생성 설정 변경"""
+    try:
+        auto_updater.auto_dummy_config['enabled'] = enabled
+        
+        status_text = "활성화" if enabled else "비활성화"
+        logger.info(f"자동 더미 데이터 생성이 {status_text}되었습니다.")
+        
+        return {
+            "success": True,
+            "data": {
+                "enabled": enabled,
+                "message": f"자동 더미 데이터 생성이 {status_text}되었습니다."
+            },
+            "message": f"자동 더미 데이터 생성이 {status_text}되었습니다."
+        }
+        
+    except Exception as e:
+        logger.error(f"자동 더미 데이터 생성 설정 변경 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"설정 변경 실패: {str(e)}")
+
+@router.get("/auto-dummy-status")
+async def get_auto_dummy_status(
+    db: Session = Depends(get_db)
+) -> Dict[str, Any]:
+    """자동 더미 데이터 생성 상태 조회"""
+    try:
+        config = auto_updater.auto_dummy_config
+        
+        return {
+            "success": True,
+            "data": {
+                "enabled": config.get('enabled', True),
+                "last_generated_draw": config.get('last_generated_draw', 0),
+                "last_generated_at": config.get('last_generated_at'),
+                "status": "활성화" if config.get('enabled', True) else "비활성화"
+            },
+            "message": "자동 더미 데이터 생성 상태를 조회했습니다."
+        }
+        
+    except Exception as e:
+        logger.error(f"자동 더미 데이터 생성 상태 조회 실패: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"상태 조회 실패: {str(e)}")

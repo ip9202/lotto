@@ -4,7 +4,7 @@ import {
   ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
-import { SessionList, SessionForm, SessionDetailModal } from '../components/SessionManagement';
+import { SessionForm, SessionDetailModal } from '../components/SessionManagement';
 import { UserSession, SessionCreate, SessionUpdate } from '../types/session';
 import { createSession, updateSession } from '../services/sessionService';
 import { useUnifiedAuth } from '../contexts/UnifiedAuthContext';
@@ -21,23 +21,6 @@ interface SystemStatus {
   has_new_data: boolean;
   new_draws_count: number;
   scheduler_status: boolean;
-}
-
-interface Statistics {
-  public_recommendations: {
-    total: number;
-    ai: number;
-    manual: number;
-    member: number;
-    guest: number;
-    recent_7days: number;
-  };
-  personal_recommendations: {
-    total: number;
-    recent_7days: number;
-  };
-  latest_draw: number;
-  total_recommendations: number;
 }
 
 interface UpdateProgress {
@@ -57,23 +40,13 @@ interface UpdateProgress {
   last_updated: string;
 }
 
-interface SchedulerStatus {
-  is_running: boolean;
-  next_run: string;
-  status: string;
-}
-
 const Admin: React.FC = () => {
-  const { user, isAuthenticated, logout, isLoading } = useUnifiedAuth();
+  const { isAuthenticated, logout, user, isLoading } = useUnifiedAuth();
   const navigate = useNavigate();
   const { message, showSuccess, showError, showInfo, clearMessage } = useMessageHandler();
   const [systemStatus, setSystemStatus] = useState<SystemStatus | null>(null);
   const [updateProgress, setUpdateProgress] = useState<UpdateProgress | null>(null);
-  const [schedulerStatus, setSchedulerStatus] = useState<SchedulerStatus | null>(null);
-  const [statistics, setStatistics] = useState<Statistics | null>(null);
-  const [, setIsUpdating] = useState(false);
-  const [, setIsStartingScheduler] = useState(false);
-  const [, setIsStoppingScheduler] = useState(false);
+  const [_isUpdating, setIsUpdating] = useState(false);
   
   // 세션 관리 상태
   const [activeTab, setActiveTab] = useState<'dashboard' | 'sessions' | 'dummy-data'>('dashboard');
@@ -89,7 +62,11 @@ const Admin: React.FC = () => {
     numbers: number[];
     bonus_number: number;
   }>>([]);
-  const [dummyDataForm, setDummyDataForm] = useState({
+  const [dummyDataForm, setDummyDataForm] = useState<{
+    draw_number: number;
+    total_count: number;
+    rank_distribution: { [key: number]: number };
+  }>({
     draw_number: 0,
     total_count: 0,
     rank_distribution: {
@@ -101,7 +78,7 @@ const Admin: React.FC = () => {
     }
   });
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationResult, setGenerationResult] = useState<any>(null);
+  const [generationResult, setGenerationResult] = useState<any | null>(null);
 
   // 데이터 변환 유틸리티 함수들
   const convertToSystemStatus = (status: SystemStatus | null) => {
@@ -130,22 +107,7 @@ const Admin: React.FC = () => {
     };
   };
 
-  const convertToSchedulerStatus = (scheduler: SchedulerStatus | null) => {
-    if (!scheduler) return null;
-    return {
-      is_running: scheduler.is_running,
-      total_jobs: 1, // 실제로는 1개의 스케줄러 작업만 있음
-      active_jobs: scheduler.is_running ? 1 : 0,
-      failed_jobs: 0,
-      next_job: {
-        id: 'auto-update',
-        name: '자동 데이터 업데이트',
-        status: 'scheduled' as const,
-        next_run: scheduler.next_run
-      },
-      recent_jobs: []
-    };
-  };
+
 
   // 시스템 상태 조회
   const fetchSystemStatus = async () => {
@@ -173,31 +135,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  // 스케줄러 상태 조회
-  const fetchSchedulerStatus = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/scheduler-status`);
-      const data = await response.json();
-      if (data.success) {
-        setSchedulerStatus(data.data);
-      }
-    } catch (error) {
-      console.error('스케줄러 상태 조회 실패:', error);
-    }
-  };
 
-  // 통계 데이터 조회
-  const fetchStatistics = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/statistics`);
-      const data = await response.json();
-      if (data.success) {
-        setStatistics(data.data);
-      }
-    } catch (error) {
-      console.error('통계 데이터 조회 실패:', error);
-    }
-  };
 
   // 데이터 업데이트 실행
   const handleUpdateData = async () => {
@@ -267,53 +205,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  // 스케줄러 시작
-  const handleStartScheduler = async () => {
-    setIsStartingScheduler(true);
-    clearMessage();
-    
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/start-scheduler`, {
-        method: 'POST',
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        showSuccess('스케줄러가 시작되었습니다!');
-        fetchSchedulerStatus();
-      } else {
-        showError('스케줄러 시작에 실패했습니다.');
-      }
-    } catch (error) {
-      showError('네트워크 오류가 발생했습니다.');
-    } finally {
-      setIsStartingScheduler(false);
-    }
-  };
 
-  // 스케줄러 중지
-  const handleStopScheduler = async () => {
-    setIsStoppingScheduler(true);
-    clearMessage();
-    
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/admin/stop-scheduler`, {
-        method: 'POST',
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        showSuccess('스케줄러가 중지되었습니다!');
-        fetchSchedulerStatus();
-      } else {
-        showError('스케줄러 중지에 실패했습니다.');
-      }
-    } catch (error) {
-      showError('네트워크 오류가 발생했습니다.');
-    } finally {
-      setIsStoppingScheduler(false);
-    }
-  };
 
   // 세션 관리 함수들
   const handleCreateSession = () => {
@@ -322,16 +214,7 @@ const Admin: React.FC = () => {
     setShowSessionForm(true);
   };
 
-  const handleEditSession = (session: UserSession) => {
-    setSessionFormMode('edit');
-    setSelectedSession(session);
-    setShowSessionForm(true);
-  };
 
-  const handleViewSession = (session: UserSession) => {
-    setSelectedSession(session);
-    setShowSessionDetail(true);
-  };
 
   const handleSessionFormSubmit = async (data: SessionCreate | SessionUpdate) => {
     try {
@@ -354,9 +237,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleSessionRefresh = () => {
-    // 세션 목록 새로고침 (SessionList 컴포넌트에서 처리)
-  };
+
 
   // 더미 데이터 생성 관련 함수들
   const fetchDrawNumbers = async () => {
@@ -376,6 +257,8 @@ const Admin: React.FC = () => {
       console.error('회차 목록 조회 실패:', error);
     }
   };
+
+
 
   const handleGenerateDummyData = async () => {
     setIsGenerating(true);
@@ -438,8 +321,6 @@ const Admin: React.FC = () => {
   useEffect(() => {
     fetchSystemStatus();
     fetchUpdateProgress();
-    fetchSchedulerStatus();
-    fetchStatistics();
     fetchDrawNumbers();
     
     // 10초마다 진행 상황 새로고침 (더 자주 업데이트)
@@ -450,7 +331,6 @@ const Admin: React.FC = () => {
     // 30초마다 전체 상태 새로고침
     const statusInterval = setInterval(() => {
       fetchSystemStatus();
-      fetchSchedulerStatus();
     }, 30000);
     
     return () => {
@@ -718,7 +598,7 @@ const Admin: React.FC = () => {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2">일별 생성 분포:</h4>
                       <div className="space-y-1">
-                        {generationResult.daily_stats && Object.entries(generationResult.daily_stats).map(([date, count]) => (
+                        {generationResult.daily_stats && Object.entries(generationResult.daily_stats as any).map(([date, count]: any) => (
                           <div key={date} className="flex justify-between text-xs">
                             <span className="text-gray-600">{date}</span>
                             <span className="font-medium">{count || 0}개</span>
@@ -730,7 +610,7 @@ const Admin: React.FC = () => {
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2">등수별 분포:</h4>
                       <div className="space-y-1">
-                        {generationResult.rank_distribution && Object.entries(generationResult.rank_distribution).map(([rank, count]) => (
+                        {generationResult.rank_distribution && Object.entries(generationResult.rank_distribution as any).map(([rank, count]: any) => (
                           <div key={rank} className="flex justify-between text-xs">
                             <span className="text-gray-600">{rank}등:</span>
                             <span className="font-medium">{count || 0}개</span>

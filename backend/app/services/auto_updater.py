@@ -1,4 +1,5 @@
 import logging
+import logging
 from datetime import datetime, time, date, timedelta
 from typing import List, Optional
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -8,6 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import pytz
+import random
 
 from ..database import get_db
 from ..models.lotto import LottoDraw
@@ -30,6 +32,12 @@ class AutoUpdater:
             'hour': 21,
             'minute': 20,
             'timezone': self.timezone
+        }
+        # 자동 더미 데이터 생성 설정
+        self.auto_dummy_config = {
+            'enabled': True,  # 기본값: 활성화
+            'last_generated_draw': 0,  # 마지막 생성 회차
+            'last_generated_at': None  # 마지막 생성 시간
         }
     
     def get_kst_now(self):
@@ -524,9 +532,208 @@ class AutoUpdater:
                 db.add(new_draw)
                 db.commit()
                 logger.info(f"{draw_data['draw_number']}회차가 성공적으로 입력되었습니다. (구매기간: {purchase_start} ~ {purchase_end})")
+                
+                # ✅ 자동 더미 데이터 생성 (새 회차 저장 후, 설정이 활성화된 경우)
+                if self.auto_dummy_config.get('enabled', True):
+                    self._generate_auto_dummy_data(db, draw_data['draw_number'], draw_data)
+                    self.auto_dummy_config['last_generated_draw'] = draw_data['draw_number']
+                    self.auto_dummy_config['last_generated_at'] = self.get_kst_now().isoformat()
+                
             except Exception as e:
                 db.rollback()
                 logger.error(f"{draw_data['draw_number']}회차 입력 실패: {str(e)}")
+    
+    def _generate_auto_dummy_data(self, db: Session, draw_number: int, draw_data: dict):
+        """자동 더미 데이터 생성 (데이터 업데이트 후 자동 실행)"""
+        try:
+            # 이미 이 회차의 더미 데이터가 있는지 확인 (중복 생성 방지)
+            from ..models.public_recommendation import PublicRecommendation
+            existing_dummy = db.query(PublicRecommendation).filter(
+                PublicRecommendation.draw_number == draw_number,
+                PublicRecommendation.is_dummy == True
+            ).first()
+            
+            if existing_dummy:
+                logger.info(f"{draw_number}회차 더미 데이터가 이미 존재합니다. 생성을 스킵합니다.")
+                return
+            
+            logger.info(f"{draw_number}회차 자동 더미 데이터 생성을 시작합니다...")
+            
+            # 1️⃣ 랜덤 파라미터 생성
+            total_count = random.randint(4000, 5000)
+            rank_1_count = random.randint(0, 3)
+            rank_2_count = random.randint(10, 20)
+            rank_3_count = random.randint(40, 80)
+            rank_4_count = random.randint(100, 200)
+            rank_5_count = random.randint(200, 300)
+            
+            # 미당첨 개수 계산
+            distributed_total = rank_1_count + rank_2_count + rank_3_count + rank_4_count + rank_5_count
+            no_win_count = total_count - distributed_total
+            
+            logger.info(f"⚙️  랜덤 파라미터 생성:")
+            logger.info(f"  - 총 생성수: {total_count:,}개")
+            logger.info(f"  - 1등: {rank_1_count}개")
+            logger.info(f"  - 2등: {rank_2_count}개")
+            logger.info(f"  - 3등: {rank_3_count}개")
+            logger.info(f"  - 4등: {rank_4_count}개")
+            logger.info(f"  - 5등: {rank_5_count}개")
+            logger.info(f"  - 미당첨: {no_win_count:,}개")
+            
+            # 2️⃣ 실제 당첨번호
+            winning_numbers = [
+                draw_data['numbers'][0],
+                draw_data['numbers'][1],
+                draw_data['numbers'][2],
+                draw_data['numbers'][3],
+                draw_data['numbers'][4],
+                draw_data['numbers'][5]
+            ]
+            bonus_number = draw_data['bonus_number']
+            
+            # 3️⃣ 구매 기간 날짜 생성 (추첨일 기준 일주일)
+            draw_date = draw_data['draw_date']
+            if isinstance(draw_date, str):
+                draw_date = datetime.strptime(draw_date, '%Y-%m-%d').date()
+            
+            purchase_dates = []
+            for i in range(7):
+                date_obj = draw_date - timedelta(days=6 - i)
+                purchase_dates.append(date_obj)
+            
+            # 4️⃣ 더미 데이터 생성
+            created_count = 0
+            
+            # 등수별 데이터 생성
+            rank_data = {
+                1: rank_1_count,
+                2: rank_2_count,
+                3: rank_3_count,
+                4: rank_4_count,
+                5: rank_5_count
+            }
+            
+            for rank, count in rank_data.items():
+                for i in range(count):
+                    # 등수별 번호 조합 생성
+                    numbers, matched_numbers, matched_count = self._generate_winning_combination(
+                        winning_numbers, bonus_number, rank
+                    )
+                    
+                    # 랜덤 구매 날짜 선택
+                    random_purchase_date = random.choice(purchase_dates)
+                    
+                    # 더미 데이터 생성
+                    dummy_data = PublicRecommendation(
+                        numbers=numbers,
+                        generation_method="ai",
+                        confidence_score=random.randint(70, 95),
+                        analysis_data={"is_dummy": True, "auto_generated": True, "rank": rank},
+                        draw_number=draw_number,
+                        user_type="member",
+                        is_dummy=True,
+                        winning_rank=rank,
+                        matched_count=matched_count,
+                        matched_numbers=matched_numbers,
+                        winning_amount=1000000 if rank == 1 else 0,
+                        created_at=random_purchase_date
+                    )
+                    
+                    db.add(dummy_data)
+                    created_count += 1
+            
+            # 미당첨 데이터 생성
+            for i in range(no_win_count):
+                # 미당첨: 0-2개 일치
+                match_count = random.randint(0, 2)
+                if match_count == 0:
+                    numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6)
+                    matched_numbers = []
+                else:
+                    base_numbers = random.sample(winning_numbers, match_count)
+                    other_numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6 - match_count)
+                    numbers = base_numbers + other_numbers
+                    matched_numbers = base_numbers
+                
+                # 랜덤 구매 날짜 선택
+                random_purchase_date = random.choice(purchase_dates)
+                
+                dummy_data = PublicRecommendation(
+                    numbers=numbers,
+                    generation_method="ai",
+                    confidence_score=random.randint(50, 85),
+                    analysis_data={"is_dummy": True, "auto_generated": True, "rank": 0},
+                    draw_number=draw_number,
+                    user_type="member",
+                    is_dummy=True,
+                    winning_rank=None,
+                    matched_count=match_count,
+                    matched_numbers=matched_numbers,
+                    winning_amount=0,
+                    created_at=random_purchase_date
+                )
+                
+                db.add(dummy_data)
+                created_count += 1
+            
+            # DB 저장
+            db.commit()
+            
+            logger.info(f"✅ {draw_number}회차 자동 더미 데이터 생성 완료! ({created_count:,}개 생성됨)")
+            
+        except Exception as e:
+            db.rollback()
+            logger.error(f"❌ {draw_number}회차 자동 더미 데이터 생성 실패: {str(e)}")
+            import traceback
+            logger.error(f"상세 오류: {traceback.format_exc()}")
+    
+    def _generate_winning_combination(self, winning_numbers: List[int], bonus_number: int, rank: int) -> tuple[List[int], List[int], int]:
+        """등수별 번호 조합 생성
+        
+        반환값: (번호들, 일치한 번호들, 일치 개수)
+        """
+        if rank == 1:
+            # 1등: 6개 모두 일치
+            return winning_numbers.copy(), winning_numbers.copy(), 6
+        
+        elif rank == 2:
+            # 2등: 5개 일치 + 보너스 번호
+            base_numbers = random.sample(winning_numbers, 5)
+            numbers = base_numbers + [bonus_number]
+            return numbers, base_numbers, 5
+        
+        elif rank == 3:
+            # 3등: 5개 일치 (보너스 번호 제외)
+            base_numbers = random.sample(winning_numbers, 5)
+            other_numbers = [n for n in range(1, 46) if n not in winning_numbers and n != bonus_number]
+            numbers = base_numbers + random.sample(other_numbers, 1)
+            return numbers, base_numbers, 5
+        
+        elif rank == 4:
+            # 4등: 4개 일치
+            base_numbers = random.sample(winning_numbers, 4)
+            other_numbers = [n for n in range(1, 46) if n not in winning_numbers]
+            numbers = base_numbers + random.sample(other_numbers, 2)
+            return numbers, base_numbers, 4
+        
+        elif rank == 5:
+            # 5등: 3개 일치
+            base_numbers = random.sample(winning_numbers, 3)
+            other_numbers = [n for n in range(1, 46) if n not in winning_numbers]
+            numbers = base_numbers + random.sample(other_numbers, 3)
+            return numbers, base_numbers, 3
+        
+        else:
+            # 미당첨: 0-2개 일치
+            match_count = random.randint(0, 2)
+            if match_count == 0:
+                numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6)
+                return numbers, [], 0
+            else:
+                base_numbers = random.sample(winning_numbers, match_count)
+                other_numbers = random.sample([n for n in range(1, 46) if n not in winning_numbers], 6 - match_count)
+                numbers = base_numbers + other_numbers
+                return numbers, base_numbers, match_count
 
 # 전역 인스턴스
 auto_updater = AutoUpdater()
