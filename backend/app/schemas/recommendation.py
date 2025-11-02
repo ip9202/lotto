@@ -55,6 +55,7 @@ class RecommendationRequest(BaseModel):
     manual_combinations: List[ManualCombination] = Field(default=[], description="수동 조합")
     preferences: PreferenceSettings = Field(default_factory=PreferenceSettings)
     target_draw: Optional[int] = Field(None, description="대상 회차 (null이면 다음 회차)")
+    use_ml_model: bool = Field(default=False, description="ML 모델 사용 여부 (True: AI 예측, False: 통계 분석)")
     
     @validator('total_count')
     def validate_total_count(cls, v, values):

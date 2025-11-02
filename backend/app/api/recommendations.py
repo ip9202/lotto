@@ -203,7 +203,7 @@ async def generate_recommendations(
             )
         
         # 3. AI 자동 추천 생성
-        engine = RecommendationEngine(db)
+        engine = RecommendationEngine(db, use_ml_model=request.use_ml_model)
         auto_count = request.total_count - len(request.manual_combinations)
         
         if auto_count > 0:
