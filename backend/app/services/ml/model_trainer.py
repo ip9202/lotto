@@ -10,12 +10,14 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any, Optional
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.multioutput import MultiOutputClassifier
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
     recall_score,
     f1_score,
-    confusion_matrix
+    confusion_matrix,
+    hamming_loss
 )
 from datetime import datetime
 from . import model_utils
@@ -34,36 +36,44 @@ _last_training_metrics = {}
 
 def train_model(
     X_train: pd.DataFrame,
-    y_train: pd.Series,
+    y_train: pd.DataFrame,
     n_estimators: int = 100,
     max_depth: Optional[int] = None,
     random_state: int = 42
-) -> RandomForestClassifier:
+) -> MultiOutputClassifier:
     """
-    Train Random Forest model for lottery prediction.
+    Train Random Forest model for multi-label lottery prediction.
+
+    Uses MultiOutputClassifier to train 45 independent binary classifiers
+    (one for each lottery number 1-45).
 
     Args:
         X_train: Training features (DataFrame with 145 features)
-        y_train: Training labels (binary classification)
+        y_train: Multi-label training targets (DataFrame with 45 columns)
         n_estimators: Number of trees in the forest (default 100)
         max_depth: Maximum depth of trees (default None = unlimited)
         random_state: Random seed for reproducibility
 
     Returns:
-        RandomForestClassifier: Trained model
+        MultiOutputClassifier: Trained multi-output model
 
     Performance:
         - Should complete within 5 minutes for 1000 samples (AC-003)
         - Target accuracy >= 70% (AC-003)
+
+    @CODE:LOTTO-ML-MODEL-001
     """
-    # Initialize Random Forest model
-    model = RandomForestClassifier(
+    # Initialize base Random Forest model
+    base_estimator = RandomForestClassifier(
         n_estimators=n_estimators,
         max_depth=max_depth,
         random_state=random_state,
         n_jobs=-1,  # Use all CPU cores
         verbose=0
     )
+
+    # Wrap with MultiOutputClassifier for 45 binary classifiers
+    model = MultiOutputClassifier(base_estimator, n_jobs=-1)
 
     # Train the model
     model.fit(X_train, y_train)
@@ -72,6 +82,7 @@ def train_model(
     global _last_training_metrics
     _last_training_metrics['training_samples'] = len(X_train)
     _last_training_metrics['features_count'] = X_train.shape[1]
+    _last_training_metrics['n_targets'] = y_train.shape[1]
     _last_training_metrics['trained_at'] = datetime.now().isoformat()
 
     return model
@@ -82,39 +93,54 @@ def train_model(
 # ============================================================================
 
 def evaluate_model(
-    model: RandomForestClassifier,
+    model: MultiOutputClassifier,
     X_test: pd.DataFrame,
-    y_test: pd.Series
+    y_test: pd.DataFrame
 ) -> Dict[str, Any]:
     """
-    Evaluate trained model on test data.
+    Evaluate trained multi-output model on test data.
+
+    Calculates macro-averaged metrics across all 45 lottery number classifiers.
 
     Args:
-        model: Trained Random Forest model
+        model: Trained MultiOutputClassifier model
         X_test: Test features
-        y_test: Test labels
+        y_test: Multi-label test targets (DataFrame with 45 columns)
 
     Returns:
         Dict containing:
-            - accuracy: Overall accuracy (target >= 0.70)
-            - precision: Precision score
-            - recall: Recall score
-            - f1_score: F1 score
-            - confusion_matrix: 2x2 confusion matrix
+            - accuracy: Sample-wise accuracy (exact match rate)
+            - hamming_loss: Hamming loss (label-wise error rate)
+            - precision: Macro-averaged precision across 45 classifiers
+            - recall: Macro-averaged recall across 45 classifiers
+            - f1_score: Macro-averaged F1 score across 45 classifiers
 
     Performance Target:
         - Accuracy >= 70% (AC-003)
+
+    @CODE:LOTTO-ML-MODEL-001
     """
     # Make predictions
     y_pred = model.predict(X_test)
 
-    # Calculate metrics
+    # Calculate multi-label metrics
     metrics = {
+        # Subset accuracy (exact match)
         'accuracy': accuracy_score(y_test, y_pred),
-        'precision': precision_score(y_test, y_pred, average='binary', zero_division=0),
-        'recall': recall_score(y_test, y_pred, average='binary', zero_division=0),
-        'f1_score': f1_score(y_test, y_pred, average='binary', zero_division=0),
-        'confusion_matrix': confusion_matrix(y_test, y_pred)
+
+        # Hamming loss (label-wise error rate)
+        'hamming_loss': hamming_loss(y_test, y_pred),
+
+        # Macro-averaged metrics (average across all 45 labels)
+        'precision': precision_score(y_test, y_pred, average='macro', zero_division=0),
+        'recall': recall_score(y_test, y_pred, average='macro', zero_division=0),
+        'f1_score': f1_score(y_test, y_pred, average='macro', zero_division=0),
+
+        # Per-label accuracy (for analysis)
+        'per_label_accuracy': [
+            accuracy_score(y_test.iloc[:, i], y_pred[:, i])
+            for i in range(y_test.shape[1])
+        ]
     }
 
     # Store evaluation metrics in global state
@@ -123,8 +149,8 @@ def evaluate_model(
     _last_training_metrics['evaluated_at'] = datetime.now().isoformat()
 
     # Convert numpy arrays to lists for JSON serialization
-    if 'confusion_matrix' in metrics:
-        metrics['confusion_matrix'] = metrics['confusion_matrix'].tolist()
+    if 'per_label_accuracy' in metrics:
+        metrics['per_label_accuracy'] = [float(x) for x in metrics['per_label_accuracy']]
 
     return metrics
 
@@ -134,15 +160,15 @@ def evaluate_model(
 # ============================================================================
 
 def save_trained_model(
-    model: RandomForestClassifier,
+    model: MultiOutputClassifier,
     metadata: Dict[str, Any],
     model_name: Optional[str] = None
 ) -> str:
     """
-    Save trained model to disk with metadata.
+    Save trained multi-output model to disk with metadata.
 
     Args:
-        model: Trained Random Forest model
+        model: Trained MultiOutputClassifier model
         metadata: Dictionary with model metadata (accuracy, training info, etc.)
         model_name: Optional custom model name (default: lotto_model_YYYYMMDD)
 
@@ -152,15 +178,18 @@ def save_trained_model(
     File Structure:
         - backend/app/models/ml/trained/lotto_model_YYYYMMDD.pkl
         - backend/app/models/ml/metadata/lotto_model_YYYYMMDD_metadata.json
+
+    @CODE:LOTTO-ML-MODEL-001
     """
     # Add timestamp to metadata
     if 'saved_at' not in metadata:
         metadata['saved_at'] = datetime.now().isoformat()
 
     # Add model type info
-    metadata['model_type'] = 'RandomForestClassifier'
-    metadata['n_estimators'] = model.n_estimators
-    metadata['max_depth'] = model.max_depth
+    metadata['model_type'] = 'MultiOutputClassifier'
+    metadata['base_estimator'] = 'RandomForestClassifier'
+    metadata['n_estimators'] = model.estimators_[0].n_estimators if model.estimators_ else 100
+    metadata['max_depth'] = model.estimators_[0].max_depth if model.estimators_ else None
 
     # Save model using model_utils
     save_path = model_utils.save_model(

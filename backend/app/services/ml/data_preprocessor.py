@@ -213,37 +213,98 @@ def extract_features(draw_data: pd.DataFrame) -> pd.DataFrame:
 
 
 # ============================================================================
+# Target Label Creation
+# ============================================================================
+
+def create_target_labels(draw_data: pd.DataFrame) -> pd.DataFrame:
+    """
+    Create multi-label target vectors for next draw prediction.
+
+    For each draw, creates a 45-dimensional binary vector indicating
+    which numbers will appear in the NEXT draw.
+
+    Args:
+        draw_data: DataFrame with lottery draw history
+
+    Returns:
+        pd.DataFrame: Target labels with 45 columns (target_1 through target_45)
+                     Shape: (n_draws - 1, 45) since last draw has no next draw
+
+    @CODE:LOTTO-ML-PREPROCESS-001
+    """
+    if len(draw_data) <= 1:
+        # Need at least 2 draws to create targets
+        return pd.DataFrame()
+
+    target_labels = []
+
+    # For each draw (except the last one)
+    for idx in range(len(draw_data) - 1):
+        # Get numbers from NEXT draw
+        next_draw = draw_data.iloc[idx + 1]
+        next_numbers = [
+            next_draw['number_1'],
+            next_draw['number_2'],
+            next_draw['number_3'],
+            next_draw['number_4'],
+            next_draw['number_5'],
+            next_draw['number_6']
+        ]
+
+        # Create 45-dimensional binary vector
+        target_vector = {}
+        for num in range(1, TOTAL_NUMBERS + 1):
+            target_vector[f'target_{num}'] = 1 if num in next_numbers else 0
+
+        target_labels.append(target_vector)
+
+    return pd.DataFrame(target_labels)
+
+
+# ============================================================================
 # Train/Test Split
 # ============================================================================
 
 def prepare_train_test_split(
     features: pd.DataFrame,
+    draw_data: pd.DataFrame,
     test_size: float = 0.2,
     random_state: int = 42
-) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Prepare train/test split for ML training.
 
+    Creates multi-label targets using create_target_labels() and splits
+    features and targets into training and test sets.
+
     Args:
         features: Feature matrix from extract_features
+        draw_data: Original draw data for creating target labels
         test_size: Proportion of data for test set (default 0.2 = 20%)
         random_state: Random seed for reproducibility
 
     Returns:
         Tuple of (X_train, X_test, y_train, y_test)
+        - X_train, X_test: Feature matrices (DataFrame)
+        - y_train, y_test: Multi-label targets (DataFrame with 45 columns)
+
+    @CODE:LOTTO-ML-PREPROCESS-001
     """
     if len(features) == 0:
-        return pd.DataFrame(), pd.DataFrame(), pd.Series(dtype=float), pd.Series(dtype=float)
+        return pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame()
 
-    # For now, create dummy target variable (will be refined in model training)
-    # Target: predict if each number (1-45) will appear in next draw
-    # Using a simple approach: create binary target for demonstration
-    y = pd.Series([1] * len(features))  # Placeholder target
+    # Create multi-label target vectors for next draw prediction
+    targets = create_target_labels(draw_data)
+
+    # Features and targets must have same length
+    # (last draw has no target, so exclude it from features)
+    if len(targets) < len(features):
+        features = features.iloc[:len(targets)]
 
     # Split data
     X_train, X_test, y_train, y_test = train_test_split(
         features,
-        y,
+        targets,
         test_size=test_size,
         random_state=random_state,
         shuffle=True
@@ -341,7 +402,9 @@ def prepare_features_for_inference(db_session) -> np.ndarray:
     @CODE:LOTTO-ML-INTEGRATE-001
     """
     # Fetch latest draws for feature extraction
-    data = fetch_draws_from_database(db_session, limit=100)
+    all_data = load_draw_data(db_session)
+    # Use latest 100 draws for inference
+    data = all_data.tail(100) if len(all_data) >= 100 else all_data
 
     if len(data) == 0:
         # Return default features if no data available
@@ -357,14 +420,10 @@ def prepare_features_for_inference(db_session) -> np.ndarray:
     # Get the latest feature row (most recent draw)
     latest_features = features_df.iloc[-1]
 
-    # Select frequency features (freq_1 to freq_45)
-    freq_cols = [f'freq_{i}' for i in range(1, TOTAL_NUMBERS + 1)]
-    feature_vector = latest_features[freq_cols].values
+    # Use ALL features (145 features) as used during training
+    feature_vector = latest_features.values
 
-    # Reshape to (1, 45) for model input
+    # Reshape to (1, 145) for model input
     feature_vector = feature_vector.reshape(1, -1)
-
-    # Normalize to ensure sum = 1.0 (probability distribution)
-    feature_vector = feature_vector / feature_vector.sum()
 
     return feature_vector

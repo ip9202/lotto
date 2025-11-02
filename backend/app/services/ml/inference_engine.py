@@ -36,18 +36,22 @@ def predict_probabilities(model: Any, features: np.ndarray) -> np.ndarray:
     if model is None:
         raise ValueError("Model cannot be None")
 
-    if features.size == 0 or features.ndim != 2 or features.shape[1] != LOTTO_NUMBER_COUNT:
-        raise ValueError(f"Features must have shape (1, {LOTTO_NUMBER_COUNT})")
+    if features.size == 0 or features.ndim != 2:
+        raise ValueError("Features must be a 2D array with shape (1, n_features)")
 
     # Get predictions from model
+    # MultiOutputClassifier returns list of arrays (one per output)
     raw_probabilities = model.predict_proba(features)
 
-    # Ensure it's 1D array of 45 values
-    if raw_probabilities.ndim > 1:
-        raw_probabilities = raw_probabilities.flatten()
+    # Extract probability of class 1 (number appearing) for each of 45 outputs
+    # Each output is shape (1, 2) with [prob_class_0, prob_class_1]
+    probabilities = np.array([
+        output[0, 1]  # Get class 1 probability for each number
+        for output in raw_probabilities
+    ])
 
-    # Normalize to ensure sum = 1.0
-    probabilities = raw_probabilities / raw_probabilities.sum()
+    # Normalize to ensure sum = 1.0 (for weighted sampling)
+    probabilities = probabilities / probabilities.sum()
 
     return probabilities
 
