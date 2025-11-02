@@ -1,0 +1,9 @@
+{
+  "accuracy": 0.41,
+  "trained_samples": 800,
+  "test_samples": 200,
+  "saved_at": "2025-11-02T23:19:49.292897",
+  "model_type": "RandomForestClassifier",
+  "n_estimators": 100,
+  "max_depth": null
+}

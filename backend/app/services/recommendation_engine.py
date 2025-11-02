@@ -1,8 +1,18 @@
 import random
-from typing import Dict, List, Tuple
+import os
+import numpy as np
+from typing import Dict, List, Tuple, Optional
 from sqlalchemy.orm import Session
 from .lotto_analyzer import LottoAnalyzer
 from ..schemas.recommendation import PreferenceSettings
+from .ml.model_utils import load_model, get_latest_model_path
+from .ml.data_preprocessor import prepare_features_for_inference
+from .ml.inference_engine import (
+    predict_probabilities,
+    generate_combinations as ml_generate_combinations,
+    calculate_confidence_scores,
+    apply_user_preferences
+)
 
 class Combination:
     """로또 번호 조합 클래스"""
@@ -13,11 +23,18 @@ class Combination:
         self.analysis = None  # 번호 조합 분석 데이터
 
 class RecommendationEngine:
-    """로또 번호 추천 엔진 - 통계적 분석 기반 AI 추천 시스템"""
-    def __init__(self, db_session: Session):
+    """로또 번호 추천 엔진 - 통계적 분석 기반 AI 추천 시스템
+
+    @CODE:LOTTO-ML-INTEGRATE-001: ML integration added
+    """
+    def __init__(self, db_session: Session, use_ml_model: bool = False):
         self.db = db_session
         self.analyzer = LottoAnalyzer(db_session)  # 로또 데이터 분석기
-        
+
+        # @CODE:LOTTO-ML-INTEGRATE-001: ML mode configuration
+        self.use_ml_model = use_ml_model
+        self.ml_engine = None  # Lazy loading (load model on first use)
+
         # 기본 점수 계산 가중치 설정
         self.weights = {
             'frequency': 0.6,       # 출현 빈도 가중치 (60%)
@@ -25,30 +42,55 @@ class RecommendationEngine:
         }
     
     def generate_combinations(self, count: int, preferences: PreferenceSettings = None, exclude_combinations: List[List[int]] = None) -> List[Combination]:
-        """메인 추천 로직 - 통계적 분석을 통한 로또 번호 조합 생성"""
+        """메인 추천 로직 - ML or 통계적 분석을 통한 로또 번호 조합 생성
+
+        @CODE:LOTTO-ML-INTEGRATE-001: ML/Statistical mode branching
+        """
         if exclude_combinations is None:
             exclude_combinations = []
-        
+
+        # @CODE:LOTTO-ML-INTEGRATE-001: ML mode
+        if self.use_ml_model:
+            try:
+                return self._generate_ml_combinations(count, preferences, exclude_combinations)
+            except Exception as e:
+                # Fallback to statistical mode on ML failure
+                print(f"ML inference failed: {e}. Falling back to statistical mode.")
+                return self.fallback_to_statistics(count, preferences, exclude_combinations)
+
+        # @CODE:LOTTO-ML-INTEGRATE-001: Statistical mode (original logic)
+        return self._generate_statistical_combinations(count, preferences, exclude_combinations)
+
+    def _generate_statistical_combinations(
+        self,
+        count: int,
+        preferences: PreferenceSettings = None,
+        exclude_combinations: List[List[int]] = None
+    ) -> List[Combination]:
+        """통계적 분석 기반 조합 생성 (기존 로직)
+
+        @CODE:LOTTO-ML-INTEGRATE-001
+        """
         # 1단계: 각 번호별 기본 점수 계산 (출현빈도 + 최근트렌드)
         number_scores = self._calculate_base_scores()
-        
+
         # 2단계: 사용자 선호도 적용 (포함/제외 번호 반영)
         if preferences:
             number_scores = self._apply_preferences(number_scores, preferences)
-        
+
         # 3단계: 몬테카를로 샘플링으로 후보 조합 생성 (10배수 생성 후 상위 선별)
         combinations = self._generate_candidate_combinations(number_scores, count * 10, preferences)
-        
+
         # 4단계: 각 조합별 종합 점수 계산 (개별점수 + 패턴점수 + 균형점수)
         scored_combinations = self._score_combinations(combinations)
-        
+
         # 5단계: 상위 N개 조합 선택 (중복 제거)
         top_combinations = self._select_top_combinations(scored_combinations, count, exclude_combinations)
-        
+
         # 6단계: 각 조합에 대한 상세 분석 수행 (홀짝, 구간분포, 연속번호 등)
         for combination in top_combinations:
             combination.analysis = self.analyzer.analyze_combination(combination.numbers)
-        
+
         return top_combinations
     
     def _calculate_base_scores(self) -> Dict[int, float]:
@@ -515,5 +557,73 @@ class RecommendationEngine:
             'amount': amount,    # 당첨 금액
             'matched': matched   # 맞춘 번호 개수
         }
+
+    # @CODE:LOTTO-ML-INTEGRATE-001: ML combination generation
+    def _generate_ml_combinations(
+        self,
+        count: int,
+        preferences: PreferenceSettings = None,
+        exclude_combinations: List[List[int]] = None
+    ) -> List[Combination]:
+        """ML 모델 기반 조합 생성
+
+        @CODE:LOTTO-ML-INTEGRATE-001
+        """
+        # Lazy load ML model on first use
+        if self.ml_engine is None:
+            model_path = get_latest_model_path()
+
+            if model_path is None or not os.path.exists(model_path):
+                raise FileNotFoundError("ML model not found. Falling back to statistical mode.")
+
+            self.ml_engine = load_model(model_path)
+
+        # Prepare features for inference
+        features = prepare_features_for_inference(self.db)
+
+        # Get probability predictions from ML model
+        probabilities = predict_probabilities(self.ml_engine, features)
+
+        # Generate combinations using weighted sampling
+        raw_combinations = ml_generate_combinations(probabilities, count=count * 2)
+
+        # Apply user preferences (filter combinations)
+        if preferences:
+            pref_dict = {
+                'include_numbers': preferences.include_numbers if preferences.include_numbers else [],
+                'exclude_numbers': preferences.exclude_numbers if preferences.exclude_numbers else []
+            }
+            filtered_combinations = apply_user_preferences(raw_combinations, pref_dict)
+
+            # If too few combinations after filtering, regenerate more
+            if len(filtered_combinations) < count:
+                raw_combinations = ml_generate_combinations(probabilities, count=count * 5)
+                filtered_combinations = apply_user_preferences(raw_combinations, pref_dict)
+
+            raw_combinations = filtered_combinations[:count * 2]
+
+        # Calculate confidence scores
+        confidence_scores = calculate_confidence_scores(probabilities)
+
+        # Convert to Combination objects with confidence scores
+        combinations = []
+        for combo_numbers in raw_combinations[:count]:
+            combo = Combination(combo_numbers, confidence_score=confidence_scores['overall_confidence'])
+            combo.analysis = self.analyzer.analyze_combination(combo_numbers)
+            combinations.append(combo)
+
+        return combinations
+
+    def fallback_to_statistics(
+        self,
+        count: int,
+        preferences: PreferenceSettings = None,
+        exclude_combinations: List[List[int]] = None
+    ) -> List[Combination]:
+        """ML 실패 시 통계적 분석으로 폴백
+
+        @CODE:LOTTO-ML-INTEGRATE-001
+        """
+        return self._generate_statistical_combinations(count, preferences, exclude_combinations)
 
 

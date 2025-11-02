@@ -138,3 +138,12 @@ dmypy.json
 railway_db_config.md
 *_db_config.md
 *_credentials.md
+# Build artifacts
+*.pyo
+.tscache/
+*.tsbuildinfo
+.env/
+# Backups
+# Cache
+*.pyc
+# Virtual environment
