@@ -3,6 +3,7 @@ ML Inference Engine
 Prediction engine for lottery number recommendations using trained ML models
 
 @CODE:LOTTO-ML-PREDICT-001
+@DOC:LOTTO-ML-PREDICT-001 → .moai/specs/SPEC-LOTTO-ML-PREDICT-001/spec.md
 """
 
 import numpy as np

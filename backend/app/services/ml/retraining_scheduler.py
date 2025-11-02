@@ -3,6 +3,7 @@ ML Model Retraining Scheduler
 
 Automatic model retraining scheduler that runs weekly on Tuesday midnight (KST).
 @CODE:LOTTO-ML-RETRAIN-001
+@DOC:LOTTO-ML-RETRAIN-001 → .moai/specs/SPEC-LOTTO-ML-RETRAIN-001/spec.md
 """
 
 import logging

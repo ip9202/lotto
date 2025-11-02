@@ -26,6 +26,7 @@ class RecommendationEngine:
     """로또 번호 추천 엔진 - 통계적 분석 기반 AI 추천 시스템
 
     @CODE:LOTTO-ML-INTEGRATE-001: ML integration added
+    @DOC:LOTTO-ML-INTEGRATE-001 → .moai/specs/SPEC-LOTTO-ML-INTEGRATE-001/spec.md
     """
     def __init__(self, db_session: Session, use_ml_model: bool = False):
         self.db = db_session

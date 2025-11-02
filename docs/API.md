@@ -8,6 +8,48 @@
 
 ### 추천 시스템
 - `POST /api/v1/recommendations/generate` - AI 추천 생성
+  - **Request Body**:
+    ```json
+    {
+      "count": 5,
+      "preferences": {
+        "include_numbers": [7, 23],
+        "exclude_numbers": [13, 39]
+      },
+      "use_ml_model": true  // ML 모드 활성화 (기본값: false)
+    }
+    ```
+  - **Response**:
+    ```json
+    {
+      "success": true,
+      "data": {
+        "combinations": [
+          {
+            "numbers": [3, 12, 23, 31, 38, 45],
+            "confidence_score": 0.632,  // ML 모드: 0.20-0.75 / 통계 모드: 0.15-0.65
+            "analysis": {
+              "odd_even_ratio": "3:3",
+              "distribution": [2, 2, 2],
+              "consecutive_count": 0
+            }
+          }
+        ],
+        "mode": "ml"  // "ml" 또는 "statistical"
+      }
+    }
+    ```
+  - **ML 모드 파라미터**:
+    - `use_ml_model`: true → ML 추론 엔진 사용, false → 통계 분석 사용 (기본값)
+    - **ML 모드 특징**:
+      - Random Forest 모델로 45개 번호 출현 확률 예측
+      - Shannon entropy 기반 신뢰도 계산 (20-75% 범위)
+      - 145개 피처 기반 예측 (빈도, 트렌드, 상관관계, 통계)
+      - 자동 폴백: ML 실패 시 통계 모드로 전환
+    - **통계 모드 특징**:
+      - 기존 Monte Carlo 샘플링 + 가중치 기반 조합 생성
+      - 패턴 분석 기반 신뢰도 계산 (15-65% 범위)
+      - 출현 빈도(60%) + 최근 트렌드(40%) 가중치
 
 ### 로또 데이터
 - `GET /api/v1/lotto/latest` - 최신 로또 데이터

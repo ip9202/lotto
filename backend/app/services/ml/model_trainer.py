@@ -3,6 +3,7 @@ ML Model Training and Evaluation
 
 Provides functions for training, evaluating, and saving lottery prediction models.
 @CODE:LOTTO-ML-MODEL-001
+@DOC:LOTTO-ML-MODEL-001 → .moai/specs/SPEC-LOTTO-ML-MODEL-001/spec.md
 """
 
 import pandas as pd

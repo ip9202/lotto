@@ -3,6 +3,7 @@ ML Model Utilities
 
 Provides functions for saving, loading, and managing ML models.
 @CODE:LOTTO-ML-INFRA-001
+@DOC:LOTTO-ML-INFRA-001 → .moai/specs/SPEC-LOTTO-ML-INFRA-001/spec.md
 """
 
 import os

@@ -3,6 +3,7 @@ ML Data Preprocessing Pipeline
 
 Provides functions for loading, validating, and preparing lottery data for ML training.
 @CODE:LOTTO-ML-PREPROCESS-001
+@DOC:LOTTO-ML-PREPROCESS-001 → .moai/specs/SPEC-LOTTO-ML-PREPROCESS-001/spec.md
 """
 
 import pandas as pd

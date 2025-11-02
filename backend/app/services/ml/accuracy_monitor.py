@@ -3,6 +3,7 @@ ML Model Accuracy Monitor
 
 Monitors prediction accuracy and triggers emergency retraining when needed.
 @CODE:LOTTO-ML-MONITOR-001
+@DOC:LOTTO-ML-MONITOR-001 → .moai/specs/SPEC-LOTTO-ML-MONITOR-001/spec.md
 """
 
 import os
