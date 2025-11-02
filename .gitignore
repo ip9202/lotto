@@ -147,3 +147,6 @@ railway_db_config.md
 # Cache
 *.pyc
 # Virtual environment
+
+# MoAI-ADK
+.moai/cache/
