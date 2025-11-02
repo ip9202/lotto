@@ -150,3 +150,8 @@ railway_db_config.md
 
 # MoAI-ADK
 .moai/cache/
+
+# ML Models (large binary files stored separately)
+*.pkl
+backend/app/models/ml/trained/*.pkl
+backend/app/models/ml/backups/*.pkl
