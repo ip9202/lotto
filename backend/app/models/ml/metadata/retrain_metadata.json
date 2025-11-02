@@ -1,0 +1,12 @@
+{
+  "last_retrain_time": null,
+  "status": "failed",
+  "error_message": "ValueError: Insufficient training data: 300 draws (minimum 500 required)",
+  "model_version": null,
+  "accuracy": null,
+  "training_samples": 0,
+  "created_at": "2025-11-02T21:42:28.761628+09:00",
+  "training_started_at": "2025-11-02T21:43:50.655411+09:00",
+  "last_failure_time": "2025-11-02T21:43:50.656100+09:00",
+  "updated_at": "2025-11-02T21:43:50.655086+09:00"
+}

@@ -1,0 +1,29 @@
+{
+  \"project\": {
+    \"name\": \"lotto\",
+    \"mode\": \"personal\",
+    \"locale\": \"ko\",
+    \"language\": \"typescript\",
+    \"language_detection\": {
+      \"detected_language\": \"typescript\",
+      \"detection_method\": \"auto_detection\",
+      \"confidence\": 0.95,
+      \"markers\": [\"package.json\", \"tsconfig.json\", \"vite.config.ts\"],
+      \"confirmed_by\": \"Alfred\"
+    },
+    \"optimized\": true
+  },
+  \"language\": {
+    \"conversation_language\": \"ko\",
+    \"conversation_language_name\": \"한국어\"
+  },
+  \"user\": {
+    \"nickname\": \"ip9202\",
+    \"selected_at\": \"2025-11-02T00:00:00Z\"
+  },
+  \"github\": {
+    \"auto_delete_branches\": true,
+    \"checked_at\": \"2025-11-02T00:00:00Z\",
+    \"recommendation\": \"Branch cleanup will be automated after PR merge\"
+  }
+}
