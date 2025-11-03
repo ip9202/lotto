@@ -48,7 +48,7 @@ const SimpleCombination: React.FC<SimpleCombinationProps> = ({
           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
             isManual ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
           }`}>
-            {isManual ? '수동' : 'AI'}
+            {isManual ? '수동' : 'ML'}
           </span>
           {!isManual && (
             <span className={`px-2 py-1 text-xs font-medium rounded-full ${getConfidenceColor(confidenceScore)}`}>

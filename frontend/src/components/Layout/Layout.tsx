@@ -53,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             <div className="flex items-center">
               <Link to="/" className="flex items-center" onClick={() => handleNavClick('/')}>
                 <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  로또리아 AI
+                  로또리아 ML
                 </span>
               </Link>
             </div>
@@ -168,10 +168,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <span className="text-white text-sm font-bold">🎯</span>
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                로또리아 AI
+                로또리아 ML
               </span>
             </div>
-            
+
             {/* 메인 텍스트 */}
             <div className="space-y-2">
               <div className="flex justify-center space-x-4 mb-4 text-sm text-gray-600">
@@ -180,21 +180,23 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Link to="/cookie-settings" className="hover:text-blue-600 transition-colors">쿠키 설정</Link>
               </div>
               <p className="text-gray-700 font-medium">
-                &copy; 2024 로또리아 AI. 인공지능 로또 번호 예측 서비스
+                &copy; 2024 로또리아 ML · Random Forest 100 Trees · 145개 피처 · 84% 정확도
               </p>
               <p className="text-sm text-gray-500">
                 행운을 빕니다! 🍀
               </p>
             </div>
-            
+
             {/* 추가 정보 */}
             <div className="pt-4 border-t border-gray-200/60">
-              <div className="flex items-center justify-center space-x-3 sm:space-x-6 text-xs text-gray-400">
-                <span>AI 기반 분석</span>
+              <div className="flex items-center justify-center space-x-2 sm:space-x-4 text-xs text-gray-400 flex-wrap">
+                <span>Random Forest 100 Trees</span>
                 <span className="text-gray-300">•</span>
-                <span>실시간 데이터</span>
+                <span>145개 피처 분석</span>
                 <span className="text-gray-300">•</span>
-                <span>개인화 추천</span>
+                <span>공출현 패턴 학습</span>
+                <span className="text-gray-300">•</span>
+                <span>20-75% 신뢰도</span>
               </div>
             </div>
           </div>

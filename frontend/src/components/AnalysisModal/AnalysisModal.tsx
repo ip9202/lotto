@@ -72,12 +72,12 @@ const AnalysisModal: React.FC<AnalysisModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-lg font-semibold text-gray-900">
-                {combinationType === 'AI' ? '🤖 AI 추천' : '👤 수동 입력'}
+                {combinationType === 'AI' ? '🤖 ML 추천' : '👤 수동 입력'}
               </h3>
               <span className={`px-3 py-1 text-sm font-medium rounded-full ${
                 combinationType === 'AI' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
               }`}>
-                {combinationType}
+                {combinationType === 'AI' ? 'ML' : combinationType}
               </span>
             </div>
             
