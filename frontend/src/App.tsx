@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Home from './pages/Home';
 import Recommendation from './pages/Recommendation';
 import Statistics from './pages/Statistics';
+import MLIntro from './pages/MLIntro';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -137,6 +138,7 @@ const AppWithNotifications: React.FC = () => {
             <Route path="/" element={<Home />} />
             <Route path="/recommendation" element={<Recommendation />} />
             <Route path="/statistics" element={<Statistics />} />
+            <Route path="/ml-intro" element={<MLIntro />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile-settings" element={<ProfileSettings />} />
