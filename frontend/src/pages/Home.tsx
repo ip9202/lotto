@@ -185,14 +185,14 @@ const Home: React.FC = () => {
             </div>
             
             <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
-              로또리아 ML - Random Forest 머신러닝으로 예측하는 로또 번호
+              로또리아 ML - 인공지능으로 예측하는 로또 번호
             </h1>
           </div>
 
           {/* 설명 문구 */}
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed mb-6">
-            Random Forest 100 Trees 엔진과 145개 피처 다차원 분석으로 복잡한 번호 패턴을 학습합니다.
-            84% Per-Label Accuracy의 과학적 예측으로 참고용 번호 선택을 도와드립니다.
+            인공지능 머신러닝이 과거 데이터를 학습하여 다양한 번호 패턴을 분석합니다.
+            높은 예측 정확도로 참고용 번호 선택을 도와드립니다.
             19세 이상 이용 가능한 오락 서비스입니다.
           </p>
           
@@ -278,9 +278,9 @@ const Home: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-2xl font-bold">🤖</span>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Random Forest 100 Trees 기반 예측</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">인공지능 머신러닝 기반 예측</h3>
           <p className="text-gray-600">
-            145개 피처 다차원 분석과 공출현 패턴 학습으로 복잡한 번호 관계를 자동으로 발견합니다.
+            다양한 번호 패턴과 출현 관계를 학습하여 복잡한 번호 조합을 자동으로 분석합니다.
           </p>
         </div>
 
@@ -288,9 +288,9 @@ const Home: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-2xl font-bold">📊</span>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">84% Per-Label Accuracy 달성</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">높은 예측 정확도 달성</h3>
           <p className="text-gray-600">
-            Hamming Loss 15.2% (업계 우수) 및 20-75% 신뢰도 점수를 제공하여 예측 품질을 투명하게 공개합니다.
+            과거 데이터 학습을 통해 높은 정확도를 달성했으며, 예측 신뢰도 점수를 함께 제공합니다.
           </p>
         </div>
 
@@ -298,9 +298,9 @@ const Home: React.FC = () => {
           <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-white text-2xl font-bold">🎯</span>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">통계 모드 대비 5배 정교한 분석</h3>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">기존보다 훨씬 정교한 분석</h3>
           <p className="text-gray-600">
-            기존 2개 피처 → ML 145개 피처로 공출현 상관관계 45개를 포함한 사용자 맞춤형 번호를 제안합니다.
+            단순 통계 분석을 넘어 인공지능이 다양한 패턴을 종합 분석하여 맞춤형 번호를 제안합니다.
           </p>
         </div>
       </div>
@@ -314,7 +314,7 @@ const Home: React.FC = () => {
           지금 바로 시작하세요!
         </h2>
         <p className="text-xl mb-6 opacity-90">
-          Random Forest ML 엔진이 1000회차 데이터를 학습한 과학적 예측으로 당신의 행운을 돕습니다 🍀
+          인공지능이 과거 1000회차 이상의 데이터를 학습한 똑똑한 예측으로 당신의 행운을 돕습니다 🍀
         </p>
         <Link
           to="/recommendation"

@@ -269,7 +269,7 @@ const Recommendation: React.FC = () => {
 
           {/* 설명 문구 */}
           <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            145개 피처 분석과 공출현 패턴 학습으로 통계 모드보다 5배 정교한 ML 추천을 경험하세요
+            인공지능이 다양한 패턴을 학습하여 기존보다 훨씬 똑똑한 추천을 제공합니다
           </p>
       </div>
 
@@ -320,10 +320,10 @@ const Recommendation: React.FC = () => {
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-xl font-bold text-gray-900 mb-4">
-                🤖 Random Forest ML 엔진의 즉시 예측
+                🤖 인공지능 머신러닝의 즉시 예측
               </h2>
               <p className="text-sm sm:text-base lg:text-lg text-gray-600 mb-6">
-                84% 정확도, 20-75% 신뢰도 점수를 제공하는 과학적 번호 추천
+                높은 정확도의 예측과 신뢰도 점수를 함께 제공하는 똑똑한 번호 추천
               </p>
             </div>
 
@@ -421,10 +421,10 @@ const Recommendation: React.FC = () => {
             {/* 헤더 섹션 */}
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                ⚙️ 145개 피처 기반 맞춤형 ML 분석
+                ⚙️ 맞춤형 인공지능 분석
               </h2>
               <p className="text-gray-600 max-w-2xl mx-auto">
-                공출현 패턴 + 사용자 선호도 반영으로 개인화된 ML 추천을 받아보세요
+                다양한 패턴 분석과 사용자 선호도를 반영하여 개인화된 추천을 받아보세요
               </p>
             </div>
 

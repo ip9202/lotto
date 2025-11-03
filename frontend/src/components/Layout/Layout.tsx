@@ -180,7 +180,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 <Link to="/cookie-settings" className="hover:text-blue-600 transition-colors">쿠키 설정</Link>
               </div>
               <p className="text-gray-700 font-medium">
-                &copy; 2024 로또리아 ML · Random Forest 100 Trees · 145개 피처 · 84% 정확도
+                &copy; 2024 로또리아 ML · 인공지능 머신러닝 · 다양한 패턴 분석 · 높은 정확도
               </p>
               <p className="text-sm text-gray-500">
                 행운을 빕니다! 🍀
@@ -190,13 +190,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             {/* 추가 정보 */}
             <div className="pt-4 border-t border-gray-200/60">
               <div className="flex items-center justify-center space-x-2 sm:space-x-4 text-xs text-gray-400 flex-wrap">
-                <span>Random Forest 100 Trees</span>
+                <span>인공지능 머신러닝</span>
                 <span className="text-gray-300">•</span>
-                <span>145개 피처 분석</span>
+                <span>다양한 패턴 분석</span>
                 <span className="text-gray-300">•</span>
-                <span>공출현 패턴 학습</span>
+                <span>번호 관계 학습</span>
                 <span className="text-gray-300">•</span>
-                <span>20-75% 신뢰도</span>
+                <span>신뢰도 제공</span>
               </div>
             </div>
           </div>

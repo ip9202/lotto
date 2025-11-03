@@ -29,7 +29,7 @@ const Statistics: React.FC = () => {
           
           {/* 설명 문구 */}
           <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Random Forest ML 엔진의 예측 성과 분석 · Per-Label Accuracy 84% · Hamming Loss 15.2%
+            인공지능 머신러닝의 예측 성과 분석 · 높은 정확도 · 신뢰할 수 있는 예측
           </p>
         </div>
 
