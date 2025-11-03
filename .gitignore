@@ -151,7 +151,14 @@ railway_db_config.md
 # MoAI-ADK
 .moai/cache/
 
-# ML Models (large binary files stored separately)
+# ML Models - track production models for Railway auto-deployment
+# Exclude all .pkl files by default
 *.pkl
-backend/app/models/ml/trained/*.pkl
+
+# But include production models (lotto_model_*.pkl) for Railway deployment
+!backend/app/models/ml/trained/lotto_model_*.pkl
+
+# Exclude test models and backups
+backend/app/models/ml/trained/test_*.pkl
+backend/app/models/ml/trained/pipeline_*.pkl
 backend/app/models/ml/backups/*.pkl
