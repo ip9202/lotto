@@ -2,7 +2,6 @@
 """Event-Driven Checkpoint system
 
 Detect risky tasks and create automatic checkpoints
-@TAG:CHECKPOINT-EVENT-001
 """
 
 import json
@@ -56,7 +55,7 @@ def detect_risky_operation(tool_name: str, tool_args: dict[str, Any], cwd: str) 
 
     Risky Operations:
         - Bash tool: rm -rf, git merge, git reset --hard, git rebase, script execution
-        - Edit/Write tool: CLAUDE.md, config.json, .moai/memory/*.md
+        - Edit/Write tool: CLAUDE.md, config.json, .claude/skills/*.md
         - MultiEdit tool: Edit ≥10 items File simultaneously
         - Script execution: Python, Node, Java, Go, Rust, Dart, Swift, Kotlin, Shell scripts
 
@@ -73,7 +72,6 @@ def detect_risky_operation(tool_name: str, tool_args: dict[str, Any], cwd: str) 
         - Performance: lightweight string matching (< 1ms)
         - Extensibility: Easily added to the patterns dictionary
 
-    @TAG:CHECKPOINT-EVENT-001
     """
     # Bash tool: Detect dangerous commands
     if tool_name == "Bash":
@@ -98,9 +96,9 @@ def detect_risky_operation(tool_name: str, tool_args: dict[str, Any], cwd: str) 
         critical_files = [
             "CLAUDE.md",
             "config.json",
-            ".moai/memory/development-guide.md",
-            ".moai/memory/spec-metadata.md",
-            ".moai/config.json",
+            ".claude/skills/moai-alfred-dev-guide/reference.md",
+            ".claude/skills/moai-alfred-spec-metadata-extended/reference.md",
+            ".moai/config/config.json",
         ]
 
         if any(cf in file_path for cf in critical_files):
@@ -143,7 +141,6 @@ def create_checkpoint(cwd: str, operation_type: str) -> str:
         - Do not check dirty working directory (allow uncommitted changes)
         - Automatically record checkpoint logs (.moai/checkpoints.log)
 
-    @TAG:CHECKPOINT-EVENT-001
     """
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
     branch_name = f"before-{operation_type}-{timestamp}"
@@ -192,7 +189,6 @@ def log_checkpoint(cwd: str, branch_name: str, operation_type: str) -> None:
         - Record in append mode (preserve existing logs)
         - Ignored in case of failure (not critical)
 
-    @TAG:CHECKPOINT-EVENT-001
     """
     log_file = Path(cwd) / ".moai" / "checkpoints.log"
 
@@ -239,7 +235,6 @@ def list_checkpoints(cwd: str, max_count: int = 10) -> list[dict[str, str]]:
         - Ignore lines where JSON parsing fails
         - Return only the latest max_count
 
-    @TAG:CHECKPOINT-EVENT-001
     """
     log_file = Path(cwd) / ".moai" / "checkpoints.log"
 

@@ -1,124 +1,93 @@
 ---
-name: moai-lang-java
-version: 2.0.0
+name: "moai-lang-java"
+version: "2.0.0"
 created: 2025-10-22
-updated: 2025-10-22
-status: active
-description: Java 23+ best practices with JUnit 5, Maven/Gradle, CheckStyle, and modern patterns.
-keywords: ['java', 'junit', 'maven', 'gradle', 'checkstyle']
-allowed-tools:
+updated: 2025-11-11
+status: stable
+description: Java programming language patterns, object-oriented design, and enterprise application development. Use when building enterprise applications, Android apps, or large-scale systems.
+keywords: ['java', 'object-oriented', 'enterprise', 'spring', 'android']
+allowed-tools: 
   - Read
   - Bash
+  - Glob
 ---
 
-# Lang Java Skill
+# Java Programming Language Skill
 
 ## Skill Metadata
 
 | Field | Value |
 | ----- | ----- |
 | **Skill Name** | moai-lang-java |
-| **Version** | 2.0.0 (2025-10-22) |
-| **Allowed tools** | Read (read_file), Bash (terminal) |
-| **Auto-load** | On demand when keywords detected |
-| **Tier** | Language |
+| **Version** | 2.0.0 (2025-11-11) |
+| **Allowed tools** | Read, Bash, Glob |
+| **Auto-load** | On demand when Java patterns detected |
+| **Tier** | Language (Foundation) |
 
 ---
 
 ## What It Does
 
-Java 23+ best practices with JUnit 5, Maven/Gradle, CheckStyle, and modern patterns.
+Java programming language patterns, object-oriented design, and enterprise application development.
 
 **Key capabilities**:
-- ✅ Best practices enforcement for language domain
-- ✅ TRUST 5 principles integration
-- ✅ Latest tool versions (2025-10-22)
-- ✅ TDD workflow support
+- ✅ Object-oriented design patterns
+- ✅ Enterprise application architecture
+- ✅ JVM optimization
+- ✅ Spring framework integration
+- ✅ Android development
 
 ---
 
 ## When to Use
 
-**Automatic triggers**:
-- Related code discussions and file patterns
-- SPEC implementation (`/alfred:2-run`)
-- Code review requests
-
-**Manual invocation**:
-- Review code for TRUST 5 compliance
-- Design new features
-- Troubleshoot issues
+- ✅ Building enterprise applications
+- ✅ Creating Android apps
+- ✅ Developing large-scale systems
+- ✅ Implementing microservices
 
 ---
 
-## Tool Version Matrix (2025-10-22)
+## Core Java Patterns
 
-| Tool | Version | Purpose | Status |
-|------|---------|---------|--------|
-| **Java** | 23.0.0 | Primary | ✅ Current |
-| **JUnit** | 5.11.0 | Primary | ✅ Current |
-| **Maven** | 3.9.9 | Primary | ✅ Current |
-| **Gradle** | 8.12.0 | Primary | ✅ Current |
+### Object-Oriented Design
+1. **Design Patterns**: GoF patterns implementation
+2. **SOLID Principles**: Clean architecture practices
+3. **Inheritance Hierarchies**: Proper class design
+4. **Interface Design**: Contract-based programming
+5. **Exception Handling**: Robust error management
+
+### Enterprise Development
+- **Spring Framework**: Dependency injection and AOP
+- **REST APIs**: JAX-RS and Spring Boot
+- **Database Integration**: JPA and Hibernate
+- **Testing**: JUnit and Mockito patterns
+- **Build Systems**: Maven and Gradle
 
 ---
-
-## Inputs
-
-- Language-specific source directories
-- Configuration files
-- Test suites and sample data
-
-## Outputs
-
-- Test/lint execution plan
-- TRUST 5 review checkpoints
-- Migration guidance
-
-## Failure Modes
-
-- When required tools are not installed
-- When dependencies are missing
-- When test coverage falls below 85%
 
 ## Dependencies
 
-- Access to project files via Read/Bash tools
-- Integration with `moai-foundation-langs` for language detection
-- Integration with `moai-foundation-trust` for quality gates
-
----
-
-## References (Latest Documentation)
-
-_Documentation links updated 2025-10-22_
-
----
-
-## Changelog
-
-- **v2.0.0** (2025-10-22): Major update with latest tool versions, comprehensive best practices, TRUST 5 integration
-- **v1.0.0** (2025-03-29): Initial Skill release
+- JDK (Java Development Kit)
+- Build tools (Maven, Gradle)
+- IDE support (IntelliJ, Eclipse)
+- Testing frameworks
 
 ---
 
 ## Works Well With
 
-- `moai-foundation-trust` (quality gates)
-- `moai-alfred-code-reviewer` (code review)
-- `moai-essentials-debug` (debugging support)
+- `moai-domain-backend` (Enterprise patterns)
+- `moai-domain-database` (Database integration)
+- `moai-essentials-debug` (Java debugging)
 
 ---
 
-## Best Practices
+## Changelog
 
-✅ **DO**:
-- Follow language best practices
-- Use latest stable tool versions
-- Maintain test coverage ≥85%
-- Document all public APIs
+- **v2.0.0** (2025-11-11): Added complete metadata, Java programming patterns
+- **v1.0.0** (2025-10-22): Initial Java language support
 
-❌ **DON'T**:
-- Skip quality gates
-- Use deprecated tools
-- Ignore security warnings
-- Mix testing frameworks
+---
+
+**End of Skill** | Updated 2025-11-11

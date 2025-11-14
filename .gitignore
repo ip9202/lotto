@@ -162,3 +162,38 @@ railway_db_config.md
 backend/app/models/ml/trained/test_*.pkl
 backend/app/models/ml/trained/pipeline_*.pkl
 backend/app/models/ml/backups/*.pkl
+# Test coverage
+*_backup_*/
+.env*
+.netlify/
+.ruff_cache
+docs_backup_*/
+.uv-cache
+.moai-backups/
+# Environment variables and deployment secrets
+hooks_backup_*/
+*.bak
+.moai/temp/
+docs/out/
+.moai/reports/*.tmp
+*.backup/
+.moai/logs/
+coverage.json
+.firebase/
+.vercel/
+.playwright-mcp
+.aws/
+# Next.js build output
+# MoAI dynamic content (로컬 프로젝트만 무시, but package templates are tracked)
+*-backup/
+# MoAI reports (임시 보고서만 무시)
+.uv_cache
+.mypy_cache
+.venv_issue43_py313
+# Claude and MoAI configuration (user-specific, root only)
+.moai/reports/*-draft.*
+*.backup
+docs/.next/
+.moai/*.tmp
+# Package templates (src/moai_adk/templates/) are tracked
+/CLAUDE.md

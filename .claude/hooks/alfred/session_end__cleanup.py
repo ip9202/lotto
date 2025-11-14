@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# @CODE:HOOKS-CLARITY-CLEAN | SPEC: Individual hook files for better UX
 """SessionEnd Hook: Session Cleanup and Finalization
 
 Claude Code Event: SessionEnd
@@ -14,17 +13,15 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from utils.timeout import CrossPlatformTimeout, TimeoutError as PlatformTimeoutError
-
 # Setup import path for shared modules
 HOOKS_DIR = Path(__file__).parent
 SHARED_DIR = HOOKS_DIR / "shared"
 if str(SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(SHARED_DIR))
 
-from handlers import handle_session_end
-
-
+from handlers import handle_session_end  # noqa: E402
+from utils.timeout import CrossPlatformTimeout  # noqa: E402
+from utils.timeout import TimeoutError as PlatformTimeoutError  # noqa: E402
 
 
 def main() -> None:

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# @CODE:HOOKS-CLARITY-DOCS | SPEC: Individual hook files for better UX
 """UserPromptSubmit Hook: Just-In-Time Document Loading
 
 Claude Code Event: UserPromptSubmit
@@ -12,7 +11,6 @@ Output: additionalContext with document path suggestions
 import json
 import sys
 from pathlib import Path
-from utils.timeout import CrossPlatformTimeout, TimeoutError as PlatformTimeoutError
 from typing import Any
 
 # Setup import path for shared modules
@@ -21,8 +19,9 @@ SHARED_DIR = HOOKS_DIR / "shared"
 if str(SHARED_DIR) not in sys.path:
     sys.path.insert(0, str(SHARED_DIR))
 
-from handlers import handle_user_prompt_submit
-
+from handlers import handle_user_prompt_submit  # noqa: E402
+from utils.timeout import CrossPlatformTimeout  # noqa: E402
+from utils.timeout import TimeoutError as PlatformTimeoutError  # noqa: E402
 
 
 def main() -> None:
@@ -31,7 +30,6 @@ def main() -> None:
     Analyzes user prompt patterns and recommends relevant documents:
     - /alfred:1-plan → spec-metadata.md
     - /alfred:2-run → development-guide.md
-    - @TAG mentions → TAG documentation
     - SPEC references → related SPEC files
 
     Exit Codes:
